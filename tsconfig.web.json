@@ -3,6 +3,8 @@
   "include": [
     "src/renderer/src/env.d.ts",
     "src/renderer/src/**/*",
+    "src/renderer/src/components/**/*.ts",
+    "src/renderer/lib/*.ts",
     "src/renderer/src/**/*.svelte",
     "src/preload/*.d.ts"
   ],
@@ -19,6 +21,15 @@
       "ESNext",
       "DOM",
       "DOM.Iterable"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": [
+        "src/renderer/src/components/*"
+      ],
+      "@lib/*": [
+        "src/renderer/lib/*"
+      ],
+    }
   }
 }
