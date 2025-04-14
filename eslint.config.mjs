@@ -20,7 +20,8 @@ export default tseslint.config(
     rules: {
       'svelte/no-unused-svelte-ignore': 'off',
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn']
+      '@typescript-eslint/no-unused-vars': ['warn'],
+      '@typescript-eslint/explicit-function-return-type': 'off'
     }
   }
 )

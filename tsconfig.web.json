@@ -4,9 +4,10 @@
     "src/renderer/src/env.d.ts",
     "src/renderer/src/**/*",
     "src/renderer/src/components/**/*.ts",
-    "src/renderer/lib/*.ts",
     "src/renderer/src/**/*.svelte",
-    "src/preload/*.d.ts"
+    "src/preload/*.d.ts",
+    "src/renderer/lib/*.ts",
+    "src/renderer/lib/types/*.ts",
   ],
   "compilerOptions": {
     "verbatimModuleSyntax": true,
@@ -24,6 +25,7 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/renderer/src/*"],
       "@components/*": [
         "src/renderer/src/components/*"
       ],
