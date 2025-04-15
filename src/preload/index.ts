@@ -1,10 +1,14 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { organizationFromFile } from './excel-lib'
+import { Player, Organization } from '@lib/types/bracket-lib'
+import { webUtils } from 'electron'
 
 // Custom APIs for renderer
 const api = {
-  organizationFromFile
+  organizationFromFile: (file: File): Promise<Organization> =>
+    ipcRenderer.invoke('dialog:organizationFromFile', webUtils.getPathForFile(file)),
+  exportPlayers: (players: Player[]): Promise<void> =>
+    ipcRenderer.invoke('dialog:exportPlayers', players)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

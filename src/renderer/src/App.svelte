@@ -14,6 +14,9 @@
   import FileInput from '@components/FileInput.svelte'
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
   import * as RadioGroup from '@components/radio-group'
+  import * as Tabs from '@components/ui/tabs'
+  import PlayerTab from './components/player-tab/PlayerTab.svelte'
+  import { playersStore } from './states/players.svelte'
 
   // ==================== DOM References ====================
   let bracketRenderer: Bracket
@@ -28,23 +31,26 @@
 
   // ==================== Computed Values ====================
   let isMale = $derived(radio_sex === 'Masculino')
-  let players = $derived(
-    organizations
+
+  $effect(() => {
+    playersStore.players = organizations
       .reduce((acc: Player[], org) => {
         return acc.concat(
           org.players.map((player) => ({
             ...player,
             organization: org.organization,
-            present: true
+            present: true,
+            contestantId: Math.floor(Math.random() * 10000).toString()
           }))
         )
       }, [])
       .sort((a, b) => a.organization.localeCompare(b.organization))
-  )
-  let nFemale = $derived(players.filter((player) => !player.isMale).length)
-  let nMale = $derived(players.filter((player) => player.isMale).length)
+  })
+
+  let nFemale = $derived(playersStore.players.filter((player) => !player.isMale).length)
+  let nMale = $derived(playersStore.players.filter((player) => player.isMale).length)
   let filteredPlayers = $derived(
-    players.filter(
+    playersStore.players.filter(
       (player) =>
         player.isMale == isMale &&
         player.name
@@ -60,7 +66,7 @@
     )
   )
   let categories = $derived(
-    Array.from(new Set(players.map((player) => `${player.category}¨${player.isMale}`)))
+    Array.from(new Set(playersStore.players.map((player) => `${player.category}¨${player.isMale}`)))
       .map((key) => {
         const [category, isMale] = key.split('¨')
         return { category, isMale: isMale === 'true', state: true }
@@ -77,7 +83,7 @@
     categories.forEach(({ category, state, isMale }) => {
       if (!state) return
 
-      const genderPlayers = players.filter(
+      const genderPlayers = playersStore.players.filter(
         (player) => player.present && player.category === category && player.isMale === isMale
       )
       newBrackets[isMale ? 'male' : 'female'][category] =
@@ -111,6 +117,7 @@
     const randomN = [5, 10]
     organizations = generateRandomOrganizations(randomN[0], randomN[1])
     generateAllBrackets()
+    bracketRenderer.update()
   })
 </script>
 
@@ -135,8 +142,8 @@
     <Separator class="my-2" />
 
     <ScrollArea class="flex-1">
-      {#each filteredPlayers as player}
-        <PlayerCard {player} />
+      {#each filteredPlayers as player, i}
+        <PlayerCard bind:player={filteredPlayers[i]} />
       {/each}
     </ScrollArea>
 
@@ -157,7 +164,26 @@
     </div>
   </aside>
 
-  <Bracket bind:this={bracketRenderer} {brackets} category={currentCategory} {isMale} />
+  <div class="tabs-container">
+    <Tabs.Root value="participantes" class="h-full w-full">
+      <Tabs.List class="grid w-full grid-cols-2">
+        <Tabs.Trigger value="participantes">Participantes</Tabs.Trigger>
+        <Tabs.Trigger value="chaves">Chaves</Tabs.Trigger>
+      </Tabs.List>
+      <Tabs.Content value="participantes" class="h-[calc(100%-10em)]">
+        <PlayerTab bind:players={playersStore.players} />
+      </Tabs.Content>
+      <Tabs.Content value="chaves" class="mt-0 h-full w-full">
+        <Bracket
+          bind:this={bracketRenderer}
+          {brackets}
+          players={playersStore.players}
+          category={currentCategory}
+          {isMale}
+        />
+      </Tabs.Content>
+    </Tabs.Root>
+  </div>
 </main>
 
 <style>
@@ -174,6 +200,10 @@
       'aside brackets';
     grid-template-rows: 200px 1fr;
     grid-template-columns: 300px 1fr;
+  }
+
+  .tabs-container {
+    grid-area: brackets;
   }
 
   aside {

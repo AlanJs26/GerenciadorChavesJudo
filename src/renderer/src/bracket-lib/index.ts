@@ -23,15 +23,12 @@ export function buildBracket(players: Player[]): Bracket {
   const rounds = ['1', '2', '3', '4', 'FIM'].slice(0, nMatches - 1)
   const order = generateTournamentOrder(2 ** Math.ceil(Math.log2(numPlayers)))
 
-  // Generate unique IDs for contestants
-  const contestantsIds = players.map(() => Math.floor(Math.random() * 10000).toString())
-
   // Create contestant objects
-  const contestants = players.reduce((prev, curr, i) => {
+  const contestants = players.reduce((prev, player) => {
     return {
       ...prev,
-      [contestantsIds[i]]: {
-        players: [{ title: curr.name, nationality: curr.organization }]
+      [player.contestantId]: {
+        players: [{ title: player.name, nationality: player.organization }]
       }
     }
   }, {})
@@ -41,12 +38,11 @@ export function buildBracket(players: Player[]): Bracket {
   for (let i = 0; i < numPlayers; i += 1) {
     const currOrdem = order[i] - 1
     const orderDiv2 = ((currOrdem - (currOrdem % 2)) / 2).toString()
-    const player = contestantsIds[i]
-    if (orderDiv2 in matchPairs) {
-      matchPairs[orderDiv2].push(player)
-    } else {
-      matchPairs[orderDiv2] = [player]
+
+    if (!(orderDiv2 in matchPairs)) {
+      matchPairs[orderDiv2] = []
     }
+    matchPairs[orderDiv2].push(players[i].contestantId)
   }
 
   // Create the complete bracket

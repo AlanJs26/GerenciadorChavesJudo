@@ -680,7 +680,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@floating-ui/core@npm:^1.3.1, @floating-ui/core@npm:^1.6.0":
+"@floating-ui/core@npm:^1.6.0, @floating-ui/core@npm:^1.6.4":
   version: 1.6.9
   resolution: "@floating-ui/core@npm:1.6.9"
   dependencies:
@@ -689,7 +689,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@floating-ui/dom@npm:^1.4.5":
+"@floating-ui/dom@npm:^1.6.7":
   version: 1.6.13
   resolution: "@floating-ui/dom@npm:1.6.13"
   dependencies:
@@ -751,7 +751,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@internationalized/date@npm:^3.5.0, @internationalized/date@npm:^3.5.1":
+"@internationalized/date@npm:^3.5.6":
   version: 3.8.0
   resolution: "@internationalized/date@npm:3.8.0"
   dependencies:
@@ -825,12 +825,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucide/svelte@npm:^0.487.0":
-  version: 0.487.0
-  resolution: "@lucide/svelte@npm:0.487.0"
+"@lucide/svelte@npm:^0.488.0":
+  version: 0.488.0
+  resolution: "@lucide/svelte@npm:0.488.0"
   peerDependencies:
     svelte: ^5
-  checksum: 10c0/b5260fd72013be7f370c096a60bbdedd0063e9fbb4c10c290a9409b4c316ea1ff8984fabea5eaee423660ddb64ef8f845fa0131a61493fae89ff88f5c96aa1b3
+  checksum: 10c0/9840f11242646536fc29d701b940936a806517f371fc4971c64c94cba30cb075268e49c16919e5b1b1beaf4e80a375b98fdee0ef6a0a901964bbcb12f9437502
   languageName: node
   linkType: hard
 
@@ -852,22 +852,6 @@ __metadata:
     lodash: "npm:^4.17.15"
     tmp-promise: "npm:^3.0.2"
   checksum: 10c0/b3c87f6482b1956411af1118c771afb39cd9a0568fbb5e86015547ff6d68d2e73a7f0d74b75a57f0a156391c347c8d0adc1037e75172b92da72b96e0a05a2f4f
-  languageName: node
-  linkType: hard
-
-"@melt-ui/svelte@npm:0.76.2":
-  version: 0.76.2
-  resolution: "@melt-ui/svelte@npm:0.76.2"
-  dependencies:
-    "@floating-ui/core": "npm:^1.3.1"
-    "@floating-ui/dom": "npm:^1.4.5"
-    "@internationalized/date": "npm:^3.5.0"
-    dequal: "npm:^2.0.3"
-    focus-trap: "npm:^7.5.2"
-    nanoid: "npm:^5.0.4"
-  peerDependencies:
-    svelte: ">=3 <5"
-  checksum: 10c0/6d7115bdee8175fc6cd80d85de0f99e5cc1f6ff74c1f2badde3c2ac35e06784f0859a16bbb37a78a631518e246c20fc4a3049bc8b9025638a321fc4ad23363d2
   languageName: node
   linkType: hard
 
@@ -1167,6 +1151,13 @@ __metadata:
   dependencies:
     defer-to-connect: "npm:^2.0.0"
   checksum: 10c0/73946918c025339db68b09abd91fa3001e87fc749c619d2e9c2003a663039d4c3cb89836c98a96598b3d47dec2481284ba85355392644911f5ecd2336536697f
+  languageName: node
+  linkType: hard
+
+"@tanstack/table-core@npm:^8.21.3":
+  version: 8.21.3
+  resolution: "@tanstack/table-core@npm:8.21.3"
+  checksum: 10c0/40e3560e6d55e07cc047024aa7f83bd47a9323d21920d4adabba8071fd2d21230c48460b26cedf392588f8265b9edc133abb1b0d6d0adf4dae0970032900a8c9
   languageName: node
   linkType: hard
 
@@ -1800,16 +1791,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bits-ui@npm:0.22.0":
-  version: 0.22.0
-  resolution: "bits-ui@npm:0.22.0"
+"bits-ui@npm:^1.3.19":
+  version: 1.3.19
+  resolution: "bits-ui@npm:1.3.19"
   dependencies:
-    "@internationalized/date": "npm:^3.5.1"
-    "@melt-ui/svelte": "npm:0.76.2"
-    nanoid: "npm:^5.0.5"
+    "@floating-ui/core": "npm:^1.6.4"
+    "@floating-ui/dom": "npm:^1.6.7"
+    "@internationalized/date": "npm:^3.5.6"
+    esm-env: "npm:^1.1.2"
+    runed: "npm:^0.23.2"
+    svelte-toolbelt: "npm:^0.7.1"
+    tabbable: "npm:^6.2.0"
   peerDependencies:
-    svelte: ^4.0.0 || ^5.0.0
-  checksum: 10c0/c1ca9cd0ecb586e6451cb07a4a9dd43616daa268a820b3e73094aa45ef90e87b554bec0e69ac60920b7ed5cc2c66c07a6c6c40b1f634945a0f485ce2eb414487
+    svelte: ^5.11.0
+  checksum: 10c0/b338d652b87c3f8097030cf74da3d29d040449a68c18959ad64ced2132e90b7973dc58cecdd591266fdad61a88609a283f6e714793ce3ec2332762e15a6b3026
   languageName: node
   linkType: hard
 
@@ -2484,13 +2479,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dequal@npm:^2.0.3":
-  version: 2.0.3
-  resolution: "dequal@npm:2.0.3"
-  checksum: 10c0/f98860cdf58b64991ae10205137c0e97d384c3a4edc7f807603887b7c4b850af1224a33d88012009f150861cbee4fa2d322c4cc04b9313bee312e47f6ecaa888
-  languageName: node
-  linkType: hard
-
 "detect-libc@npm:^2.0.1":
   version: 2.0.3
   resolution: "detect-libc@npm:2.0.3"
@@ -3036,7 +3024,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esm-env@npm:^1.2.1":
+"esm-env@npm:^1.0.0, esm-env@npm:^1.1.2, esm-env@npm:^1.2.1":
   version: 1.2.2
   resolution: "esm-env@npm:1.2.2"
   checksum: 10c0/3d25c973f2fd69c25ffff29c964399cea573fe10795ecc1d26f6f957ce0483d3254e1cceddb34bf3296a0d7b0f1d53a28992f064ba509dfe6366751e752c4166
@@ -3286,15 +3274,6 @@ __metadata:
   version: 3.3.3
   resolution: "flatted@npm:3.3.3"
   checksum: 10c0/e957a1c6b0254aa15b8cce8533e24165abd98fadc98575db082b786b5da1b7d72062b81bfdcd1da2f4d46b6ed93bec2434e62333e9b4261d79ef2e75a10dd538
-  languageName: node
-  linkType: hard
-
-"focus-trap@npm:^7.5.2":
-  version: 7.6.4
-  resolution: "focus-trap@npm:7.6.4"
-  dependencies:
-    tabbable: "npm:^6.2.0"
-  checksum: 10c0/ed810d47fd904a5e0269e822d98e634c6cbdd7222046c712ef299bdd26a422db754e3cec04e6517065b12be4b47f65c21f6244e0c07a308b1060985463d518cb
   languageName: node
   linkType: hard
 
@@ -3867,6 +3846,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"inline-style-parser@npm:0.2.4":
+  version: 0.2.4
+  resolution: "inline-style-parser@npm:0.2.4"
+  checksum: 10c0/ddc0b210eaa03e0f98d677b9836242c583c7c6051e84ce0e704ae4626e7871c5b78f8e30853480218b446355745775df318d4f82d33087ff7e393245efa9a881
+  languageName: node
+  linkType: hard
+
 "ip-address@npm:^9.0.5":
   version: 9.0.5
   resolution: "ip-address@npm:9.0.5"
@@ -4154,13 +4140,14 @@ __metadata:
     "@electron-toolkit/preload": "npm:^3.0.1"
     "@electron-toolkit/tsconfig": "npm:^1.0.1"
     "@electron-toolkit/utils": "npm:^4.0.0"
-    "@lucide/svelte": "npm:^0.487.0"
+    "@lucide/svelte": "npm:^0.488.0"
     "@rollup/plugin-alias": "npm:^5.1.1"
     "@sveltejs/vite-plugin-svelte": "npm:^5.0.3"
+    "@tanstack/table-core": "npm:^8.21.3"
     "@types/module-alias": "npm:^2"
     "@types/node": "npm:^22.13.13"
     autoprefixer: "npm:^10.4.20"
-    bits-ui: "npm:0.22.0"
+    bits-ui: "npm:^1.3.19"
     bracketry: "npm:^1.1.3"
     clsx: "npm:^2.1.1"
     electron: "npm:^35.0.3"
@@ -4169,7 +4156,7 @@ __metadata:
     eslint: "npm:^9.23.0"
     eslint-plugin-svelte: "npm:^2.46.1"
     exceljs: "npm:^4.4.0"
-    lucide-svelte: "npm:^0.487.0"
+    lucide-svelte: "npm:^0.488.0"
     module-alias: "npm:^2.2.3"
     prettier: "npm:^3.5.3"
     prettier-plugin-svelte: "npm:^3.3.3"
@@ -4440,12 +4427,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-svelte@npm:^0.487.0":
-  version: 0.487.0
-  resolution: "lucide-svelte@npm:0.487.0"
+"lucide-svelte@npm:^0.488.0":
+  version: 0.488.0
+  resolution: "lucide-svelte@npm:0.488.0"
   peerDependencies:
     svelte: ^3 || ^4 || ^5.0.0-next.42
-  checksum: 10c0/c5315ac98649aad16e7786cd1d162ab23b7e42ae89e6353de58cb0ee4befde27d09c6d10dd3c9ff319e9878d4bb69871de19836c53b23d6825cd75ce1f47d40a
+  checksum: 10c0/5f849d26a4fbf6be5163fe3f7dc2f938438c6aef90697a7c4a528dab937bb5a428ce9e1dbcebe0ddbac2bf5bbabb5966904760c86ec370b77a0ab8ef297e3743
   languageName: node
   linkType: hard
 
@@ -4807,15 +4794,6 @@ __metadata:
   bin:
     nanoid: bin/nanoid.cjs
   checksum: 10c0/40e7f70b3d15f725ca072dfc4f74e81fcf1fbb02e491cf58ac0c79093adc9b0a73b152bcde57df4b79cd097e13023d7504acb38404a4da7bc1cd8e887b82fe0b
-  languageName: node
-  linkType: hard
-
-"nanoid@npm:^5.0.4, nanoid@npm:^5.0.5":
-  version: 5.1.5
-  resolution: "nanoid@npm:5.1.5"
-  bin:
-    nanoid: bin/nanoid.js
-  checksum: 10c0/e6004f1ad6c7123eeb037062c4441d44982037dc043aabb162457ef6986e99964ba98c63c975f96c547403beb0bf95bc537bd7bf9a09baf381656acdc2975c3c
   languageName: node
   linkType: hard
 
@@ -5761,6 +5739,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"runed@npm:^0.23.2":
+  version: 0.23.4
+  resolution: "runed@npm:0.23.4"
+  dependencies:
+    esm-env: "npm:^1.0.0"
+  peerDependencies:
+    svelte: ^5.7.0
+  checksum: 10c0/e27400af9e69b966dca449b851e82e09b3d2ddde4095ba72237599aa80fc248a23d0737c0286f751ca6c12721a5e09eb21b9d8cc872cbd70e7b161442818eece
+  languageName: node
+  linkType: hard
+
 "sade@npm:^1.7.4":
   version: 1.8.1
   resolution: "sade@npm:1.8.1"
@@ -6074,6 +6063,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"style-to-object@npm:^1.0.8":
+  version: 1.0.8
+  resolution: "style-to-object@npm:1.0.8"
+  dependencies:
+    inline-style-parser: "npm:0.2.4"
+  checksum: 10c0/daa6646b1ff18258c0ca33ed281fbe73485c8391192db1b56ce89d40c93ea64507a41e8701d0dadfe771bc2f540c46c9b295135f71584c8e5cb23d6a19be9430
+  languageName: node
+  linkType: hard
+
 "sucrase@npm:^3.35.0":
   version: 3.35.0
   resolution: "sucrase@npm:3.35.0"
@@ -6150,6 +6148,19 @@ __metadata:
     svelte:
       optional: true
   checksum: 10c0/52bbbf5d266fc36f64626e38d8de4354d78a5490fa60b61b1cd127c1c661d94f0c671a220e3ed7dd92b144a3c99f517d5205c218f78feea0603132f24eeb4c9d
+  languageName: node
+  linkType: hard
+
+"svelte-toolbelt@npm:^0.7.1":
+  version: 0.7.1
+  resolution: "svelte-toolbelt@npm:0.7.1"
+  dependencies:
+    clsx: "npm:^2.1.1"
+    runed: "npm:^0.23.2"
+    style-to-object: "npm:^1.0.8"
+  peerDependencies:
+    svelte: ^5.0.0
+  checksum: 10c0/a50db97c851fa65af7fbf77007bd76730a179ac0239c0121301bd26682c1078a4ffea77835492550b133849a42d3dffee0714ae076154d86be8d0b3a84c9a9bf
   languageName: node
   linkType: hard
 

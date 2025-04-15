@@ -1,29 +1,37 @@
 <script lang="ts">
-  import { ScrollArea as ScrollAreaPrimitive } from 'bits-ui'
-  import { Scrollbar } from './index.js'
-  import { cn } from '../../../../lib/utils.js'
+  import { ScrollArea as ScrollAreaPrimitive, type WithoutChild } from 'bits-ui'
+  import { Scrollbar } from './index'
+  import { cn } from '@lib/utils'
 
-  type $$Props = ScrollAreaPrimitive.Props & {
-    orientation?: 'vertical' | 'horizontal' | 'both'
-    scrollbarXClasses?: string
-    scrollbarYClasses?: string
+  let viewportEl: HTMLDivElement = $state(null)
+
+  let {
+    ref = $bindable(null),
+    class: className,
+    contentclass: contentClassName,
+    orientation = 'vertical',
+    scrollbarXClasses = '',
+    scrollbarYClasses = '',
+    children,
+    ...restProps
+  }: WithoutChild<ScrollAreaPrimitive.RootProps> & {
+    orientation?: 'vertical' | 'horizontal' | 'both' | undefined
     contentclass?: string | undefined
-  }
+    scrollbarXClasses?: string | undefined
+    scrollbarYClasses?: string | undefined
+  } = $props()
 
-  let className: $$Props['class'] = undefined
-  let contentClassName: $$Props['contentclass'] = undefined
-  export { className as class }
-  export { contentClassName as contentclass }
-  export let orientation = 'vertical'
-  export let scrollbarXClasses: string = ''
-  export let scrollbarYClasses: string = ''
+  $effect(() => {
+    viewportEl.querySelector('&>div').className = contentClassName ?? ''
+  })
 </script>
 
-<ScrollAreaPrimitive.Root {...$$restProps} class={cn('relative overflow-hidden', className)}>
-  <ScrollAreaPrimitive.Viewport class="h-full w-full rounded-[inherit]">
-    <ScrollAreaPrimitive.Content class={contentClassName ?? ''}>
-      <slot />
-    </ScrollAreaPrimitive.Content>
+<ScrollAreaPrimitive.Root bind:ref {...restProps} class={cn('relative overflow-hidden', className)}>
+  <ScrollAreaPrimitive.Viewport
+    class={cn('h-full w-full rounded-[inherit]', contentClassName)}
+    bind:ref={viewportEl}
+  >
+    {@render children?.()}
   </ScrollAreaPrimitive.Viewport>
   {#if orientation === 'vertical' || orientation === 'both'}
     <Scrollbar orientation="vertical" class={scrollbarYClasses} />

@@ -8,4 +8,12 @@
       "path": "./tsconfig.web.json",
     }
   ],
+  "compilerOptions": {
+    "composite": true,
+    "types": ["electron-vite/node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/renderer/src/*"],
+    }
+  }
 }

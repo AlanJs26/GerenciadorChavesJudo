@@ -6,6 +6,10 @@
   font-weight: normal;
 }
 
+*:focus-visible {
+  box-shadow: none!important;
+}
+
 ul {
   list-style: none;
 }

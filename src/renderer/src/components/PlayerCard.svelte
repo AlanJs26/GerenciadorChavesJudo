@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Player } from '@lib/types/bracket-lib'
 
-  export let player: Player
+  let { player = $bindable() }: { player: Player } = $props()
 </script>
 
 <button
@@ -19,7 +19,12 @@
     onclick={(e: Event): void => {
       e.stopPropagation()
     }}
-    bind:checked={player.present}
+    bind:checked={
+      () => player.present,
+      () => {
+        player.present = !player.present
+      }
+    }
   />
 </button>
 
