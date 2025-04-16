@@ -4,9 +4,9 @@
 </script>
 
 <script lang="ts" generics="TData, TValue">
-  import CirclePlus from '@lucide/svelte/icons/circle-plus'
-  import Check from '@lucide/svelte/icons/check'
-  import type { Column } from '@tanstack/table-core'
+  import { CirclePlus, Component } from '@lucide/svelte'
+  import { Check } from '@lucide/svelte'
+  import type { Column, Updater } from '@tanstack/table-core'
   import { SvelteSet } from 'svelte/reactivity'
   import * as Command from '@components/ui/command'
   import * as Popover from '@components/ui/popover'
@@ -20,24 +20,24 @@
     title: string
     options: {
       label: string
-      value: string
-      // This should be `Component` after @lucide/svelte updates types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      icon?: any
+      value: string | boolean
+      icon?: typeof Component
     }[]
   }
 
   let { column, title, options }: Props<TData, TValue> = $props()
 
+  type optionValue = (typeof options)[number]['value']
+
   const facets = $derived(column?.getFacetedUniqueValues())
-  const selectedValues = $derived(new SvelteSet(column?.getFilterValue() as string[]))
+  const selectedValues = $derived(new SvelteSet(column?.getFilterValue() as optionValue[]))
 </script>
 
 <Popover.Root>
   <Popover.Trigger>
     {#snippet child({ props })}
       <Button {...props} variant="outline" size="sm" class="h-8 border-dashed">
-        <CirclePlus />
+        <CirclePlus class="mr-1 w-4" />
         {title}
         {#if selectedValues.size > 0}
           <Separator orientation="vertical" class="mx-2 h-4" />

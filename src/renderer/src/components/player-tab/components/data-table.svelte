@@ -24,13 +24,14 @@
   import FlexRender from '@components/ui/data-table/flex-render.svelte'
   import * as Table from '@components/ui/table'
 
-  let { columns, data = $bindable() }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } = $props()
+  let { columns, data = $bindable() }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } =
+    $props()
 
   let rowSelection = $state<RowSelectionState>({})
   let columnVisibility = $state<VisibilityState>({})
   let columnFilters = $state<ColumnFiltersState>([])
   let sorting = $state<SortingState>([])
-  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 })
+  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 100 })
 
   const table = createSvelteTable({
     get data() {
@@ -54,7 +55,7 @@
       }
     },
     columns,
-    enableRowSelection: true,
+    enableRowSelection: false,
     onRowSelectionChange: (updater) => {
       if (typeof updater === 'function') {
         rowSelection = updater(rowSelection)
@@ -99,9 +100,9 @@
   })
 </script>
 
-<div class="space-y-4 h-full">
+<div class="h-full space-y-4">
   <DataTableToolbar {table} />
-  <div class="rounded-md border h-full">
+  <div class="h-full rounded-md border">
     <Table.Root class="h-full">
       <Table.Header>
         {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}

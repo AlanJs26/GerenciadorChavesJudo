@@ -10,10 +10,12 @@
   ],
   "compilerOptions": {
     "composite": true,
-    "types": ["electron-vite/node"],
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/renderer/src/*"],
-    }
+    },
+    "moduleResolution": "node",
+    "esModuleInterop": true
   }
 }

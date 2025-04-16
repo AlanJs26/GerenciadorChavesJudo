@@ -28,3 +28,10 @@ export type BracketCollection = {
   male: Record<string, Bracket>
   female: Record<string, Bracket>
 }
+
+export type PlayerColumn = Omit<
+  {
+    [K in keyof Player]: string
+  },
+  'contestantId'
+>

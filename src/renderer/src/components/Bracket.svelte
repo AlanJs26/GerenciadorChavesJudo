@@ -42,6 +42,7 @@
   let openCommand = $state(false)
   let commandValue = $state('')
   let selectedMatch = $state<Bracket['matches'][0]>()
+  let isBracketVisible = $state(false)
 
   let gender: 'male' | 'female' = $derived(isMale ? 'male' : 'female')
   let selectedBrackets = $derived(
@@ -65,6 +66,8 @@
         return
       }
     }
+
+    isBracketVisible = true
 
     if (bracketry) {
       bracketry.replaceData(currentBracket)
@@ -135,7 +138,7 @@
 
 <div class={cn('brackets-container', 'h-full w-full')}>
   <div class="categories p-2">
-    <ScrollArea contentclass="!flex flex-wrap justify-center">
+    <ScrollArea contentclass="!flex flex-wrap justify-center gap-1">
       {#each Object.entries(selectedBrackets) as [category]}
         <Badge
           variant={category == currentCategory ? 'default' : 'outline'}
@@ -158,7 +161,19 @@
   </div>
 
   {#snippet bracketsSnippet()}
-    <div class="brackets" bind:this={bracketsEl}></div>
+    <div class={'brackets ' + (!isBracketVisible ? 'hidden' : '')} bind:this={bracketsEl}></div>
+    {#if !isBracketVisible}
+      <div class="flex h-full w-full items-center justify-center text-center">
+        <span>
+          Nenhuma chave foi gerada!
+          <br />
+          <br />
+          Clique no botão "Gerar Chaves" parar criar chaves automaticamente
+          <br />
+          ou adicione uma Chave manualmente através do botão "+"
+        </span>
+      </div>
+    {/if}
   {/snippet}
   {@render contextmenu(bracketsSnippet)}
 </div>

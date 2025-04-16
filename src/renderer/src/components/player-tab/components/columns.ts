@@ -14,25 +14,25 @@ import { renderComponent, renderSnippet } from '@components/ui/data-table'
 import type { Player } from '@lib/types/bracket-lib'
 
 export const columns: ColumnDef<Player>[] = [
-  {
-    id: 'select',
-    header: ({ table }) =>
-      renderComponent(DataTableCheckbox, {
-        checked: table.getIsAllPageRowsSelected(),
-        onCheckedChange: (value) => table.toggleAllPageRowsSelected(!!value),
-        'aria-label': 'Select all',
-        class: 'translate-y-[2px]'
-      }),
-    cell: ({ row }) =>
-      renderComponent(DataTableCheckbox, {
-        checked: row.getIsSelected(),
-        onCheckedChange: (value) => row.toggleSelected(!!value),
-        'aria-label': 'Select row',
-        class: 'translate-y-[2px]'
-      }),
-    enableSorting: false,
-    enableHiding: false
-  },
+  // {
+  //   id: 'select',
+  //   header: ({ table }) =>
+  //     renderComponent(DataTableCheckbox, {
+  //       checked: table.getIsAllPageRowsSelected(),
+  //       onCheckedChange: (value) => table.toggleAllPageRowsSelected(!!value),
+  //       'aria-label': 'Select all',
+  //       class: 'translate-y-[2px]'
+  //     }),
+  //   cell: ({ row }) =>
+  //     renderComponent(DataTableCheckbox, {
+  //       checked: row.getIsSelected(),
+  //       onCheckedChange: (value) => row.toggleSelected(!!value),
+  //       'aria-label': 'Select row',
+  //       class: 'translate-y-[2px]'
+  //     }),
+  //   enableSorting: false,
+  //   enableHiding: false
+  // },
   {
     accessorKey: 'name',
     header: ({ column }): unknown => {
@@ -56,6 +56,9 @@ export const columns: ColumnDef<Player>[] = [
       return renderComponent(DataTableCell, {
         value: row.original.isMale ? 'Masc.' : 'Fem.'
       })
+    },
+    filterFn: (row, id, value): boolean => {
+      return value.includes(row.getValue(id))
     }
   },
   {
@@ -66,6 +69,9 @@ export const columns: ColumnDef<Player>[] = [
       return renderComponent(DataTableCell, {
         value: row.original.organization
       })
+    },
+    filterFn: (row, id, value): boolean => {
+      return value.includes(row.getValue(id))
     }
   },
   {
@@ -85,7 +91,7 @@ export const columns: ColumnDef<Player>[] = [
     }
   },
   {
-    accessorKey: 'presence',
+    accessorKey: 'present',
     header: ({ column }): unknown => {
       return renderComponent(DataTableColumnHeader<Player, unknown>, {
         title: 'Presença',

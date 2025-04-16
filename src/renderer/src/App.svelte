@@ -95,6 +95,7 @@
               rounds: []
             }
     })
+    console.log(newBrackets)
 
     brackets = newBrackets
   }
@@ -116,8 +117,8 @@
   onMount(() => {
     const randomN = [5, 10]
     organizations = generateRandomOrganizations(randomN[0], randomN[1])
-    generateAllBrackets()
-    bracketRenderer.update()
+    // generateAllBrackets()
+    // bracketRenderer.update()
   })
 </script>
 
@@ -137,13 +138,13 @@
       </RadioGroup.Item>
     </RadioGroup.Root>
 
-    <Input id="busca" class="w-100" placeholder="Filtrar..." bind:value={filterText} />
+    <Input id="busca" class="w-100" placeholder="Filtrar Nomes..." bind:value={filterText} />
 
     <Separator class="my-2" />
 
-    <ScrollArea class="flex-1">
-      {#each filteredPlayers as player, i}
-        <PlayerCard bind:player={filteredPlayers[i]} />
+    <ScrollArea class="flex-1" type="auto">
+      {#each filteredPlayers as _player, i}
+        <PlayerCard bind:player={() => filteredPlayers[i], () => {}} />
       {/each}
     </ScrollArea>
 

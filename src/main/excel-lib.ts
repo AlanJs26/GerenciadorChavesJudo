@@ -3,7 +3,7 @@ import type { Organization, Player } from '@lib/types/bracket-lib'
 import { dialog } from 'electron'
 
 export async function organizationFromFile(
-  event: Electron.IpcMainInvokeEvent,
+  _event: Electron.IpcMainInvokeEvent,
   path: string
 ): Promise<Organization> {
   const workbook = new ExcelJS.Workbook()
@@ -22,14 +22,9 @@ export async function organizationFromFile(
   const organizationCell = worksheet.getRow(5).getCell(2).value as string
   organization.organization = organizationCell.replace('COLÉGIO / INSTITUIÇÃO:', '').trim()
 
-  const lastRow = worksheet?.lastRow?.number
-  if (!lastRow) {
-    return organization
-  }
-  const rows = worksheet.getRows(12, lastRow)
-  if (!rows) {
-    return organization
-  }
+  const lastRow = worksheet?.lastRow?.number ?? 0
+  const rows = worksheet.getRows(12, lastRow) ?? []
+
   for (const row of rows) {
     const values = row.values
 
@@ -45,9 +40,9 @@ export async function organizationFromFile(
     }
 
     organization.players.push({
-      name: values[2],
-      isMale: values[3] == 'MASC.',
-      category: values[4] ?? ''
+      name: (values[2] as string)?.trim() ?? '',
+      isMale: ['m', 'h'].includes((values[3] as string)?.toLowerCase().trim().at(0) ?? '$'),
+      category: values[4]?.replaceAll(/\(\s*?(FEM|MASC)\s*?\)/g, '').replaceAll(/\s+/g, ' ') ?? ''
     })
   }
 
@@ -55,7 +50,7 @@ export async function organizationFromFile(
 }
 
 export async function exportPlayers(
-  event: Electron.IpcMainInvokeEvent,
+  _event: Electron.IpcMainInvokeEvent,
   players: Player[]
 ): Promise<void> {
   const dialogResult = await dialog.showSaveDialog({
