@@ -11,7 +11,7 @@
   }}
 >
   <div class="w-full flex-1 items-start">
-    <span>{player.name}</span>
+    <span class="text-start">{player.name}</span>
     <span class="organization text-start">{player.organization}<br />{player.category}</span>
   </div>
   <input

@@ -172,16 +172,10 @@
         <Tabs.Trigger value="chaves">Chaves</Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="participantes" class="h-[calc(100%-10em)]">
-        <PlayerTab bind:players={playersStore.players} />
+        <PlayerTab />
       </Tabs.Content>
       <Tabs.Content value="chaves" class="mt-0 h-full w-full">
-        <Bracket
-          bind:this={bracketRenderer}
-          {brackets}
-          players={playersStore.players}
-          category={currentCategory}
-          {isMale}
-        />
+        <Bracket bind:this={bracketRenderer} {brackets} category={currentCategory} {isMale} />
       </Tabs.Content>
     </Tabs.Root>
   </div>

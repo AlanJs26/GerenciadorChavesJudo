@@ -9,20 +9,13 @@
   import Button from '@components/ui/button/button.svelte'
   import { Input } from '@components/ui/input'
   import type { PlayerColumn } from '@lib/types/bracket-lib'
+  import { buildColFn } from '@lib/utils'
 
   let { table }: { table: Table<TData> } = $props()
 
-  const isFiltered = $derived(table.getState().columnFilters.length > 0)
+  const colFn = buildColFn<TData>(table)
 
-  function colFn(key: string, mapFn?: (value: unknown) => string) {
-    return Array.from(
-      new Set(table.getPreFilteredRowModel().flatRows.map((row) => row.original[key]))
-    ).map((value) => ({
-      value,
-      label: mapFn ? mapFn(value) : value,
-      icon: undefined
-    }))
-  }
+  const isFiltered = $derived(table.getState().columnFilters.length > 0)
 
   const organizationCol = $derived(table.getColumn('organization'))
   const organizations = $derived(colFn('organization'))

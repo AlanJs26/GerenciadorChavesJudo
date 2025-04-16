@@ -23,6 +23,7 @@
   import { createSvelteTable } from '@components/ui/data-table/data-table.svelte'
   import FlexRender from '@components/ui/data-table/flex-render.svelte'
   import * as Table from '@components/ui/table'
+  import type { Player } from '@lib/types/bracket-lib'
 
   let { columns, data = $bindable() }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } =
     $props()
@@ -56,6 +57,15 @@
     },
     columns,
     enableRowSelection: false,
+    meta: {
+      removePlayer: (player: Player) => {
+        const index = (data as Player[]).findIndex((p) => p.contestantId == player.contestantId)
+        if (index !== -1) {
+          data.splice(index, 1)
+        }
+        data = [...data]
+      }
+    },
     onRowSelectionChange: (updater) => {
       if (typeof updater === 'function') {
         rowSelection = updater(rowSelection)

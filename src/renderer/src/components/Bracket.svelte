@@ -10,14 +10,13 @@
   import { installBracketUI, get_match_data_for_element } from '../bracket-lib/rendering'
   import { buttonVariants } from './ui/button'
   import { cn } from '@lib/utils'
+  import { playersStore } from '@/states/players.svelte'
 
   let {
-    players,
     brackets,
     isMale,
     category: currentCategory
   }: {
-    players: Player[]
     brackets: BracketCollection
     category: string
     isMale: boolean
@@ -27,10 +26,10 @@
   let bracketry: ReturnType<typeof createBracket> = null
 
   let filteredPlayers = $derived(
-    players.filter((player) => player.isMale == isMale && player.present)
+    playersStore.players.filter((player) => player.isMale == isMale && player.present)
   )
   let playerNameByContestantId = $derived(
-    players.reduce((acc, player) => {
+    playersStore.players.reduce((acc, player) => {
       if (player.contestantId) {
         acc[player.contestantId] = player.name
       }

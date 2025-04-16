@@ -1,10 +1,30 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { cubicOut } from 'svelte/easing'
+import type { Table } from '@tanstack/table-core'
 import type { TransitionConfig } from 'svelte/transition'
+import { Component } from '@lucide/svelte'
 
 export function cn(...inputs: ClassValue[]): ReturnType<typeof twMerge> {
   return twMerge(clsx(inputs))
+}
+
+export function buildColFn<TData>(table: Table<TData>) {
+  return (
+    key: string,
+    mapFn?: (value: unknown) => string
+  ): {
+    value: string | boolean
+    label: string
+    icon: typeof Component | undefined
+  }[] =>
+    Array.from(
+      new Set(table.getPreFilteredRowModel().flatRows.map((row) => row.original[key]))
+    ).map((value) => ({
+      value,
+      label: mapFn ? mapFn(value) : value,
+      icon: undefined
+    }))
 }
 
 type FlyAndScaleParams = {

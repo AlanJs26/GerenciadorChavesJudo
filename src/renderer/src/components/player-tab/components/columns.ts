@@ -109,6 +109,6 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     id: 'actions',
-    cell: () => renderComponent(DataTableRowActions<Player>, {})
+    cell: ({ row, table }) => renderComponent(DataTableRowActions<Player>, { row, table })
   }
 ]
