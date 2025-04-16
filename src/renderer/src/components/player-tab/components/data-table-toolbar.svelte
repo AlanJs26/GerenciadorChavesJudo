@@ -5,11 +5,10 @@
 <script lang="ts" generics="TData">
   import { X } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
-  import { priorities, statuses } from '../(data)/data'
   import { DataTableFacetedFilter, DataTableViewOptions } from './index'
   import Button from '@components/ui/button/button.svelte'
   import { Input } from '@components/ui/input'
-  import type { Player, PlayerColumn } from '@lib/types/bracket-lib'
+  import type { PlayerColumn } from '@lib/types/bracket-lib'
 
   let { table }: { table: Table<TData> } = $props()
 

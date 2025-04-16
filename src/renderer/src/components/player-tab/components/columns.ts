@@ -1,16 +1,16 @@
 import type { ColumnDef } from '@tanstack/table-core'
-import { createRawSnippet } from 'svelte'
-import type { Task } from '../(data)/schemas'
+// import { createRawSnippet } from 'svelte'
+// import type { Task } from '../(data)/schemas'
 import {
-  DataTableCheckbox,
+  // DataTableCheckbox,
   DataTableColumnHeader,
   DataTableCell,
-  DataTablePriorityCell,
-  DataTableRowActions,
-  DataTableStatusCell,
-  DataTableTitleCell
+  // DataTablePriorityCell,
+  // DataTableStatusCell,
+  // DataTableTitleCell,
+  DataTableRowActions
 } from './index'
-import { renderComponent, renderSnippet } from '@components/ui/data-table'
+import { renderComponent } from '@components/ui/data-table'
 import type { Player } from '@lib/types/bracket-lib'
 
 export const columns: ColumnDef<Player>[] = [
@@ -109,6 +109,6 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => renderComponent(DataTableRowActions<Player>, { row })
+    cell: () => renderComponent(DataTableRowActions<Player>, {})
   }
 ]

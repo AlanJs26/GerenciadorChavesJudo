@@ -6,7 +6,7 @@
 <script lang="ts" generics="TData, TValue">
   import { CirclePlus, Component } from '@lucide/svelte'
   import { Check } from '@lucide/svelte'
-  import type { Column, Updater } from '@tanstack/table-core'
+  import type { Column } from '@tanstack/table-core'
   import { SvelteSet } from 'svelte/reactivity'
   import * as Command from '@components/ui/command'
   import * as Popover from '@components/ui/popover'

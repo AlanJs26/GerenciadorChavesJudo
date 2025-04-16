@@ -46,7 +46,7 @@
 
   let gender: 'male' | 'female' = $derived(isMale ? 'male' : 'female')
   let selectedBrackets = $derived(
-    filterObject<Record<string, Bracket>>(brackets[gender], (key, v) => v.matches.length > 0)
+    filterObject<Record<string, Bracket>>(brackets[gender], (_key, v) => v.matches.length > 0)
   )
 
   let currentBracket = $derived(
