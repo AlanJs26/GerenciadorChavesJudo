@@ -16,11 +16,17 @@ function generateTournamentOrder(size: number): number[] {
   return result
 }
 
+export const ROUNDS = ['1', '2', '3', '4', 'FIM']
+
+export function roundsBySize(size: number): string[] {
+  const numRounds = Math.ceil(Math.log2(size))
+  return ROUNDS.slice(0, Math.max(numRounds, 1))
+}
+
 // ==================== Bracket Generation ====================
 export function buildBracket(players: Player[]): Bracket {
   const numPlayers = players.length
-  const nMatches = (numPlayers + 1 - ((numPlayers + 1) % 2)) / 2
-  const rounds = ['1', '2', '3', '4', 'FIM'].slice(0, nMatches)
+  const rounds = roundsBySize(numPlayers)
   const order = generateTournamentOrder(2 ** Math.ceil(Math.log2(numPlayers)))
 
   // Create contestant objects

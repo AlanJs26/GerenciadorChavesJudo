@@ -1,3 +1,8 @@
+export type Organization = {
+  organization: string
+  players: Omit<Player, 'organization' | 'present' | 'contestantId'>[]
+}
+
 export type Player = {
   name: string
   isMale: boolean
@@ -7,26 +12,23 @@ export type Player = {
   contestantId: string
 }
 
-export type Organization = {
-  organization: string
-  players: Omit<Player, 'organization' | 'present' | 'contestantId'>[]
-}
-
-export type Match = {
-  roundIndex: number
-  order: number
-  sides: { contestantId: string }[]
+export type BracketCollection = {
+  male: Record<string, Bracket>
+  female: Record<string, Bracket>
 }
 
 export type Bracket = {
   rounds: { name: string }[]
-  contestants: Record<string, { players: { title: string; nationality: string }[] }>
+  contestants: Record<string, Contestant>
   matches: Match[]
 }
 
-export type BracketCollection = {
-  male: Record<string, Bracket>
-  female: Record<string, Bracket>
+export type Contestant = { players: { title: string; nationality: string }[] }
+
+export type Match = {
+  roundIndex: number
+  order: number
+  sides: { contestantId?: string }[]
 }
 
 export type PlayerColumn = Omit<

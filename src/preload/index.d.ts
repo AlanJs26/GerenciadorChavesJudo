@@ -7,6 +7,7 @@ declare global {
     api: {
       organizationFromFile: (file: File) => Promise<Organization>
       exportPlayers: (players: PlayerColumn[]) => Promise<void>
+      printPDF: () => Promise<string>
     }
   }
 }

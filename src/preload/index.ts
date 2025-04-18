@@ -8,7 +8,8 @@ const api = {
   organizationFromFile: (file: File): Promise<Organization> =>
     ipcRenderer.invoke('dialog:organizationFromFile', webUtils.getPathForFile(file)),
   exportPlayers: (players: Player[]): Promise<void> =>
-    ipcRenderer.invoke('dialog:exportPlayers', players)
+    ipcRenderer.invoke('dialog:exportPlayers', players),
+  printPDF: (): Promise<string> => ipcRenderer.invoke('dialog:printPDF')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -8,7 +8,8 @@ import {
   // DataTablePriorityCell,
   // DataTableStatusCell,
   // DataTableTitleCell,
-  DataTableRowActions
+  DataTableRowActions,
+  DataTableAddButton
 } from './index'
 import { renderComponent } from '@components/ui/data-table'
 import type { Player } from '@lib/types/bracket-lib'
@@ -109,6 +110,11 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     id: 'actions',
+    header: ({ table }): unknown => {
+      return renderComponent(DataTableAddButton<Player>, {
+        table
+      })
+    },
     cell: ({ row, table }) => renderComponent(DataTableRowActions<Player>, { row, table })
   }
 ]

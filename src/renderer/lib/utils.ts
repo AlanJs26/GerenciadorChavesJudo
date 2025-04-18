@@ -27,6 +27,19 @@ export function buildColFn<TData>(table: Table<TData>) {
     }))
 }
 
+export function randomContestantId(): string {
+  return Math.floor(Math.random() * 10000).toString()
+}
+
+export function filterObject<T extends object>(
+  obj: T,
+  predicate: (key: string, value: T[keyof T]) => boolean
+): T {
+  return Object.keys(obj)
+    .filter((key) => predicate(key, obj[key]))
+    .reduce((res, key) => ((res[key] = obj[key]), res), {} as T)
+}
+
 type FlyAndScaleParams = {
   y?: number
   x?: number

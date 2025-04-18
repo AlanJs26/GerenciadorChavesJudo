@@ -24,6 +24,7 @@
   import FlexRender from '@components/ui/data-table/flex-render.svelte'
   import * as Table from '@components/ui/table'
   import type { Player } from '@lib/types/bracket-lib'
+  import { randomContestantId } from '@lib/utils'
 
   let { columns, data = $bindable() }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } =
     $props()
@@ -62,8 +63,17 @@
         const index = (data as Player[]).findIndex((p) => p.contestantId == player.contestantId)
         if (index !== -1) {
           data.splice(index, 1)
+          data = [...data]
         }
-        data = [...data]
+      },
+      addPlayer: (player: Omit<Player, 'contestantId'>) => {
+        const players = data as Player[]
+        let contestantId = randomContestantId()
+        while (players.find((p) => p.contestantId == contestantId)) {
+          contestantId = randomContestantId()
+        }
+        players.push({ ...player, contestantId })
+        ;(data as Player[]) = [...players]
       }
     },
     onRowSelectionChange: (updater) => {

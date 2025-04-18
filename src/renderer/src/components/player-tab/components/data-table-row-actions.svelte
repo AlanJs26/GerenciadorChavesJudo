@@ -4,7 +4,6 @@
 
 <script lang="ts" generics="TData">
   import { Ellipsis } from '@lucide/svelte'
-  import type { Row } from '@tanstack/table-core'
   import * as DropdownMenu from '@components/ui/dropdown-menu'
   import * as Popover from '@components/ui/popover'
   import { Button } from '@components/ui/button'
@@ -14,9 +13,10 @@
   import { cn } from '@lib/utils'
   import type { Player } from '@lib/types/bracket-lib'
   import type { PlayerTableMeta } from '@lib/types/player-table'
-  import { playersStore } from '@/states/players.svelte'
+  import { playersStore } from '@/states.svelte'
   import * as Select from '@components/ui/select'
   import type { Table } from '@tanstack/table-core'
+  import type { Row } from '@tanstack/table-core'
 
   let { row, table }: { row: Row<TData>; table: Table<TData> } = $props()
   const player = $derived(row.original as Player)
@@ -124,7 +124,6 @@
                   <Label for="width">{playerInputLabels[key]}</Label>
                   <Select.Root
                     type="single"
-                    name="favoriteFruit"
                     bind:value={
                       () => selectedValues[key] ?? '',
                       (v) => {
@@ -141,7 +140,6 @@
                     <Select.Trigger class="w-[180px]">{selectedValues[key]}</Select.Trigger>
                     <Select.Content>
                       <Select.Group>
-                        <Select.GroupHeading>Fruits</Select.GroupHeading>
                         {#each inputType as item}
                           {#if typeof item == 'string'}
                             <Select.Item value={item} label={item}>{item}</Select.Item>

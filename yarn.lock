@@ -4157,12 +4157,14 @@ __metadata:
     eslint-plugin-svelte: "npm:^2.46.1"
     exceljs: "npm:^4.4.0"
     lucide-svelte: "npm:^0.488.0"
+    mode-watcher: "npm:^1.0.2"
     module-alias: "npm:^2.2.3"
     prettier: "npm:^3.5.3"
     prettier-plugin-svelte: "npm:^3.3.3"
     prettier-plugin-tailwindcss: "npm:^0.6.10"
     svelte: "npm:^5.25.3"
     svelte-check: "npm:^4.1.5"
+    svelte-sonner: "npm:^0.3.28"
     tailwind-merge: "npm:^3.2.0"
     tailwind-variants: "npm:^1.0.0"
     tailwindcss: "npm:^3.4.17"
@@ -4753,6 +4755,18 @@ __metadata:
   bin:
     mkdirp: dist/cjs/src/bin.js
   checksum: 10c0/9f2b975e9246351f5e3a40dcfac99fcd0baa31fbfab615fe059fb11e51f10e4803c63de1f384c54d656e4db31d000e4767e9ef076a22e12a641357602e31d57d
+  languageName: node
+  linkType: hard
+
+"mode-watcher@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "mode-watcher@npm:1.0.2"
+  dependencies:
+    runed: "npm:^0.25.0"
+    svelte-toolbelt: "npm:^0.7.1"
+  peerDependencies:
+    svelte: ^5.27.0
+  checksum: 10c0/bd7fb756c916d1c186a5871f085b1116b054b4365f26630adecdf482b4232492a641aa1a5a98b63fc86b73ba22fb34075aa0c4359e538a12129cc517e3b43d5c
   languageName: node
   linkType: hard
 
@@ -5750,6 +5764,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"runed@npm:^0.25.0":
+  version: 0.25.0
+  resolution: "runed@npm:0.25.0"
+  dependencies:
+    esm-env: "npm:^1.0.0"
+  peerDependencies:
+    svelte: ^5.7.0
+  checksum: 10c0/e371d5f1ec179ff516c7a7f1f9341c03f7f5a8fdf45d86b61c697c1265794e768eb4f72f008f724a9306e1b83b66b7aacf1a9aa7eae5f9af043e26b4cd44462d
+  languageName: node
+  linkType: hard
+
 "sade@npm:^1.7.4":
   version: 1.8.1
   resolution: "sade@npm:1.8.1"
@@ -6148,6 +6173,15 @@ __metadata:
     svelte:
       optional: true
   checksum: 10c0/52bbbf5d266fc36f64626e38d8de4354d78a5490fa60b61b1cd127c1c661d94f0c671a220e3ed7dd92b144a3c99f517d5205c218f78feea0603132f24eeb4c9d
+  languageName: node
+  linkType: hard
+
+"svelte-sonner@npm:^0.3.28":
+  version: 0.3.28
+  resolution: "svelte-sonner@npm:0.3.28"
+  peerDependencies:
+    svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.1
+  checksum: 10c0/47db67b3a4c7c31be620e16c1bc88b392e8e8d8434e9e314efc771776c24ea35ebd69b196f2d5376b2526db839ddba4cc41e6da0c0b457b7f6d5253724741499
   languageName: node
   linkType: hard
 

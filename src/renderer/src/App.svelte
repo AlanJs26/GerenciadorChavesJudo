@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
 
-  import type { Organization, BracketCollection, Player } from '@lib/types/bracket-lib'
+  import type { Organization, Player } from '@lib/types/bracket-lib'
   import { buildBracket, generateRandomOrganizations } from './bracket-lib'
 
   import { Bolt, FileDown } from '@lucide/svelte'
@@ -16,7 +16,9 @@
   import * as RadioGroup from '@components/radio-group'
   import * as Tabs from '@components/ui/tabs'
   import PlayerTab from './components/player-tab/PlayerTab.svelte'
-  import { playersStore } from './states/players.svelte'
+  import { playersStore, bracketsStore } from './states.svelte'
+  import { randomContestantId } from '@lib/utils'
+  import { Toaster } from '@components/ui/sonner'
 
   // ==================== DOM References ====================
   let bracketRenderer: Bracket
@@ -26,11 +28,11 @@
   let radio_sex = $state('Feminino')
   let currentCategory = $state('')
   let organizations: Organization[] = $state([])
-  let brackets = $state<BracketCollection>({ male: {}, female: {} })
   let filterText = $state('')
 
   // ==================== Computed Values ====================
   let isMale = $derived(radio_sex === 'Masculino')
+  const gender = $derived(isMale ? 'male' : 'female')
 
   $effect(() => {
     playersStore.players = organizations
@@ -40,7 +42,7 @@
             ...player,
             organization: org.organization,
             present: true,
-            contestantId: Math.floor(Math.random() * 10000).toString()
+            contestantId: randomContestantId()
           }))
         )
       }, [])
@@ -66,7 +68,13 @@
     )
   )
   let categories = $derived(
-    Array.from(new Set(playersStore.players.map((player) => `${player.category}¨${player.isMale}`)))
+    Array.from(
+      new Set(
+        playersStore.players
+          .map((player) => `${player.category}¨${player.isMale}`)
+          .concat(Object.keys(bracketsStore.brackets[gender]).map((c) => `${c}¨${isMale}`))
+      )
+    )
       .map((key) => {
         const [category, isMale] = key.split('¨')
         return { category, isMale: isMale === 'true', state: true }
@@ -76,34 +84,21 @@
 
   // ==================== State Update Functions ====================
   function generateAllBrackets(): void {
-    // Create a new object to trigger reactivity
-    const newBrackets: BracketCollection = { male: {}, female: {} }
-
     // Generate brackets for each category and gender
-    categories.forEach(({ category, state, isMale }) => {
-      if (!state) return
+    for (const { category, state, isMale } of categories) {
+      if (!state) continue
 
       const genderPlayers = playersStore.players.filter(
         (player) => player.present && player.category === category && player.isMale === isMale
       )
-      newBrackets[isMale ? 'male' : 'female'][category] =
-        genderPlayers.length > 0
-          ? buildBracket(genderPlayers)
-          : {
-              contestants: {},
-              matches: [],
-              rounds: []
-            }
-    })
-    console.log(newBrackets)
 
-    brackets = newBrackets
+      if (genderPlayers.length === 0) continue
+
+      bracketsStore.brackets[isMale ? 'male' : 'female'][category] = buildBracket(genderPlayers)
+    }
   }
 
   // ==================== Lifecycle Hooks ====================
-  $effect(() => {
-    bracketRenderer.update()
-  })
 
   $effect(() => {
     if (!files) return
@@ -121,6 +116,8 @@
     // bracketRenderer.update()
   })
 </script>
+
+<Toaster />
 
 <main>
   <aside class="p-1">
@@ -142,7 +139,7 @@
 
     <Separator class="my-2" />
 
-    <ScrollArea class="flex-1" type="auto">
+    <ScrollArea class="flex flex-1 flex-col" type="auto">
       {#each filteredPlayers as _player, i}
         <PlayerCard bind:player={() => filteredPlayers[i], () => {}} />
       {/each}
@@ -160,13 +157,13 @@
         onclick={(): void => {
           generateAllBrackets()
           bracketRenderer.update()
-        }}>Gerar Chaves</Button
+        }}>Atualizar Chaves</Button
       >
     </div>
   </aside>
 
   <div class="tabs-container">
-    <Tabs.Root value="participantes" class="h-full w-full">
+    <Tabs.Root value="chaves" class="h-full w-full">
       <Tabs.List class="grid w-full grid-cols-2">
         <Tabs.Trigger value="participantes">Participantes</Tabs.Trigger>
         <Tabs.Trigger value="chaves">Chaves</Tabs.Trigger>
@@ -175,7 +172,7 @@
         <PlayerTab />
       </Tabs.Content>
       <Tabs.Content value="chaves" class="mt-0 h-full w-full">
-        <Bracket bind:this={bracketRenderer} {brackets} category={currentCategory} {isMale} />
+        <Bracket bind:this={bracketRenderer} category={currentCategory} {isMale} />
       </Tabs.Content>
     </Tabs.Root>
   </div>

@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs'
 import type { Organization, Player } from '@lib/types/bracket-lib'
-import { dialog } from 'electron'
+import { dialog, shell, BrowserWindow } from 'electron'
+import fs from 'fs/promises'
 
 export async function organizationFromFile(
   _event: Electron.IpcMainInvokeEvent,
@@ -92,4 +93,40 @@ export async function exportPlayers(
   })
 
   workbook.xlsx.writeFile(filePath)
+}
+
+export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<string> {
+  const win = BrowserWindow.fromWebContents(event.sender)
+
+  if (!win) {
+    throw new Error('No window found for the given web contents')
+  }
+
+  const dialogResult = await dialog.showSaveDialog({
+    title: 'Exportar Chave para PDF',
+    defaultPath: `chave.pdf`,
+    filters: [
+      {
+        name: 'PDF',
+        extensions: ['pdf']
+      }
+    ]
+  })
+
+  if (dialogResult.canceled || !dialogResult.filePath) {
+    throw new Error('Exportação cancelada')
+  }
+  const filePath = dialogResult.filePath
+
+  const data = await win.webContents.printToPDF({
+    // printBackground: true,
+    landscape: true
+    // preferCSSPageSize: true
+  })
+
+  await fs.writeFile(filePath, data)
+
+  shell.openExternal('file://' + filePath)
+
+  return filePath
 }
