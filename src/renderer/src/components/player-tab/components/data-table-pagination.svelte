@@ -9,7 +9,7 @@
   import { ChevronsLeft } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
   import * as Select from '@components/ui/select'
-  import { Button } from '@components/ui/button'
+  import { Button } from '@/components/ui/button-old'
 
   let { table }: { table: Table<TData> } = $props()
 </script>

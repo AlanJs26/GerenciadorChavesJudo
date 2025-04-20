@@ -19,7 +19,7 @@ export function installBracketUI(
   const bracketry = createBracket(data, domEl, {
     navButtonsPosition: 'overTitles',
     width: '100%',
-    height: '100%',
+    height: '100%'
   })
 
   if (oncontextmenu) {

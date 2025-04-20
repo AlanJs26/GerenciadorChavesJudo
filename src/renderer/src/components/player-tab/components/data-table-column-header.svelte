@@ -13,7 +13,7 @@
   import type { WithoutChildren } from 'bits-ui'
   import { cn } from '@lib/utils'
   import * as DropdownMenu from '@components/ui/dropdown-menu'
-  import Button from '@components/ui/button/button.svelte'
+  import Button from '@/components/ui/button-old/button.svelte'
 
   type Props = HTMLAttributes<HTMLDivElement> & {
     column: Column<TData, TValue>

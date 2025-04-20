@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as DropdownMenu from '@components/ui/dropdown-menu'
-  import { buttonVariants } from '@components/ui/button'
+  import { buttonVariants } from '@/components/ui/button-old'
   import { ScrollArea } from '@components/ui/scroll-area'
   import type { Snippet } from 'svelte'
 

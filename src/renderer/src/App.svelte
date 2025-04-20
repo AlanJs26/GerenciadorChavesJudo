@@ -2,10 +2,10 @@
   import { onMount } from 'svelte'
 
   import type { Organization, Player } from '@lib/types/bracket-lib'
-  import { buildBracket, generateRandomOrganizations } from './bracket-lib'
+  import { buildBracket, generateRandomOrganizations } from '@lib/bracket-lib'
 
   import { Bolt, FileDown } from '@lucide/svelte'
-  import { Button } from '@components/ui/button'
+  import { Button } from '@/components/ui/button-old'
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Input } from '@components/ui/input'
   import { Separator } from '@components/ui/separator'
@@ -19,6 +19,8 @@
   import { playersStore, bracketsStore } from './states.svelte'
   import { randomContestantId } from '@lib/utils'
   import { Toaster } from '@components/ui/sonner'
+  import type { ErrorObject, ExcelOrganizationError, ExcelPlayerError } from '@lib/types/errors'
+  import { toast } from 'svelte-sonner'
 
   // ==================== DOM References ====================
   let bracketRenderer: Bracket
@@ -94,24 +96,76 @@
 
       if (genderPlayers.length === 0) continue
 
-      bracketsStore.brackets[isMale ? 'male' : 'female'][category] = buildBracket(genderPlayers)
+      function splitEvenly<T>(list: T[], nGroups: number): T[][] {
+        const result: T[][] = Array.from({ length: nGroups }, () => [])
+        for (let i = 0; i < list.length; i++) {
+          result[i % nGroups].push(list[i])
+        }
+        return result
+      }
+
+      const maxChunk = 8
+      const nChunks = Math.ceil(genderPlayers.length / maxChunk)
+      const chunks = splitEvenly(genderPlayers, nChunks)
+
+      const letterGen = (n) => {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        return letters[n % letters.length]
+      }
+      for (const [i, chunk] of chunks.entries()) {
+        const categoryName = chunks.length > 1 ? `${category} (${letterGen(i)})` : category
+        bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = buildBracket(chunk)
+      }
+
+      console.log(
+        category,
+        genderPlayers.length,
+        nChunks,
+        chunks.map((chunk) => chunk.map((c) => c.name))
+      )
     }
   }
 
   // ==================== Lifecycle Hooks ====================
 
+  function handleError(error: ErrorObject | null): void {
+    if (!error) return
+    if (error.name == 'ExcelPlayerError') {
+      const { cause } = error as ExcelPlayerError
+      toast.error(`Erro ao importar ${cause.file}: ${cause.message} (N: ${cause.n})`)
+    } else if (error.name == 'ExcelOrganizationError') {
+      const { cause } = error as ExcelOrganizationError
+      toast.error(`Erro ao importar ${cause.file}: ${cause.message} (Cell: ${cause.cell})`)
+    } else {
+      const cause = error.cause
+      toast.error(`Erro ao importar ${cause.file}`)
+    }
+    console.error('Erro ao importar arquivos:', error.cause)
+  }
+
   $effect(() => {
     if (!files) return
     ;(async (): Promise<void> => {
-      organizations = await Promise.all(
-        Array.from(files).map((file) => window.api.organizationFromFile(file))
-      )
+      try {
+        organizations = await Promise.all(
+          Array.from(files).map(async (file) => {
+            const { result, error } = await window.api.organizationFromFile(file)
+            handleError(error)
+            return result
+          })
+        )
+        // Remove arquivos que falharam
+        organizations = organizations.filter(Boolean)
+      } catch (err) {
+        toast.error(`Erro ao importar arquivos`)
+        console.error('Erro ao importar arquivos:', err)
+      }
     })()
   })
 
   onMount(() => {
-    const randomN = [5, 10]
-    organizations = generateRandomOrganizations(randomN[0], randomN[1])
+    const randomN = [5, 20]
+    // organizations = generateRandomOrganizations(randomN[0], randomN[1])
     // generateAllBrackets()
     // bracketRenderer.update()
   })

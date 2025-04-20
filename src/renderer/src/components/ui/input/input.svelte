@@ -4,7 +4,7 @@
   import { cn } from '@lib/utils'
 
   type $$Props = HTMLInputAttributes
-  type $$Events = InputEvents
+  type _$$Events = InputEvents
 
   let className: $$Props['class'] = undefined
   export let value: $$Props['value'] = undefined

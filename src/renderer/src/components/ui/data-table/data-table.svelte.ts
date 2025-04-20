@@ -36,6 +36,7 @@ export function createSvelteTable<TData extends RowData>(options: TableOptions<T
   const resolvedOptions: TableOptionsResolved<TData> = mergeObjects(
     {
       state: {},
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onStateChange() {},
       renderFallbackValue: null,
       mergeOptions: (

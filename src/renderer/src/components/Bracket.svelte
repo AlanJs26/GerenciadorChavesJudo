@@ -7,8 +7,8 @@
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Badge } from '@components/ui/badge'
   import { Plus, Trash2 } from '@lucide/svelte'
-  import { installBracketUI, get_match_data_for_element } from '../bracket-lib/rendering'
-  import { Button, buttonVariants } from '@components/ui/button'
+  import { installBracketUI, get_match_data_for_element } from '@lib/bracket-lib/rendering'
+  import { Button, buttonVariants } from '@/components/ui/button-old'
   import { cn } from '@lib/utils'
   import { playersStore, bracketsStore } from '@/states.svelte'
   import { Label } from '@components/ui/label'
@@ -17,7 +17,7 @@
   import type { Snippet } from 'svelte'
   import { toast } from 'svelte-sonner'
   import * as Select from '@components/ui/select'
-  import { roundsBySize } from '@/bracket-lib'
+  import { roundsBySize } from '@lib/bracket-lib'
 
   let {
     isMale,
@@ -501,6 +501,7 @@ MARK: New Player
     & .brackets {
       min-width: 0;
       min-height: 0;
+      height: calc(100% - 80px);
     }
   }
   .fullscreen {
@@ -509,5 +510,6 @@ MARK: New Player
     left: 0;
     z-index: 100;
     background: white;
+    height: 100vh !important;
   }
 </style>

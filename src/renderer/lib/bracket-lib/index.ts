@@ -6,7 +6,7 @@ function generateTournamentOrder(size: number): number[] {
 
   const halfSize = Math.max(Math.floor(size / 2), 1)
   const halfOrder = generateTournamentOrder(halfSize)
-  const result = []
+  const result: number[] = []
 
   for (let i = 0; i < halfOrder.length; i++) {
     result.push(halfOrder[i])

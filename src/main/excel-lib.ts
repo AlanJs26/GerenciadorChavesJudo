@@ -1,12 +1,37 @@
 import ExcelJS from 'exceljs'
 import type { Organization, Player } from '@lib/types/bracket-lib'
 import { dialog, shell, BrowserWindow } from 'electron'
+import type { ResultError } from '@lib/types/errors'
 import fs from 'fs/promises'
+
+function cellToText(value: ExcelJS.CellValue | undefined): string {
+  if (value === undefined || value === null) return ''
+  if (typeof value === 'object' && 'richText' in value) {
+    // Rich text cell
+    return value.richText.map((t) => t.text).join('')
+  }
+  if (typeof value === 'object' && 'text' in value) {
+    // Formula or shared string
+    return value.text
+  }
+  return value.toString()
+}
+
+function toTitleCase(str: string): string {
+  return str.replace(
+    /\w\S*/g,
+    (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+  )
+}
+
+function normalizeCategory(category: string | undefined): string {
+  return category?.replaceAll(/\(\s*?(FEM|MASC)\s*?\)/g, '')?.replaceAll(/\s+/g, ' ') ?? ''
+}
 
 export async function organizationFromFile(
   _event: Electron.IpcMainInvokeEvent,
   path: string
-): Promise<Organization> {
+): Promise<ResultError<Organization>> {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.readFile(path)
 
@@ -17,37 +42,79 @@ export async function organizationFromFile(
 
   const worksheet = workbook.getWorksheet('Planilha1')
   if (worksheet === undefined) {
-    return organization
+    return {
+      error: {
+        name: 'ExcelOrganizationError',
+        cause: {
+          file: path,
+          message: 'Planilha não encontrada'
+        }
+      },
+      result: null
+    }
   }
 
-  const organizationCell = worksheet.getRow(5).getCell(2).value as string
-  organization.organization = organizationCell.replace('COLÉGIO / INSTITUIÇÃO:', '').trim()
+  const organizationCell = cellToText(worksheet.getRow(5).getCell(2).value)
+  organization.organization = toTitleCase(
+    organizationCell.replace(/COLÉGIO \/ INSTITUIÇÃO:\s*(.+)/i, '$1').trim()
+  )
+  if (!organization.organization) {
+    return {
+      error: {
+        name: 'ExcelOrganizationError',
+        cause: {
+          file: path,
+          cell: organizationCell,
+          message: 'Não foi possível encontrar a célula com o nome da instituição'
+        }
+      },
+      result: null
+    }
+  }
 
   const lastRow = worksheet?.lastRow?.number ?? 0
   const rows = worksheet.getRows(12, lastRow) ?? []
 
   for (const row of rows) {
-    const values = row.values
+    if (!Array.isArray(row.values)) continue
+    if (row.values.length == 0) break
+    if (row.values.length == 2) continue
 
-    if (values.length == 0) {
-      break
-    } else if (
-      !Array.isArray(values) ||
-      values.length < 5 ||
-      typeof values[2] != 'string' ||
-      typeof values[4] != 'string'
-    ) {
-      continue
+    const [_, ...values] = row.values.map((v) => cellToText(v).trim())
+
+    const fields = [
+      { value: values?.[1], message: 'Participante com nome inválido' },
+      { value: values?.[2], message: 'Participante com gênero inválido' },
+      { value: values?.[3], message: 'Participante com categoria inválida' }
+    ]
+
+    for (const { value, message } of fields) {
+      if (!value) {
+        return {
+          error: {
+            name: 'ExcelPlayerError',
+            cause: {
+              file: path,
+              n: values?.[0],
+              cell: value,
+              message
+            }
+          },
+          result: null
+        }
+      }
     }
 
-    organization.players.push({
-      name: (values[2] as string)?.trim() ?? '',
-      isMale: ['m', 'h'].includes((values[3] as string)?.toLowerCase().trim().at(0) ?? '$'),
-      category: values[4]?.replaceAll(/\(\s*?(FEM|MASC)\s*?\)/g, '').replaceAll(/\s+/g, ' ') ?? ''
-    })
+    const player = {
+      name: toTitleCase(values?.[1]),
+      isMale: /^(ma|ho|menino|garoto)/i.test(values?.[2]),
+      category: normalizeCategory(values?.[3])
+    }
+
+    organization.players.push(player)
   }
 
-  return organization
+  return { result: organization, error: null }
 }
 
 export async function exportPlayers(

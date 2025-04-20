@@ -8,7 +8,7 @@
   import type { Table } from '@tanstack/table-core'
   import type { WithoutChildren } from 'bits-ui'
   import { cn } from '@lib/utils'
-  import { Button, buttonVariants } from '@components/ui/button'
+  import { Button, buttonVariants } from '@/components/ui/button-old'
   import * as Dialog from '@components/ui/dialog'
   import { Label } from '@components/ui/label'
   import { Input } from '@components/ui/input'

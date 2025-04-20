@@ -18,7 +18,12 @@ export default tseslint.config(
   {
     files: ['**/*.{tsx,svelte}'],
     rules: {
-      'svelte/no-unused-svelte-ignore': 'off',
+      'svelte/no-unused-svelte-ignore': 'off'
+    }
+  },
+  {
+    files: ['**/*.{ts,tsx,svelte}'],
+    rules: {
       'no-unused-vars': ['off', { varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-unused-vars': [
         'warn',

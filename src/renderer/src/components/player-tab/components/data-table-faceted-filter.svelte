@@ -10,7 +10,7 @@
   import { SvelteSet } from 'svelte/reactivity'
   import * as Command from '@components/ui/command'
   import * as Popover from '@components/ui/popover'
-  import { Button } from '@components/ui/button'
+  import { Button } from '@/components/ui/button-old'
   import { cn } from '@lib/utils'
   import { Separator } from '@components/ui/separator'
   import { Badge } from '@components/ui/badge'
