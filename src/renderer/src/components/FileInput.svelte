@@ -4,7 +4,7 @@
   let { files = $bindable(), children }: { files: FileList | undefined; children: Snippet } =
     $props()
 
-  import { Button } from '@/components/ui/button-old'
+  import { Button } from '@/components/ui/button'
 
   let fileInput: HTMLInputElement
 </script>

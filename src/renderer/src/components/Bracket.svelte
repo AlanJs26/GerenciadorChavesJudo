@@ -8,7 +8,7 @@
   import { Badge } from '@components/ui/badge'
   import { Plus, Trash2 } from '@lucide/svelte'
   import { installBracketUI, get_match_data_for_element } from '@lib/bracket-lib/rendering'
-  import { Button, buttonVariants } from '@/components/ui/button-old'
+  import { Button, buttonVariants } from '@/components/ui/button'
   import { cn } from '@lib/utils'
   import { playersStore, bracketsStore } from '@/states.svelte'
   import { Label } from '@components/ui/label'
