@@ -240,7 +240,7 @@
           bracket,
           playerByContestantId[winnerContestantId]
         )
-        console.log(winners)
+        winnerStore.winnersByCategory = { ...winnerStore.winnersByCategory }
       }
     }
   }

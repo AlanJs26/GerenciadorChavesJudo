@@ -86,8 +86,6 @@
 
   // ==================== State Update Functions ====================
   function generateAllBrackets(): void {
-    winnerStore.winnersByCategory = {}
-
     // Generate brackets for each category and gender
     for (const { category, state, isMale } of categories) {
       if (!state) continue
@@ -116,9 +114,15 @@
       }
       for (const [i, chunk] of chunks.entries()) {
         const categoryName = chunks.length > 1 ? `${category} (${letterGen(i)})` : category
+        for (const player of chunk) {
+          player.category = categoryName
+        }
         bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = buildBracket(chunk)
       }
     }
+    winnerStore.winnersByCategory = Object.fromEntries(
+      Array.from(categories, (c) => [c.category, { matches: {}, winners: [] }])
+    )
   }
 
   // ==================== Lifecycle Hooks ====================

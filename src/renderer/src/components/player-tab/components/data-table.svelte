@@ -89,6 +89,7 @@
       } else {
         sorting = updater
       }
+      data = [...data]
     },
     onColumnFiltersChange: (updater) => {
       if (typeof updater === 'function') {

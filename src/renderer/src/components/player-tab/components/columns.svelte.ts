@@ -13,6 +13,34 @@ import {
 } from './index'
 import { renderComponent } from '@components/ui/data-table'
 import type { Player } from '@lib/types/bracket-lib'
+import { winnerStore } from '@/states.svelte'
+
+function getPoints(player: Player): number {
+  let points = 0
+
+  for (const [category, winners] of Object.entries(winnerStore.winnersByCategory)) {
+    if (category != player.category) continue
+
+    const winner = winners.winners?.find((w) => w.contestantId == player.contestantId)
+    if (!winner) {
+      points += 1
+      continue
+    }
+    switch (winner.classification) {
+      case 1:
+        points += 7
+        break
+      case 2:
+        points += 5
+        break
+      case 3:
+        points += 3
+        break
+    }
+  }
+
+  return points
+}
 
 export const columns: ColumnDef<Player>[] = [
   // {
@@ -92,6 +120,24 @@ export const columns: ColumnDef<Player>[] = [
     }
   },
   {
+    id: 'points',
+    accessorFn: (player: Player, _index: number) => getPoints(player),
+    header: ({ column, table }) =>
+      renderComponent(DataTableColumnHeader<Player, unknown>, {
+        column,
+        title: `Pontos (${table.getRowModel().flatRows.reduce((acc, row) => acc + +row.getValue('points'), 0)})`
+      }),
+    cell: ({ row }): unknown => {
+      return renderComponent(DataTableCell, {
+        value: getPoints(row.original),
+        center: true
+      })
+    },
+    sortingFn: (rowA, rowB, id): number => {
+      return +rowA.getValue(id) - +rowB.getValue(id)
+    }
+  },
+  {
     accessorKey: 'present',
     header: ({ column }): unknown => {
       return renderComponent(DataTableColumnHeader<Player, unknown>, {
@@ -103,9 +149,6 @@ export const columns: ColumnDef<Player>[] = [
       return renderComponent(DataTableCell, {
         value: row.original.present ? 'Sim' : 'Não'
       })
-    },
-    filterFn: (row, id, value): boolean => {
-      return value.includes(row.getValue(id))
     }
   },
   {

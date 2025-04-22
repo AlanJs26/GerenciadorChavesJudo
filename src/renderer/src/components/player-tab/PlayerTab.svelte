@@ -1,6 +1,6 @@
 <script lang="ts">
   import DataTable from './components/data-table.svelte'
-  import { columns } from './components/columns'
+  import { columns } from './components/columns.svelte'
   import { playersStore } from '@/states.svelte'
 </script>
 
