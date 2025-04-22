@@ -37,3 +37,17 @@ export type PlayerColumn = Omit<
   },
   'contestantId'
 >
+
+export type WinnersByCategory = Record<string, Winners>
+
+export type Classification = 1 | 2 | 3
+export type Winners = {
+  matches: Record<
+    string,
+    { top: Classification; bottom?: Classification } | { top?: Classification; bottom: Classification }
+  >
+  winners: {
+    contestantId: string
+    classification: Classification
+  }[]
+}

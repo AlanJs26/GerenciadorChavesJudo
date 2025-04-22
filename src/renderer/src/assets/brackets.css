@@ -1,0 +1,9 @@
+.match-winner {
+    color: #4c4c4c;
+    font-size: 12pt;
+
+    &.first {
+        color: red;
+        font-weight: bold;
+    }
+}

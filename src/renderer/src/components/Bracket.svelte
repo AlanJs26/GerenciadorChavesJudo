@@ -1,5 +1,12 @@
 <script lang="ts">
-  import type { Bracket, Contestant, Match } from '@lib/types/bracket-lib'
+  import type {
+    Bracket,
+    Classification,
+    Contestant,
+    Match,
+    Player,
+    Winners
+  } from '@lib/types/bracket-lib'
   import * as ContextMenu from '@components/ui/context-menu'
   import * as Command from '@components/ui/command'
   import { computeCommandScore } from 'bits-ui'
@@ -10,14 +17,14 @@
   import { installBracketUI, get_match_data_for_element } from '@lib/bracket-lib/rendering'
   import { Button, buttonVariants } from '@/components/ui/button'
   import { cn } from '@lib/utils'
-  import { playersStore, bracketsStore } from '@/states.svelte'
+  import { playersStore, bracketsStore, winnerStore } from '@/states.svelte'
   import { Label } from '@components/ui/label'
   import { Input } from '@components/ui/input'
   import * as Popover from '@components/ui/popover'
   import type { Snippet } from 'svelte'
   import { toast } from 'svelte-sonner'
   import * as Select from '@components/ui/select'
-  import { roundsBySize } from '@lib/bracket-lib'
+  import { retrieveWinners, roundsBySize } from '@lib/bracket-lib'
 
   let {
     isMale,
@@ -45,6 +52,7 @@
   let popoverSelectedValue = $state(validBracketSizes[0])
   let selectedMatch = $state<Bracket['matches'][2]>()
   let isBracketVisible = $state(false)
+  let winners: Winners = $derived(winnerStore.winnersByCategory[currentCategory])
 
   // ==================== Derived States ====================
   let gender: 'male' | 'female' = $derived(isMale ? 'male' : 'female')
@@ -63,13 +71,10 @@
   let filteredPlayers = $derived(
     playersStore.players.filter((player) => player.isMale == isMale && player.present)
   )
-  let playerNameByContestantId: Record<string, { name: string; organization: string }> = $derived(
+  let playerByContestantId: Record<string, Player> = $derived(
     playersStore.players.reduce((acc, player) => {
       if (player.contestantId) {
-        acc[player.contestantId] = {
-          name: player.name,
-          organization: player.organization
-        }
+        acc[player.contestantId] = player
       }
       return acc
     }, {})
@@ -97,18 +102,49 @@
       return
     }
 
-    bracketry = installBracketUI(bracketsEl, currentBracket, (e: MouseEvent) => {
-      const match_data = get_match_data_for_element(e.target as Element, currentBracket)
-      if (
-        (e.target as HTMLDivElement).closest('.match-body') ||
-        ((e.target as HTMLDivElement).closest('.match-wrapper') && match_data.roundIndex == 0)
-      ) {
-        selectedMatch = match_data
-        openContext = true
-        return
+    const htmlByClassification = (classification: Classification) => {
+      switch (classification) {
+        case 1:
+          return `<span class='match-winner first'>🏆 1º Lugar</span>`
+        case 2:
+          return `<span class='match-winner'>🥈 2º Lugar</span>`
+        case 3:
+          return `<span class='match-winner'>🥉 3º Lugar</span>`
       }
-      openContext = false
-    })
+    }
+
+    bracketry = installBracketUI(
+      bracketsEl,
+      currentBracket,
+      (e: MouseEvent) => {
+        const match_data = get_match_data_for_element(e.target as Element, currentBracket)
+        if (
+          (e.target as HTMLDivElement).closest('.match-body') ||
+          ((e.target as HTMLDivElement).closest('.match-wrapper') && match_data.roundIndex == 0)
+        ) {
+          selectedMatch = match_data
+          openContext = true
+          return
+        }
+        openContext = false
+      },
+      {
+        getMatchTopHTML: (match: Match) => {
+          const { roundIndex, order } = match
+          const winnerInfo = winners?.matches?.[`${roundIndex}:${order}`]
+          if (!winnerInfo?.top) return ''
+
+          return htmlByClassification(winnerInfo.top)
+        },
+        getMatchBottomHTML: (match: Match) => {
+          const { roundIndex, order } = match
+          const winnerInfo = winners?.matches?.[`${roundIndex}:${order}`]
+          if (!winnerInfo?.bottom) return ''
+
+          return htmlByClassification(winnerInfo.bottom)
+        }
+      }
+    )
   }
 
   // ==================== Helper Functions ====================
@@ -125,7 +161,7 @@
     commandKeywords?: string[]
   ): number {
     const score = computeCommandScore(
-      playerNameByContestantId?.[commandValue]?.name ?? '',
+      playerByContestantId?.[commandValue]?.name ?? '',
       search,
       commandKeywords
     )
@@ -156,7 +192,7 @@
           updatedSides[side] = { contestantId }
       }
 
-      const player = playerNameByContestantId?.[contestantId]
+      const player = playerByContestantId?.[contestantId]
       if (!player) {
         toast.error(`Player not found`)
         return
@@ -191,6 +227,22 @@
     ])
 
     bracketsStore.brackets[gender][currentCategory] = bracketry.getAllData()
+
+    if (
+      bracket.rounds.length == roundIndex ||
+      bracket.matches.some(
+        (m) => m.roundIndex == bracket.rounds.length - 1 && m.sides.every((s) => s.contestantId)
+      )
+    ) {
+      if ((!left && right) || (left && !right)) {
+        const winnerContestantId = left ?? right
+        winnerStore.winnersByCategory[currentCategory] = retrieveWinners(
+          bracket,
+          playerByContestantId[winnerContestantId]
+        )
+        console.log(winners)
+      }
+    }
   }
 </script>
 
@@ -396,7 +448,7 @@ MARK: Context Menu
               })
             }}
           >
-            {playerNameByContestantId?.[contestantId].name ?? ''}</ContextMenu.Item
+            {playerByContestantId?.[contestantId].name ?? ''}</ContextMenu.Item
           >
         {/each}
       </ContextMenu.Group>
@@ -439,7 +491,7 @@ MARK: Context Menu
                   left: sides?.[0]?.contestantId == contestantId ? null : undefined,
                   right: sides?.[1]?.contestantId == contestantId ? null : undefined
                 })
-              }}>{playerNameByContestantId?.[contestantId].name ?? ''}</ContextMenu.Item
+              }}>{playerByContestantId?.[contestantId].name ?? ''}</ContextMenu.Item
             >
           {/each}
         </ContextMenu.SubContent>

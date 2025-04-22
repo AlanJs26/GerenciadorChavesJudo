@@ -1,4 +1,4 @@
-import type { Player, BracketCollection } from '@lib/types/bracket-lib'
+import type { Player, BracketCollection, WinnersByCategory } from '@lib/types/bracket-lib'
 
 let players: Player[] = $state([])
 
@@ -19,5 +19,16 @@ export const bracketsStore = {
   },
   set brackets(value: BracketCollection) {
     brackets = value
+  }
+}
+
+let winnersByCategory = $state<WinnersByCategory>({})
+
+export const winnerStore = {
+  get winnersByCategory(): WinnersByCategory {
+    return winnersByCategory
+  },
+  set winnersByCategory(value: WinnersByCategory) {
+    winnersByCategory = value
   }
 }

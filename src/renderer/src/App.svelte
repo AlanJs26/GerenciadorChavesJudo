@@ -16,7 +16,7 @@
   import * as RadioGroup from '@components/radio-group'
   import * as Tabs from '@components/ui/tabs'
   import PlayerTab from './components/player-tab/PlayerTab.svelte'
-  import { playersStore, bracketsStore } from './states.svelte'
+  import { playersStore, bracketsStore, winnerStore } from './states.svelte'
   import { randomContestantId } from '@lib/utils'
   import { Toaster } from '@components/ui/sonner'
   import type { ErrorObject, ExcelOrganizationError, ExcelPlayerError } from '@lib/types/errors'
@@ -86,6 +86,8 @@
 
   // ==================== State Update Functions ====================
   function generateAllBrackets(): void {
+    winnerStore.winnersByCategory = {}
+
     // Generate brackets for each category and gender
     for (const { category, state, isMale } of categories) {
       if (!state) continue
@@ -116,13 +118,6 @@
         const categoryName = chunks.length > 1 ? `${category} (${letterGen(i)})` : category
         bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = buildBracket(chunk)
       }
-
-      console.log(
-        category,
-        genderPlayers.length,
-        nChunks,
-        chunks.map((chunk) => chunk.map((c) => c.name))
-      )
     }
   }
 
@@ -165,8 +160,8 @@
 
   onMount(() => {
     const randomN = [5, 20]
-    // organizations = generateRandomOrganizations(randomN[0], randomN[1])
-    // generateAllBrackets()
+    organizations = generateRandomOrganizations(randomN[0], randomN[1])
+    generateAllBrackets()
     // bracketRenderer.update()
   })
 </script>
