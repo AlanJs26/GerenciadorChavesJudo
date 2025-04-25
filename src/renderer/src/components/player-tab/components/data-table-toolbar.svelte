@@ -30,7 +30,7 @@
   const presencies = $derived(colFn('present', (v) => (v ? 'Sim' : 'Não')))
 </script>
 
-<div class="flex items-center justify-between">
+<div class="flex items-center justify-between overflow-x-auto">
   <div class="flex flex-1 items-center space-x-2">
     <Input
       placeholder="Filtrar Nomes..."

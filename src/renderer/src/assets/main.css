@@ -5,6 +5,24 @@
 @tailwind utilities;
 
 
+/* ===== Scrollbar CSS ===== */
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #eeeeee;
+  border-radius: 10px;
+  border: 3px none #ffffff;
+}
+
 body, #app {
   overflow: hidden;
   width: 100vw;

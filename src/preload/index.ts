@@ -10,6 +10,9 @@ const api = {
     ipcRenderer.invoke('dialog:organizationFromFile', webUtils.getPathForFile(file)),
   exportPlayers: (players: Player[]): Promise<void> =>
     ipcRenderer.invoke('dialog:exportPlayers', players),
+  exportState: (state: string, defaultPath?: string): Promise<ResultError<void>> =>
+    ipcRenderer.invoke('dialog:exportState', state, defaultPath),
+  importState: (defaultPath?: string): Promise<ResultError<string>> => ipcRenderer.invoke('dialog:importState', defaultPath),
   printPDF: (): Promise<string> => ipcRenderer.invoke('dialog:printPDF')
 }
 

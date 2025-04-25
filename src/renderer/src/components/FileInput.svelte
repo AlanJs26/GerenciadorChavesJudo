@@ -9,7 +9,7 @@
   let fileInput: HTMLInputElement
 </script>
 
-<div>
+<div class="flex-1">
   <Button
     id="file"
     variant="outline"

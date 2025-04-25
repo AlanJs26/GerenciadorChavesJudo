@@ -7,3 +7,10 @@
         font-weight: bold;
     }
 }
+
+.fullscreen .brackets {
+
+    & .round-titles-grid-item, & .navigation-button {
+        display: none !important;
+      }
+}

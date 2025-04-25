@@ -1,7 +1,9 @@
 <script lang="ts">
   import * as DropdownMenu from '@components/ui/dropdown-menu'
   import { buttonVariants } from '@/components/ui/button'
+  import { Separator } from '@components/ui/separator'
   import { ScrollArea } from '@components/ui/scroll-area'
+
   import type { Snippet } from 'svelte'
 
   let {
@@ -17,6 +19,8 @@
   $effect(() => {
     states = categories.map((c) => c.state)
   })
+
+  let allChecked = $derived(states.every((s) => s))
 </script>
 
 <DropdownMenu.Root>
@@ -28,7 +32,7 @@
 
   <DropdownMenu.Content class="w-30">
     <DropdownMenu.Group>
-      <ScrollArea class="flex max-h-[60vh] flex-col" type="auto">
+      <ScrollArea class="flex max-h-[calc(32px*10)] flex-col" type="auto">
         {#each categories as _selected, i}
           <DropdownMenu.CheckboxItem
             closeOnSelect={false}
@@ -44,6 +48,20 @@
           </DropdownMenu.CheckboxItem>
         {/each}
       </ScrollArea>
+      <Separator />
+      <DropdownMenu.CheckboxItem
+        closeOnSelect={false}
+        bind:checked={
+          () => allChecked,
+          () => {
+            const prevAllChecked = allChecked
+            categories.forEach((_, i) => {
+              categories[i].state = !prevAllChecked
+              states[i] = categories[i].state
+            })
+          }
+        }>Alternar Todos</DropdownMenu.CheckboxItem
+      >
     </DropdownMenu.Group>
   </DropdownMenu.Content>
 </DropdownMenu.Root>

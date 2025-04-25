@@ -52,3 +52,9 @@ export type Winners = {
     classification: Classification
   }[]
 }
+
+export type State = {
+  players: Player[]
+  brackets: BracketCollection
+  winnersByCategory: WinnersByCategory
+}

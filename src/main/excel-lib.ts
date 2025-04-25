@@ -1,8 +1,28 @@
 import ExcelJS from 'exceljs'
 import type { Organization, Player } from '@lib/types/bracket-lib'
+import os from 'os'
+import path from 'path'
 import { dialog, shell, BrowserWindow } from 'electron'
 import type { ResultError } from '@lib/types/errors'
-import fs from 'fs/promises'
+import fs, { readFile, writeFile } from 'fs/promises'
+import { existsSync } from 'fs'
+
+function makeError<T>(name: string, message?: string): ResultError<T> {
+  return {
+    error: {
+      name: name,
+      cause: { message: message }
+    },
+    result: null
+  }
+}
+
+function makeResult<T>(result: T): ResultError<T> {
+  return {
+    error: null,
+    result: result
+  }
+}
 
 function cellToText(value: ExcelJS.CellValue | undefined): string {
   if (value === undefined || value === null) return ''
@@ -187,7 +207,8 @@ export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<stri
 
   const data = await win.webContents.printToPDF({
     // printBackground: true,
-    landscape: true
+    landscape: true,
+    pageSize: 'A4'
     // preferCSSPageSize: true
   })
 
@@ -196,4 +217,92 @@ export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<stri
   shell.openExternal('file://' + filePath)
 
   return filePath
+}
+
+export async function exportState(
+  _event: Electron.IpcMainInvokeEvent,
+  state: string,
+  defaultPath?: string
+): Promise<ResultError<void>> {
+  let filePath = ''
+
+  if (defaultPath) {
+    filePath = path.resolve(defaultPath.replace(/^~/, os.homedir()))
+
+    if (!filePath.endsWith('.json')) {
+      return makeError('WrongExtension', 'Extensão de arquivo incorreta')
+    }
+
+    const dirname = path.dirname(filePath)
+
+    if (!existsSync(dirname)) {
+      fs.mkdir(dirname, { recursive: true })
+    }
+  } else {
+    const dialogResult = await dialog.showSaveDialog({
+      title: 'Exportar Dados',
+      defaultPath: `dados.json`,
+      filters: [
+        {
+          name: 'Json',
+          extensions: ['json']
+        }
+      ]
+    })
+
+    if (dialogResult.canceled || !dialogResult.filePath) {
+      return makeError('Cancelled', 'Exportação cancelada')
+    }
+
+    filePath = dialogResult.filePath
+  }
+
+  try {
+    await writeFile(filePath, state)
+
+    return makeResult(null)
+  } catch (error) {
+    const e = error as Error
+    return makeError(e.name, e.message)
+  }
+}
+
+export async function importState(
+  _event: Electron.IpcMainInvokeEvent,
+  defaultPath?: string
+): Promise<ResultError<string>> {
+  let filePath = ''
+
+  if (defaultPath) {
+    filePath = path.resolve(defaultPath.replace(/^~/, os.homedir()))
+
+    if (!filePath.endsWith('.json')) {
+      return makeError('WrongExtension', 'Extensão de arquivo incorreta')
+    }
+  } else {
+    const dialogResult = await dialog.showSaveDialog({
+      title: 'Importar Dados',
+      filters: [
+        {
+          name: 'Json',
+          extensions: ['json']
+        }
+      ]
+    })
+
+    if (dialogResult.canceled || !dialogResult.filePath) {
+      return makeError('Cancelled', 'Importação cancelada')
+    }
+
+    filePath = dialogResult.filePath
+  }
+
+  try {
+    const stateString = await readFile(filePath, { encoding: 'utf8' })
+
+    return makeResult(stateString)
+  } catch (error) {
+    const e = error as Error
+    return makeError(e.name, e.message)
+  }
 }

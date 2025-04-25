@@ -8,6 +8,8 @@ declare global {
     api: {
       organizationFromFile: (file: File) => Promise<ResultError<Organization>>
       exportPlayers: (players: PlayerColumn[]) => Promise<void>
+      exportState: (state: string, defaultPath?: string) => Promise<ResultError<void>>
+      importState: (defaultPath?: string) => Promise<ResultError<string>>
       printPDF: () => Promise<string>
     }
   }

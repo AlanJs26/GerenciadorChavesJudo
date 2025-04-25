@@ -23,7 +23,7 @@ function getPoints(player: Player): number {
 
     const winner = winners.winners?.find((w) => w.contestantId == player.contestantId)
     if (!winner) {
-      points += 1
+      points += 0
       continue
     }
     switch (winner.classification) {
@@ -121,7 +121,7 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     id: 'points',
-    accessorFn: (player: Player, _index: number) => getPoints(player),
+    accessorFn: (player: Player, _index: number) => getPoints(player).toString(),
     header: ({ column, table }) =>
       renderComponent(DataTableColumnHeader<Player, unknown>, {
         column,

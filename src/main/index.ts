@@ -2,7 +2,13 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { organizationFromFile, exportPlayers, printPDF } from './excel-lib'
+import {
+  organizationFromFile,
+  exportPlayers,
+  printPDF,
+  exportState,
+  importState
+} from './excel-lib'
 
 function createWindow(): void {
   // Create the browser window.
@@ -55,6 +61,8 @@ app.whenReady().then(() => {
 
   ipcMain.handle('dialog:organizationFromFile', organizationFromFile)
   ipcMain.handle('dialog:exportPlayers', exportPlayers)
+  ipcMain.handle('dialog:exportState', exportState)
+  ipcMain.handle('dialog:importState', importState)
 
   ipcMain.handle('dialog:printPDF', printPDF)
 

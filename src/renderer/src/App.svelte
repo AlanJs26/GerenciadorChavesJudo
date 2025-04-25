@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, type Snippet } from 'svelte'
 
-  import type { Organization, Player } from '@lib/types/bracket-lib'
+  import type { Organization, Player, State } from '@lib/types/bracket-lib'
   import { buildBracket, generateRandomOrganizations } from '@lib/bracket-lib'
 
-  import { Bolt, FileDown } from '@lucide/svelte'
-  import { Button } from '@/components/ui/button'
+  import { Bolt, FileDown, FileJson2, Download } from '@lucide/svelte'
+  import { Button, buttonVariants } from '@/components/ui/button'
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Input } from '@components/ui/input'
   import { Separator } from '@components/ui/separator'
@@ -15,12 +15,16 @@
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
   import * as RadioGroup from '@components/radio-group'
   import * as Tabs from '@components/ui/tabs'
+  import * as DropdownMenu from '@components/ui/dropdown-menu'
+  import * as ContextMenu from '@components/ui/context-menu'
   import PlayerTab from './components/player-tab/PlayerTab.svelte'
   import { playersStore, bracketsStore, winnerStore } from './states.svelte'
   import { randomContestantId } from '@lib/utils'
   import { Toaster } from '@components/ui/sonner'
   import type { ErrorObject, ExcelOrganizationError, ExcelPlayerError } from '@lib/types/errors'
   import { toast } from 'svelte-sonner'
+  import { Checkbox } from '@components/ui/checkbox'
+  import { Label } from '@components/ui/label'
 
   // ==================== DOM References ====================
   let bracketRenderer: Bracket
@@ -31,6 +35,7 @@
   let currentCategory = $state('')
   let organizations: Organization[] = $state([])
   let filterText = $state('')
+  let autosaveInterval: ReturnType<typeof setInterval> | null = $state(null)
 
   // ==================== Computed Values ====================
   let isMale = $derived(radio_sex === 'Masculino')
@@ -79,7 +84,7 @@
     )
       .map((key) => {
         const [category, isMale] = key.split('¨')
-        return { category, isMale: isMale === 'true', state: true }
+        return { category, isMale: isMale === 'true', state: false }
       })
       .sort((a, b) => a.category.localeCompare(b.category))
   )
@@ -125,6 +130,56 @@
     )
   }
 
+  function exportState(defaultPath?: string) {
+    const state: State = {
+      brackets: bracketsStore.brackets,
+      players: playersStore.players,
+      winnersByCategory: winnerStore.winnersByCategory
+    }
+    if (defaultPath) {
+      console.log(`Autosave: ${defaultPath}`)
+      window.api.exportState(JSON.stringify(state), defaultPath).then(({ error }) => {
+        if (!error) return
+        console.error(error)
+        toast.error(`Erro ao salvar automaticamente: ${error.cause?.message}`)
+      })
+    } else {
+      window.api.exportState(JSON.stringify(state)).then(({ error }) => {
+        if (error) {
+          console.error(error)
+          toast.error(`Erro de exportação: ${error.cause?.message}`)
+          return
+        }
+        toast.success('Exportado com sucesso!')
+      })
+    }
+  }
+
+  function enableAutosave() {
+    console.log('Autosave ativado!')
+    if (autosaveInterval === null) {
+      autosaveInterval = setInterval(() => {
+        exportState('~/.chaves-judo/dados.json')
+      }, 60000)
+    }
+  }
+
+  function importState(defaultPath?: string) {
+    window.api.importState(defaultPath).then(({ result, error }) => {
+      if (error) {
+        console.error(error)
+        toast.error(`${error.name}: ${error.cause?.message}`)
+        return
+      }
+      const state: State = JSON.parse(result)
+
+      playersStore.players = state.players
+      bracketsStore.brackets = state.brackets
+      winnerStore.winnersByCategory = state.winnersByCategory
+      enableAutosave()
+    })
+  }
+
   // ==================== Lifecycle Hooks ====================
 
   function handleError(error: ErrorObject | null): void {
@@ -164,20 +219,65 @@
 
   onMount(() => {
     const randomN = [5, 20]
-    organizations = generateRandomOrganizations(randomN[0], randomN[1])
-    generateAllBrackets()
+    importState('~/.chaves-judo/dados.json')
+
+    // Get a reference to the last interval + 1
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    const interval_id = window.setInterval(function () {}, Number.MAX_SAFE_INTEGER)
+
+    // Clear any timeout/interval up to that id
+    for (let i = 1; i < interval_id; i++) {
+      window.clearInterval(i)
+    }
+
+    // organizations = generateRandomOrganizations(randomN[0], randomN[1])
+    // generateAllBrackets()
     // bracketRenderer.update()
   })
 </script>
 
 <Toaster />
 
+{#snippet importDropdown()}
+  <DropdownMenu.Root>
+    <DropdownMenu.Trigger class={buttonVariants({ variant: 'outline' })}>
+      <Bolt class="h-4 w-4" />
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content class="w-56">
+      <DropdownMenu.Group>
+        <DropdownMenu.DropdownMenuGroupHeading>Outras Formas</DropdownMenu.DropdownMenuGroupHeading>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Item
+          onclick={() => {
+            importState()
+          }}
+        >
+          <FileJson2 class="h-4 w-4" />
+          <span>Importar Sessão Anterior</span>
+        </DropdownMenu.Item>
+
+        <DropdownMenu.Item
+          onclick={() => {
+            exportState()
+          }}
+        >
+          <Download class="h-4 w-4" />
+          <span>Exportar Sessão</span>
+        </DropdownMenu.Item>
+      </DropdownMenu.Group>
+    </DropdownMenu.Content>
+  </DropdownMenu.Root>
+{/snippet}
+
 <main>
   <aside class="p-1">
-    <FileInput bind:files>
-      <FileDown class="mr-2 h-4 w-4" />
-      Importar
-    </FileInput>
+    <div class="flex w-full flex-row">
+      {@render importDropdown()}
+      <FileInput bind:files>
+        <FileDown class="mr-2 h-4 w-4" />
+        Importar Fichas
+      </FileInput>
+    </div>
 
     <RadioGroup.Root bind:group={radio_sex}>
       <RadioGroup.Item value="Feminino">
@@ -192,11 +292,14 @@
 
     <Separator class="my-2" />
 
-    <ScrollArea class="flex flex-1 flex-col" type="auto">
-      {#each filteredPlayers as _player, i}
-        <PlayerCard bind:player={() => filteredPlayers[i], () => {}} />
-      {/each}
-    </ScrollArea>
+    {#snippet playersScrollview()}
+      <ScrollArea class="flex flex-1 flex-col" type="auto">
+        {#each filteredPlayers as _player, i}
+          <PlayerCard bind:player={() => filteredPlayers[i], () => {}} />
+        {/each}
+      </ScrollArea>
+    {/snippet}
+    {@render contextmenu(playersScrollview)}
 
     <Separator class="my-2" />
 
@@ -210,6 +313,7 @@
         onclick={(): void => {
           generateAllBrackets()
           bracketRenderer.update()
+          enableAutosave()
         }}>Atualizar Chaves</Button
       >
     </div>
@@ -231,6 +335,39 @@
   </div>
 </main>
 
+{#snippet contextmenu(trigger: Snippet)}
+  <ContextMenu.Root>
+    <ContextMenu.Trigger class="flex min-h-0 flex-1 flex-col">
+      {@render trigger()}
+    </ContextMenu.Trigger>
+
+    <ContextMenu.Content class="flex flex-1 flex-col p-3" updatePositionStrategy="always">
+      <ContextMenu.Group class="flex w-full cursor-pointer flex-row items-center">
+        <Checkbox
+          id="player-checkbox"
+          aria-labelledby="player-checkbox-label"
+          bind:checked={
+            () => filteredPlayers.every((p) => p.present),
+            () => {
+              const AllChecked = filteredPlayers.every((p) => p.present)
+              filteredPlayers.forEach((_, i) => {
+                filteredPlayers[i].present = !AllChecked
+              })
+            }
+          }
+        />
+        <Label
+          id="player-checkbox-label"
+          for="player-checkbox"
+          class="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Alternar Tudo
+        </Label>
+      </ContextMenu.Group>
+    </ContextMenu.Content>
+  </ContextMenu.Root>
+{/snippet}
+
 <style>
   main {
     padding: 0;
@@ -249,6 +386,7 @@
 
   .tabs-container {
     grid-area: brackets;
+    min-width: 0;
   }
 
   aside {
