@@ -257,7 +257,7 @@ MARK: Categories
   onclick={() => {
     bracketFullscreen = true
     window.api.printPDF().then(
-      (res) => {
+      () => {
         bracketFullscreen = false
       },
       () => {

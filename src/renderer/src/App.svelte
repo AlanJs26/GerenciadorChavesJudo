@@ -2,7 +2,7 @@
   import { onMount, type Snippet } from 'svelte'
 
   import type { Organization, Player, State } from '@lib/types/bracket-lib'
-  import { buildBracket, generateRandomOrganizations } from '@lib/bracket-lib'
+  import { buildBracket } from '@lib/bracket-lib'
 
   import { Bolt, FileDown, FileJson2, Download } from '@lucide/svelte'
   import { Button, buttonVariants } from '@/components/ui/button'
@@ -218,7 +218,8 @@
   })
 
   onMount(() => {
-    const randomN = [5, 20]
+    // import { generateRandomOrganizations } from '@lib/bracket-lib'
+    // const randomN = [5, 20]
     importState('~/.chaves-judo/dados.json')
 
     // Get a reference to the last interval + 1
