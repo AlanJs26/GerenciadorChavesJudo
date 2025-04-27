@@ -63,7 +63,6 @@ app.whenReady().then(() => {
   ipcMain.handle('dialog:exportPlayers', exportPlayers)
   ipcMain.handle('dialog:exportState', exportState)
   ipcMain.handle('dialog:importState', importState)
-
   ipcMain.handle('dialog:printPDF', printPDF)
 
   createWindow()

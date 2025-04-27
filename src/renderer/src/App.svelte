@@ -1,30 +1,33 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte'
+  import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
 
   import type { Organization, Player, State } from '@lib/types/bracket-lib'
-  import { buildBracket } from '@lib/bracket-lib'
 
   import { Bolt, FileDown, FileJson2, Download } from '@lucide/svelte'
   import { Button, buttonVariants } from '@/components/ui/button'
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Input } from '@components/ui/input'
+  import * as Tabs from '@components/ui/tabs'
+  import * as DropdownMenu from '@components/ui/dropdown-menu'
+  import * as ContextMenu from '@components/ui/context-menu'
   import { Separator } from '@components/ui/separator'
+  import { Toaster } from '@components/ui/sonner'
+  import { Checkbox } from '@components/ui/checkbox'
+  import { Label } from '@components/ui/label'
+  import { toast } from 'svelte-sonner'
+
+  import * as RadioGroup from '@components/radio-group'
   import PlayerCard from '@components/PlayerCard.svelte'
   import Bracket from '@components/Bracket.svelte'
   import FileInput from '@components/FileInput.svelte'
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
-  import * as RadioGroup from '@components/radio-group'
-  import * as Tabs from '@components/ui/tabs'
-  import * as DropdownMenu from '@components/ui/dropdown-menu'
-  import * as ContextMenu from '@components/ui/context-menu'
-  import PlayerTab from './components/player-tab/PlayerTab.svelte'
+  import PlayerTab from '@components/player-tab/PlayerTab.svelte'
+
+  import { buildBracket } from '@lib/bracket-lib'
   import { playersStore, bracketsStore, winnerStore } from './states.svelte'
   import { randomContestantId } from '@lib/utils'
-  import { Toaster } from '@components/ui/sonner'
-  import type { ErrorObject, ExcelOrganizationError, ExcelPlayerError } from '@lib/types/errors'
-  import { toast } from 'svelte-sonner'
-  import { Checkbox } from '@components/ui/checkbox'
-  import { Label } from '@components/ui/label'
+  import { handleResult } from '@shared/errors'
 
   // ==================== DOM References ====================
   let bracketRenderer: Bracket
@@ -138,20 +141,24 @@
     }
     if (defaultPath) {
       console.log(`Autosave: ${defaultPath}`)
-      window.api.exportState(JSON.stringify(state), defaultPath).then(({ error }) => {
-        if (!error) return
-        console.error(error)
-        toast.error(`Erro ao salvar automaticamente: ${error.cause?.message}`)
-      })
-    } else {
-      window.api.exportState(JSON.stringify(state)).then(({ error }) => {
-        if (error) {
+      window.api.exportState(JSON.stringify(state), defaultPath).then(
+        handleResult(undefined, (error) => {
           console.error(error)
-          toast.error(`Erro de exportação: ${error.cause?.message}`)
-          return
-        }
-        toast.success('Exportado com sucesso!')
-      })
+          toast.error(`Erro ao salvar automaticamente: ${error.cause?.message}`)
+        })
+      )
+    } else {
+      window.api.exportState(JSON.stringify(state)).then(
+        handleResult(
+          () => {
+            toast.success('Exportado com sucesso!')
+          },
+          (error) => {
+            console.error(error)
+            toast.error(`Erro de exportação: ${error.cause?.message}`)
+          }
+        )
+      )
     }
   }
 
@@ -165,61 +172,51 @@
   }
 
   function importState(defaultPath?: string) {
-    window.api.importState(defaultPath).then(({ result, error }) => {
-      if (error) {
-        console.error(error)
-        toast.error(`${error.name}: ${error.cause?.message}`)
-        return
-      }
-      const state: State = JSON.parse(result)
-
-      playersStore.players = state.players
-      bracketsStore.brackets = state.brackets
-      winnerStore.winnersByCategory = state.winnersByCategory
-      enableAutosave()
-    })
+    window.api.importState(defaultPath).then(
+      handleResult(
+        (state) => {
+          playersStore.players = state.players
+          bracketsStore.brackets = state.brackets
+          winnerStore.winnersByCategory = state.winnersByCategory
+          enableAutosave()
+        },
+        (error) => {
+          console.error(error)
+          toast.error(`${error.name}: ${error.cause?.message}`)
+        }
+      )
+    )
   }
 
   // ==================== Lifecycle Hooks ====================
 
-  function handleError(error: ErrorObject | null): void {
-    if (!error) return
+  function handleImportError(error: ResultError) {
     if (error.name == 'ExcelPlayerError') {
       const { cause } = error as ExcelPlayerError
-      toast.error(`Erro ao importar ${cause.file}: ${cause.message} (N: ${cause.n})`)
+      toast.error(`Erro ao importar ${cause.file}: ${error.message} (N: ${cause.n})`)
     } else if (error.name == 'ExcelOrganizationError') {
       const { cause } = error as ExcelOrganizationError
-      toast.error(`Erro ao importar ${cause.file}: ${cause.message} (Cell: ${cause.cell})`)
-    } else {
-      const cause = error.cause
-      toast.error(`Erro ao importar ${cause.file}`)
+      toast.error(`Erro ao importar ${cause.file}: ${error.message} (Cell: ${cause.cell})`)
     }
     console.error('Erro ao importar arquivos:', error.cause)
+    return null
   }
 
   $effect(() => {
     if (!files) return
     ;(async (): Promise<void> => {
-      try {
-        organizations = await Promise.all(
-          Array.from(files).map(async (file) => {
-            const { result, error } = await window.api.organizationFromFile(file)
-            handleError(error)
-            return result
-          })
-        )
-        // Remove arquivos que falharam
-        organizations = organizations.filter(Boolean)
-      } catch (err) {
-        toast.error(`Erro ao importar arquivos`)
-        console.error('Erro ao importar arquivos:', err)
-      }
+      organizations = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const result = await window.api.organizationFromFile(file)
+          return result.status == true ? result.data : handleImportError(result.error)
+        })
+      )
+      // Remove arquivos que falharam
+      organizations = organizations.filter(Boolean)
     })()
   })
 
   onMount(() => {
-    // import { generateRandomOrganizations } from '@lib/bracket-lib'
-    // const randomN = [5, 20]
     importState('~/.chaves-judo/dados.json')
 
     // Get a reference to the last interval + 1
@@ -230,10 +227,6 @@
     for (let i = 1; i < interval_id; i++) {
       window.clearInterval(i)
     }
-
-    // organizations = generateRandomOrganizations(randomN[0], randomN[1])
-    // generateAllBrackets()
-    // bracketRenderer.update()
   })
 </script>
 

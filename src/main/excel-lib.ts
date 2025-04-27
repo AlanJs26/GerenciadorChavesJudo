@@ -3,26 +3,9 @@ import type { Organization, Player } from '@lib/types/bracket-lib'
 import os from 'os'
 import path from 'path'
 import { dialog, shell, BrowserWindow } from 'electron'
-import type { ResultError } from '@lib/types/errors'
+import { type Result, fail, succeed } from '@shared/errors'
 import fs, { readFile, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
-
-function makeError<T>(name: string, message?: string): ResultError<T> {
-  return {
-    error: {
-      name: name,
-      cause: { message: message }
-    },
-    result: null
-  }
-}
-
-function makeResult<T>(result: T): ResultError<T> {
-  return {
-    error: null,
-    result: result
-  }
-}
 
 function cellToText(value: ExcelJS.CellValue | undefined): string {
   if (value === undefined || value === null) return ''
@@ -51,7 +34,7 @@ function normalizeCategory(category: string | undefined): string {
 export async function organizationFromFile(
   _event: Electron.IpcMainInvokeEvent,
   path: string
-): Promise<ResultError<Organization>> {
+): Promise<Result<Organization>> {
   const workbook = new ExcelJS.Workbook()
   await workbook.xlsx.readFile(path)
 
@@ -62,16 +45,9 @@ export async function organizationFromFile(
 
   const worksheet = workbook.getWorksheet('Planilha1')
   if (worksheet === undefined) {
-    return {
-      error: {
-        name: 'ExcelOrganizationError',
-        cause: {
-          file: path,
-          message: 'Planilha não encontrada'
-        }
-      },
-      result: null
-    }
+    return fail('ExcelOrganizationError', 'Planilha não encontrada', {
+      file: path
+    })
   }
 
   const organizationCell = cellToText(worksheet.getRow(5).getCell(2).value)
@@ -79,17 +55,14 @@ export async function organizationFromFile(
     organizationCell.replace(/COLÉGIO \/ INSTITUIÇÃO:\s*(.+)/i, '$1').trim()
   )
   if (!organization.organization) {
-    return {
-      error: {
-        name: 'ExcelOrganizationError',
-        cause: {
-          file: path,
-          cell: organizationCell,
-          message: 'Não foi possível encontrar a célula com o nome da instituição'
-        }
-      },
-      result: null
-    }
+    return fail(
+      'ExcelOrganizationError',
+      'Não foi possível encontrar a célula com o nome da instituição',
+      {
+        file: path,
+        cell: organizationCell
+      }
+    )
   }
 
   const lastRow = worksheet?.lastRow?.number ?? 0
@@ -110,18 +83,11 @@ export async function organizationFromFile(
 
     for (const { value, message } of fields) {
       if (!value) {
-        return {
-          error: {
-            name: 'ExcelPlayerError',
-            cause: {
-              file: path,
-              n: values?.[0],
-              cell: value,
-              message
-            }
-          },
-          result: null
-        }
+        return fail('ExcelPlayerError', message, {
+          file: path,
+          n: values?.[0],
+          cell: value
+        })
       }
     }
 
@@ -134,13 +100,13 @@ export async function organizationFromFile(
     organization.players.push(player)
   }
 
-  return { result: organization, error: null }
+  return succeed(organization)
 }
 
 export async function exportPlayers(
   _event: Electron.IpcMainInvokeEvent,
   players: Player[]
-): Promise<void> {
+): Promise<Result<void>> {
   const dialogResult = await dialog.showSaveDialog({
     title: 'Exportar jogadores',
     defaultPath: `jogadores-${new Date().toISOString()}.xlsx`,
@@ -154,7 +120,7 @@ export async function exportPlayers(
 
   if (dialogResult.canceled || !dialogResult.filePath) {
     console.warn('Exportação cancelada')
-    return
+    return fail('Cancelled', 'Exportação cancelada')
   }
   const filePath = dialogResult.filePath
 
@@ -179,14 +145,20 @@ export async function exportPlayers(
     })
   })
 
-  workbook.xlsx.writeFile(filePath)
+  try {
+    await workbook.xlsx.writeFile(filePath)
+    return succeed(undefined)
+  } catch (error) {
+    const e = error as Error
+    return fail(e.name, e.message)
+  }
 }
 
-export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<string> {
+export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<Result<string>> {
   const win = BrowserWindow.fromWebContents(event.sender)
 
   if (!win) {
-    throw new Error('No window found for the given web contents')
+    return fail('UnknownWindow', 'No window found for the given web contents')
   }
 
   const dialogResult = await dialog.showSaveDialog({
@@ -201,36 +173,34 @@ export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<stri
   })
 
   if (dialogResult.canceled || !dialogResult.filePath) {
-    throw new Error('Exportação cancelada')
+    return fail('Cancelled', 'Exportação cancelada')
   }
   const filePath = dialogResult.filePath
 
   const data = await win.webContents.printToPDF({
-    // printBackground: true,
     landscape: true,
     pageSize: 'A4'
-    // preferCSSPageSize: true
   })
 
   await fs.writeFile(filePath, data)
 
   shell.openExternal('file://' + filePath)
 
-  return filePath
+  return succeed(filePath)
 }
 
 export async function exportState(
   _event: Electron.IpcMainInvokeEvent,
   state: string,
   defaultPath?: string
-): Promise<ResultError<void>> {
+): Promise<Result<void>> {
   let filePath = ''
 
   if (defaultPath) {
     filePath = path.resolve(defaultPath.replace(/^~/, os.homedir()))
 
     if (!filePath.endsWith('.json')) {
-      return makeError('WrongExtension', 'Extensão de arquivo incorreta')
+      return fail('WrongExtension', 'Extensão de arquivo incorreta')
     }
 
     const dirname = path.dirname(filePath)
@@ -251,7 +221,7 @@ export async function exportState(
     })
 
     if (dialogResult.canceled || !dialogResult.filePath) {
-      return makeError('Cancelled', 'Exportação cancelada')
+      return fail('Cancelled', 'Exportação cancelada')
     }
 
     filePath = dialogResult.filePath
@@ -260,27 +230,27 @@ export async function exportState(
   try {
     await writeFile(filePath, state)
 
-    return makeResult(null)
+    return succeed(undefined)
   } catch (error) {
     const e = error as Error
-    return makeError(e.name, e.message)
+    return fail(e.name, e.message)
   }
 }
 
 export async function importState(
   _event: Electron.IpcMainInvokeEvent,
   defaultPath?: string
-): Promise<ResultError<string>> {
+): Promise<Result<string>> {
   let filePath = ''
 
   if (defaultPath) {
     filePath = path.resolve(defaultPath.replace(/^~/, os.homedir()))
 
     if (!filePath.endsWith('.json')) {
-      return makeError('WrongExtension', 'Extensão de arquivo incorreta')
+      return fail('WrongExtension', 'Extensão de arquivo incorreta')
     }
   } else {
-    const dialogResult = await dialog.showSaveDialog({
+    const dialogResult = await dialog.showOpenDialog({
       title: 'Importar Dados',
       filters: [
         {
@@ -290,19 +260,23 @@ export async function importState(
       ]
     })
 
-    if (dialogResult.canceled || !dialogResult.filePath) {
-      return makeError('Cancelled', 'Importação cancelada')
+    if (dialogResult.canceled || !dialogResult.filePaths.length) {
+      return fail('Cancelled', 'Importação cancelada')
     }
 
-    filePath = dialogResult.filePath
+    filePath = dialogResult.filePaths[0]
   }
 
   try {
     const stateString = await readFile(filePath, { encoding: 'utf8' })
 
-    return makeResult(stateString)
+    const stateKeys = ['brackets', 'players', 'winnersByCategory']
+    if (!stateKeys.every((k) => stateString.includes(k)))
+      return fail('InvalidState', `Arquivo de estado "${path.basename(filePath)}" inválido`)
+
+    return succeed(stateString)
   } catch (error) {
     const e = error as Error
-    return makeError(e.name, e.message)
+    return fail(e.name, e.message)
   }
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte'
   import type {
     Bracket,
     Classification,
@@ -7,25 +8,27 @@
     Player,
     Winners
   } from '@lib/types/bracket-lib'
+
   import * as ContextMenu from '@components/ui/context-menu'
   import * as Command from '@components/ui/command'
-  import { computeCommandScore } from 'bits-ui'
-  import { createBracket } from 'bracketry'
-  import { ScrollArea } from '@components/ui/scroll-area'
-  import { Badge } from '@components/ui/badge'
-  import { Plus, Trash2 } from '@lucide/svelte'
-  import { installBracketUI, get_match_data_for_element } from '@lib/bracket-lib/rendering'
-  import { Button, buttonVariants } from '@/components/ui/button'
-  import { cn } from '@lib/utils'
-  import { playersStore, bracketsStore, winnerStore } from '@/states.svelte'
+  import * as Popover from '@components/ui/popover'
+  import * as Select from '@components/ui/select'
   import { Label } from '@components/ui/label'
   import { Input } from '@components/ui/input'
-  import * as Popover from '@components/ui/popover'
-  import type { Snippet } from 'svelte'
-  import { toast } from 'svelte-sonner'
-  import * as Select from '@components/ui/select'
-  import { retrieveWinners, roundsBySize } from '@lib/bracket-lib'
   import { Separator } from '@components/ui/separator'
+  import { ScrollArea } from '@components/ui/scroll-area'
+  import { Button, buttonVariants } from '@/components/ui/button'
+  import { Badge } from '@components/ui/badge'
+  import { computeCommandScore } from 'bits-ui'
+  import { toast } from 'svelte-sonner'
+  import { cn } from '@lib/utils'
+
+  import { Plus, Trash2 } from '@lucide/svelte'
+
+  import { installBracketUI, get_match_data_for_element } from '@lib/bracket-lib/rendering'
+  import { playersStore, bracketsStore, winnerStore } from '@/states.svelte'
+  import { retrieveWinners, roundsBySize } from '@lib/bracket-lib'
+  import { createBracket } from 'bracketry'
 
   let {
     isMale,
@@ -46,11 +49,11 @@
   let openPopover = $state(false)
   let bracketFullscreen = $state(false)
   let openDeletePopover: Record<string, boolean> = $state({})
-
   let popoverInput = $state('')
   let commandValue = $state('')
   let newPlayerSide = $state(0)
   let popoverSelectedValue = $state(validBracketSizes[0])
+
   let selectedMatch = $state<Bracket['matches'][2]>()
   let isBracketVisible = $state(false)
   let winners: Winners = $derived(winnerStore.winnersByCategory[currentCategory])
@@ -68,7 +71,6 @@
       contestants: {}
     }
   )
-
   let filteredPlayers = $derived(
     playersStore.players.filter((player) => player.isMale == isMale && player.present)
   )
@@ -86,6 +88,7 @@
     currentCategory = currentCategory
     update()
   })
+
   export function update(): void {
     // Make sure we have a valid category selected
     if (!currentCategory || !(currentCategory in selectedBrackets)) {
@@ -149,13 +152,6 @@
   }
 
   // ==================== Helper Functions ====================
-
-  function findMatch(roundIndex: number, order: number): Match | undefined {
-    return currentBracket.matches.find(
-      (match) => match.roundIndex === roundIndex && match.order === order
-    )
-  }
-
   function customCommandFilter(
     commandValue: string,
     search: string,
@@ -174,7 +170,9 @@
     order: number,
     { left, right }: { left?: string | null; right?: string | null }
   ): void {
-    const match = findMatch(roundIndex, order)
+    const match = currentBracket.matches.find(
+      (match) => match.roundIndex === roundIndex && match.order === order
+    )
     type Side = {
       contestantId?: string
     }
@@ -248,7 +246,7 @@
 </script>
 
 <!-- 
-MARK: Categories
+MARK: Category Tags
 -->
 
 <Button
@@ -256,14 +254,12 @@ MARK: Categories
   class="fixed bottom-2 right-2 z-10"
   onclick={() => {
     bracketFullscreen = true
-    window.api.printPDF().then(
-      () => {
-        bracketFullscreen = false
-      },
-      () => {
-        bracketFullscreen = false
+    window.api.printPDF().then((result) => {
+      if (result.status == false) {
+        console.warn(result.error)
       }
-    )
+      bracketFullscreen = false
+    })
   }}>Print</Button
 >
 
@@ -345,14 +341,7 @@ MARK: Bracketry
           {/each}
         </div>
       {/if}
-      <div
-        class={cn(
-          'brackets flex h-full w-full'
-          // !isBracketVisible ? 'hidden' : '',
-          // bracketFullscreen ? 'fullscreen' : ''
-        )}
-        bind:this={bracketsEl}
-      ></div>
+      <div class={cn('brackets flex h-full w-full')} bind:this={bracketsEl}></div>
     </div>
     {#if !isBracketVisible}
       <div class="flex h-full w-full items-center justify-center text-center">
@@ -371,7 +360,7 @@ MARK: Bracketry
 </div>
 
 <!-- 
-MARK: Delete Category
+MARK: Del Category Popover
  -->
 {#snippet deleteCategoryPopover(trigger: Snippet, category: string)}
   <Popover.Root
@@ -411,7 +400,7 @@ MARK: Delete Category
 {/snippet}
 
 <!-- 
-MARK: New Category
+MARK: New Category Popover
  -->
 {#snippet new_category_button()}
   <Popover.Root
@@ -559,7 +548,7 @@ MARK: Context Menu
 {/snippet}
 
 <!-- 
-MARK: New Player
+MARK: New Player Dialog
  -->
 <Command.Dialog bind:open={openCommand} filter={customCommandFilter} bind:value={commandValue}>
   <Command.Input
