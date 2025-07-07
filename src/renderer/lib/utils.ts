@@ -40,6 +40,15 @@ export function filterObject<T extends object>(
     .reduce((res, key) => ((res[key] = obj[key]), res), {} as T)
 }
 
+// Helper function to split a list evenly
+export function splitEvenly<T>(list: T[], nGroups: number): T[][] {
+  const result: T[][] = Array.from({ length: nGroups }, () => [])
+  for (let i = 0; i < list.length; i++) {
+    result[i % nGroups].push(list[i])
+  }
+  return result
+}
+
 type FlyAndScaleParams = {
   y?: number
   x?: number

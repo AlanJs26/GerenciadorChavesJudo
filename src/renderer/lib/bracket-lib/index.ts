@@ -1,4 +1,7 @@
 import type { Bracket, Player, Organization, Winners } from '@lib/types/bracket-lib'
+import { splitEvenly } from '@lib/utils'
+
+export const ROUNDS = ['1', '2', '3', '4', 'FIM']
 
 // ==================== Tournament Order Generation ====================
 function generateTournamentOrder(size: number): number[] {
@@ -15,8 +18,6 @@ function generateTournamentOrder(size: number): number[] {
 
   return result
 }
-
-export const ROUNDS = ['1', '2', '3', '4', 'FIM']
 
 export function roundsBySize(size: number): string[] {
   const numRounds = Math.ceil(Math.log2(size))
@@ -104,6 +105,29 @@ export function buildBracket(players: Player[]): Bracket {
       sides: pair.map((p) => ({ contestantId: p }))
     }))
   }
+}
+
+// Helper function to split players and create brackets
+export function createGroupedBrackets(players: Player[], category: string, isMale: boolean) {
+  const maxChunk = 8
+  const nChunks = Math.ceil(players.length / maxChunk)
+  const chunks = splitEvenly(players, nChunks)
+
+  const result = {}
+  const letterGen = (n) => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    return letters[n % letters.length]
+  }
+
+  for (const [i, chunk] of chunks.entries()) {
+    const categoryName = chunks.length > 1 ? `${category} (${letterGen(i)})` : category
+    for (const player of chunk) {
+      player.category = categoryName
+    }
+    result[categoryName] = buildBracket(chunk)
+  }
+
+  return result
 }
 
 // ==================== Data Generation ====================

@@ -1,11 +1,10 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte'
   import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
-
   import type { Organization, Player, State } from '@lib/types/bracket-lib'
 
-  import { Bolt, FileDown, FileJson2, Download } from '@lucide/svelte'
-  import { Button, buttonVariants } from '@/components/ui/button'
+  // Group imports by type/functionality
+  // UI Components
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Input } from '@components/ui/input'
   import * as Tabs from '@components/ui/tabs'
@@ -15,8 +14,13 @@
   import { Toaster } from '@components/ui/sonner'
   import { Checkbox } from '@components/ui/checkbox'
   import { Label } from '@components/ui/label'
+  import { Button, buttonVariants } from '@/components/ui/button'
   import { toast } from 'svelte-sonner'
 
+  // Icons
+  import { Bolt, FileDown, FileJson2, Download } from '@lucide/svelte'
+
+  // Custom components
   import * as RadioGroup from '@components/radio-group'
   import PlayerCard from '@components/PlayerCard.svelte'
   import Bracket from '@components/Bracket.svelte'
@@ -24,7 +28,8 @@
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
   import PlayerTab from '@components/player-tab/PlayerTab.svelte'
 
-  import { buildBracket } from '@lib/bracket-lib'
+  // Utilities and stores
+  import { createGroupedBrackets } from '@lib/bracket-lib'
   import { playersStore, bracketsStore, winnerStore } from './states.svelte'
   import { randomContestantId } from '@lib/utils'
   import { handleResult } from '@shared/errors'
@@ -44,6 +49,8 @@
   let isMale = $derived(radio_sex === 'Masculino')
   const gender = $derived(isMale ? 'male' : 'female')
 
+  // ==================== Effect Handlers ====================
+  // Process organizations into players
   $effect(() => {
     playersStore.players = organizations
       .reduce((acc: Player[], org) => {
@@ -59,8 +66,18 @@
       .sort((a, b) => a.organization.localeCompare(b.organization))
   })
 
+  // ==================== Derived Values ====================
   let nFemale = $derived(playersStore.players.filter((player) => !player.isMale).length)
   let nMale = $derived(playersStore.players.filter((player) => player.isMale).length)
+
+  // Apply text normalization once instead of twice
+  let normalizedFilterText = $derived(
+    filterText
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+  )
+
   let filteredPlayers = $derived(
     playersStore.players.filter(
       (player) =>
@@ -69,14 +86,10 @@
           .normalize('NFD')
           .replace(/\p{Diacritic}/gu, '')
           .toLowerCase()
-          .includes(
-            filterText
-              .normalize('NFD')
-              .replace(/\p{Diacritic}/gu, '')
-              .toLowerCase()
-          )
+          .includes(normalizedFilterText)
     )
   )
+
   let categories = $derived(
     Array.from(
       new Set(
@@ -92,7 +105,7 @@
       .sort((a, b) => a.category.localeCompare(b.category))
   )
 
-  // ==================== State Update Functions ====================
+  // ==================== Functions ====================
   function generateAllBrackets(): void {
     // Generate brackets for each category and gender
     for (const { category, state, isMale } of categories) {
@@ -104,30 +117,16 @@
 
       if (genderPlayers.length === 0) continue
 
-      function splitEvenly<T>(list: T[], nGroups: number): T[][] {
-        const result: T[][] = Array.from({ length: nGroups }, () => [])
-        for (let i = 0; i < list.length; i++) {
-          result[i % nGroups].push(list[i])
-        }
-        return result
-      }
+      // Extract this into a helper function
+      const groupedBrackets = createGroupedBrackets(genderPlayers, category, isMale)
 
-      const maxChunk = 8
-      const nChunks = Math.ceil(genderPlayers.length / maxChunk)
-      const chunks = splitEvenly(genderPlayers, nChunks)
-
-      const letterGen = (n) => {
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        return letters[n % letters.length]
-      }
-      for (const [i, chunk] of chunks.entries()) {
-        const categoryName = chunks.length > 1 ? `${category} (${letterGen(i)})` : category
-        for (const player of chunk) {
-          player.category = categoryName
-        }
-        bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = buildBracket(chunk)
-      }
+      // Assign to store
+      Object.entries(groupedBrackets).forEach(([categoryName, bracket]) => {
+        bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = bracket
+      })
     }
+
+    // Initialize winners structure
     winnerStore.winnersByCategory = Object.fromEntries(
       Array.from(categories, (c) => [c.category, { matches: {}, winners: [] }])
     )
@@ -139,27 +138,37 @@
       players: playersStore.players,
       winnersByCategory: winnerStore.winnersByCategory
     }
+
+    // Separate handlers for autosave vs manual export
     if (defaultPath) {
-      console.log(`Autosave: ${defaultPath}`)
-      window.api.exportState(JSON.stringify(state), defaultPath).then(
-        handleResult(undefined, (error) => {
-          console.error(error)
-          toast.error(`Erro ao salvar automaticamente: ${error.cause?.message}`)
-        })
-      )
+      handleAutosaveExport(state, defaultPath)
     } else {
-      window.api.exportState(JSON.stringify(state)).then(
-        handleResult(
-          () => {
-            toast.success('Exportado com sucesso!')
-          },
-          (error) => {
-            console.error(error)
-            toast.error(`Erro de exportação: ${error.cause?.message}`)
-          }
-        )
-      )
+      handleManualExport(state)
     }
+  }
+
+  function handleAutosaveExport(state: State, path: string) {
+    console.log(`Autosave: ${path}`)
+    window.api.exportState(JSON.stringify(state), path).then(
+      handleResult(undefined, (error) => {
+        console.error(error)
+        toast.error(`Erro ao salvar automaticamente: ${error.cause?.message}`)
+      })
+    )
+  }
+
+  function handleManualExport(state: State) {
+    window.api.exportState(JSON.stringify(state)).then(
+      handleResult(
+        () => {
+          toast.success('Exportado com sucesso!')
+        },
+        (error) => {
+          console.error(error)
+          toast.error(`Erro de exportação: ${error.cause?.message}`)
+        }
+      )
+    )
   }
 
   function enableAutosave() {
@@ -188,8 +197,7 @@
     )
   }
 
-  // ==================== Lifecycle Hooks ====================
-
+  // ==================== Error Handling ====================
   function handleImportError(error: ResultError) {
     if (error.name == 'ExcelPlayerError') {
       const { cause } = error as ExcelPlayerError
@@ -202,6 +210,7 @@
     return null
   }
 
+  // ==================== Effect for Files Import ====================
   $effect(() => {
     if (!files) return
     ;(async (): Promise<void> => {
@@ -216,9 +225,16 @@
     })()
   })
 
+  // ==================== Lifecycle Hooks ====================
   onMount(() => {
     importState('~/.chaves-judo/dados.json')
 
+    // Clear all previous intervals
+    clearAllIntervals()
+  })
+
+  // Helper function to clear all intervals
+  function clearAllIntervals() {
     // Get a reference to the last interval + 1
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const interval_id = window.setInterval(function () {}, Number.MAX_SAFE_INTEGER)
@@ -227,7 +243,7 @@
     for (let i = 1; i < interval_id; i++) {
       window.clearInterval(i)
     }
-  })
+  }
 </script>
 
 <Toaster />
