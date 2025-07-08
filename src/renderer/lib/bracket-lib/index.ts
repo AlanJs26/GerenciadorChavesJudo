@@ -108,7 +108,7 @@ export function buildBracket(players: Player[]): Bracket {
 }
 
 // Helper function to split players and create brackets
-export function createGroupedBrackets(players: Player[], category: string, isMale: boolean) {
+export function createGroupedBrackets(players: Player[], category: string, _isMale: boolean) {
   const maxChunk = 8
   const nChunks = Math.ceil(players.length / maxChunk)
   const chunks = splitEvenly(players, nChunks)

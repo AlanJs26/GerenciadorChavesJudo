@@ -1,9 +1,9 @@
-import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
-import { cubicOut } from 'svelte/easing'
-import type { Table } from '@tanstack/table-core'
-import type { TransitionConfig } from 'svelte/transition'
 import { Component } from '@lucide/svelte'
+import type { Table } from '@tanstack/table-core'
+import { type ClassValue, clsx } from 'clsx'
+import { cubicOut } from 'svelte/easing'
+import type { TransitionConfig } from 'svelte/transition'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]): ReturnType<typeof twMerge> {
   return twMerge(clsx(inputs))

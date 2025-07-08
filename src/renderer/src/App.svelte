@@ -23,7 +23,7 @@
   // Custom components
   import * as RadioGroup from '@components/radio-group'
   import PlayerCard from '@components/PlayerCard.svelte'
-  import Bracket from '@components/Bracket.svelte'
+  import { Bracket } from '@/components/bracket'
   import FileInput from '@components/FileInput.svelte'
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
   import PlayerTab from '@components/player-tab/PlayerTab.svelte'
@@ -40,7 +40,6 @@
   // ==================== State Variables ====================
   let files: FileList | undefined = $state()
   let radio_sex = $state('Feminino')
-  let currentCategory = $state('')
   let organizations: Organization[] = $state([])
   let filterText = $state('')
   let autosaveInterval: ReturnType<typeof setInterval> | null = $state(null)
@@ -117,16 +116,13 @@
 
       if (genderPlayers.length === 0) continue
 
-      // Extract this into a helper function
       const groupedBrackets = createGroupedBrackets(genderPlayers, category, isMale)
 
-      // Assign to store
       Object.entries(groupedBrackets).forEach(([categoryName, bracket]) => {
         bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = bracket
       })
     }
 
-    // Initialize winners structure
     winnerStore.winnersByCategory = Object.fromEntries(
       Array.from(categories, (c) => [c.category, { matches: {}, winners: [] }])
     )
@@ -339,7 +335,7 @@
         <PlayerTab />
       </Tabs.Content>
       <Tabs.Content value="chaves" class="mt-0 h-full w-full">
-        <Bracket bind:this={bracketRenderer} category={currentCategory} {isMale} />
+        <Bracket bind:this={bracketRenderer} {isMale} />
       </Tabs.Content>
     </Tabs.Root>
   </div>

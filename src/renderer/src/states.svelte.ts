@@ -27,10 +27,21 @@ function createStore<T>(initialValue: T) {
 
 // Players store
 const playersStoreInternal = createStore<Player[]>([])
+const playerByContestantId: Record<string, Player> = $derived(
+  playersStoreInternal.state.reduce((acc, player) => {
+    if (player.contestantId) {
+      acc[player.contestantId] = player
+    }
+    return acc
+  }, {})
+)
 
 export const playersStore = {
   get players(): Player[] {
     return playersStoreInternal.state
+  },
+  get byContestantId(): Record<string, Player> {
+    return playerByContestantId
   },
   set players(value: Player[]) {
     playersStoreInternal.state = value

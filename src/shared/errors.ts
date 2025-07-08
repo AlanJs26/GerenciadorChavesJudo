@@ -55,7 +55,7 @@ export function handleResult<T, E extends ResultError = ResultError>(
   }
 }
 
-export function succeed<T>(result: T): Success<T> {
+export function success<T>(result: T): Success<T> {
   return {
     status: true,
     data: result

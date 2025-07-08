@@ -3,7 +3,7 @@ import type { Organization, Player } from '@lib/types/bracket-lib'
 import os from 'os'
 import path from 'path'
 import { dialog, shell, BrowserWindow } from 'electron'
-import { type Result, fail, succeed } from '@shared/errors'
+import { type Result, fail, success } from '@shared/errors'
 import fs, { readFile, writeFile } from 'fs/promises'
 import { existsSync } from 'fs'
 
@@ -100,7 +100,7 @@ export async function organizationFromFile(
     organization.players.push(player)
   }
 
-  return succeed(organization)
+  return success(organization)
 }
 
 export async function exportPlayers(
@@ -147,7 +147,7 @@ export async function exportPlayers(
 
   try {
     await workbook.xlsx.writeFile(filePath)
-    return succeed(undefined)
+    return success(undefined)
   } catch (error) {
     const e = error as Error
     return fail(e.name, e.message)
@@ -173,7 +173,7 @@ export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<Resu
   })
 
   if (dialogResult.canceled || !dialogResult.filePath) {
-    return fail('Cancelled', 'Exportação cancelada')
+    return fail('Canceled', 'Exportação cancelada')
   }
   const filePath = dialogResult.filePath
 
@@ -186,7 +186,7 @@ export async function printPDF(event: Electron.IpcMainInvokeEvent): Promise<Resu
 
   shell.openExternal('file://' + filePath)
 
-  return succeed(filePath)
+  return success(filePath)
 }
 
 export async function exportState(
@@ -221,7 +221,7 @@ export async function exportState(
     })
 
     if (dialogResult.canceled || !dialogResult.filePath) {
-      return fail('Cancelled', 'Exportação cancelada')
+      return fail('Canceled', 'Exportação cancelada')
     }
 
     filePath = dialogResult.filePath
@@ -230,7 +230,7 @@ export async function exportState(
   try {
     await writeFile(filePath, state)
 
-    return succeed(undefined)
+    return success(undefined)
   } catch (error) {
     const e = error as Error
     return fail(e.name, e.message)
@@ -274,7 +274,7 @@ export async function importState(
     if (!stateKeys.every((k) => stateString.includes(k)))
       return fail('InvalidState', `Arquivo de estado "${path.basename(filePath)}" inválido`)
 
-    return succeed(stateString)
+    return success(stateString)
   } catch (error) {
     const e = error as Error
     return fail(e.name, e.message)

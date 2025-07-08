@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { fail, succeed } from '@shared/errors'
+import { fail, success } from '@shared/errors'
 import type { State } from '@lib/types/bracket-lib'
 import { webUtils } from 'electron'
 import type { API } from './index.d'
@@ -23,7 +23,7 @@ const api: API = {
 
     try {
       const state: State = JSON.parse(result.data)
-      return succeed(state)
+      return success(state)
     } catch {
       return fail('InvalidState', `Não foi possível processar o arquivo`)
     }
