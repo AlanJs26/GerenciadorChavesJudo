@@ -1,6 +1,12 @@
 <script lang="ts">
   import { setContext, type Snippet } from 'svelte'
-  let { group = $bindable(), children }: { group: string; children: Snippet } = $props()
+  import { cn } from '@lib/utils'
+
+  let {
+    group = $bindable(),
+    class: className = '',
+    children
+  }: { group: string; class: string; children: Snippet } = $props()
 
   // Define o contexto para compartilhar o valor selecionado com os itens filhos
   setContext('RADIO_GROUP', {
@@ -13,7 +19,7 @@
   })
 </script>
 
-<div class="radio-group">
+<div class={cn(className, 'radio-group bg-secondary')}>
   {@render children?.()}
 </div>
 
@@ -22,7 +28,6 @@
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    background-color: #0000001c;
     padding: 5px;
     border-radius: 5px;
   }

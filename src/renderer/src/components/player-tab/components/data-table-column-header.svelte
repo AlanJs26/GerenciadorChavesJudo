@@ -36,7 +36,7 @@
             {...props}
             variant="ghost"
             size="sm"
-            class="-ml-3 h-8 data-[state=open]:bg-accent"
+            class="data-[state=open]:bg-accent -ml-3 h-8"
           >
             <span>
               {title}
@@ -53,16 +53,16 @@
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="start">
         <DropdownMenu.Item onclick={() => column.toggleSorting(false)}>
-          <ArrowUp class="mr-2 size-3.5 text-muted-foreground/70" />
+          <ArrowUp class="text-muted-foreground/70 mr-2 size-3.5" />
           Asc
         </DropdownMenu.Item>
         <DropdownMenu.Item onclick={() => column.toggleSorting(true)}>
-          <ArrowDown class="mr-2 size-3.5 text-muted-foreground/70" />
+          <ArrowDown class="text-muted-foreground/70 mr-2 size-3.5" />
           Desc
         </DropdownMenu.Item>
         <DropdownMenu.Separator />
         <DropdownMenu.Item onclick={() => column.toggleVisibility(false)}>
-          <EyeOff class="mr-2 size-3.5 text-muted-foreground/70" />
+          <EyeOff class="text-muted-foreground/70 mr-2 size-3.5" />
           Hide
         </DropdownMenu.Item>
       </DropdownMenu.Content>

@@ -1,5 +1,13 @@
-import type { Bracket, Player, Organization, Winners } from '@lib/types/bracket-lib'
-import { splitEvenly } from '@lib/utils'
+import type {
+  Bracket,
+  Player,
+  Organization,
+  Winners,
+  Category,
+  TaggedBracket,
+  Gendered
+} from '@lib/types/bracket-lib'
+import { splitEvenly, buildRandomGen, pickRandom } from '@lib/utils'
 
 export const ROUNDS = ['1', '2', '3', '4', 'FIM']
 
@@ -68,7 +76,13 @@ export function retrieveWinners(bracket: Bracket, player: Player): Winners {
 }
 
 // ==================== Bracket Generation ====================
-export function buildBracket(players: Player[]): Bracket {
+export function buildBracket(players: Player[]): TaggedBracket {
+  if (
+    players.some((player) => hashCategory(player.category) != hashCategory(players[0].category))
+  ) {
+    throw Error('Attempt to create Bracket with players of mixed categories')
+  }
+
   const numPlayers = players.length
   const rounds = roundsBySize(numPlayers)
   const order = generateTournamentOrder(2 ** Math.ceil(Math.log2(numPlayers)))
@@ -99,6 +113,7 @@ export function buildBracket(players: Player[]): Bracket {
   return {
     rounds: rounds.map((name) => ({ name })),
     contestants,
+    category: players[0].category,
     matches: Object.entries(matchPairs).map(([k, pair]) => ({
       roundIndex: 0,
       order: parseInt(k),
@@ -108,77 +123,63 @@ export function buildBracket(players: Player[]): Bracket {
 }
 
 // Helper function to split players and create brackets
-export function createGroupedBrackets(players: Player[], category: string, _isMale: boolean) {
+export function createGroupedBrackets(players: Player[]): TaggedBracket[] {
   const maxChunk = 8
   const nChunks = Math.ceil(players.length / maxChunk)
   const chunks = splitEvenly(players, nChunks)
 
-  const result = {}
+  const result: TaggedBracket[] = []
   const letterGen = (n) => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     return letters[n % letters.length]
   }
 
   for (const [i, chunk] of chunks.entries()) {
-    const categoryName = chunks.length > 1 ? `${category} (${letterGen(i)})` : category
-    for (const player of chunk) {
-      player.category = categoryName
+    if (chunks.length > 1) {
+      for (const player of chunk) {
+        player.category.push({ id: 'Grupo', value: letterGen(i) })
+      }
     }
-    result[categoryName] = buildBracket(chunk)
+
+    result.push(buildBracket(chunk))
   }
 
   return result
 }
 
+export function hashCategory(category: Category) {
+  return category
+    .map((t) => t.id + '¬' + t.value)
+    .toSorted()
+    .join('¨')
+}
+
+export function unhashCategory(hashed: string): Category {
+  return hashed.split('¨').map((hashedTag) => {
+    const [id, value] = hashedTag.split('¬')
+    return { id, value }
+  })
+}
+
+export function compareCategory(a: Category, b: Category) {
+  return hashCategory(a) == hashCategory(b)
+}
+
+export function gendered<T>(fn: (gender: 'female' | 'male') => T): Gendered<T> {
+  return {
+    male: fn('male'),
+    female: fn('female')
+  }
+}
+
+export function isGendered<T>(obj: T) {
+  if (!obj || typeof obj != 'object') return false
+  if (Object.keys(obj).length != 2) return false
+  if (!('male' in obj) || !('female' in obj)) return false
+
+  return true
+}
 // ==================== Data Generation ====================
-
-function cyrb128(str: string) {
-  let h1 = 1779033703,
-    h2 = 3144134277,
-    h3 = 1013904242,
-    h4 = 2773480762
-  for (let i = 0, k; i < str.length; i++) {
-    k = str.charCodeAt(i)
-    h1 = h2 ^ Math.imul(h1 ^ k, 597399067)
-    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233)
-    h3 = h4 ^ Math.imul(h3 ^ k, 951274213)
-    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179)
-  }
-  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067)
-  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233)
-  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213)
-  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179)
-  h1 ^= h2 ^ h3 ^ h4
-  h2 ^= h1
-  h3 ^= h1
-  h4 ^= h1
-  return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0]
-}
-
-function sfc32(a: number, b: number, c: number, d: number) {
-  return function () {
-    a |= 0
-    b |= 0
-    c |= 0
-    d |= 0
-    const t = (((a + b) | 0) + d) | 0
-    d = (d + 1) | 0
-    a = b ^ (b >>> 9)
-    b = (c + (c << 3)) | 0
-    c = (c << 21) | (c >>> 11)
-    c = (c + t) | 0
-    return (t >>> 0) / 4294967296
-  }
-}
-
-function buildRandomGen(seedStr: string) {
-  // Create cyrb128 state:
-  const seed = cyrb128(seedStr)
-  // Four 32-bit component hashes provide the seed for sfc32.
-  const rand = sfc32(seed[0], seed[1], seed[2], seed[3])
-
-  return rand
-}
 
 export function generateRandomOrganizations(
   numOrgs: number,
@@ -221,7 +222,16 @@ export function generateRandomOrganizations(
     'Federação Estadual',
     'União Esportiva'
   ]
-  const categories = ['KIDS', 'KIDS 2', 'JUNIOR', 'TEEN', 'ADULT']
+  const categories = [
+    {
+      id: 'Peso',
+      values: ['10kg', '20kg', '30kg', '40kg', '50kg']
+    },
+    {
+      id: 'SUB',
+      values: ['SUB10', 'SUB11', 'SUB12', 'SUB13', 'SUB14', 'SUB15', 'SUB16']
+    }
+  ]
 
   return Array.from({ length: numOrgs }, (_, i) => {
     const orgName = i < orgNames.length ? orgNames[i] : `Organização ${i + 1}`
@@ -230,9 +240,9 @@ export function generateRandomOrganizations(
       const isMale = rand() > 0.5
       const names = isMale ? maleNames : femaleNames
       return {
-        name: names[Math.floor(rand() * names.length)],
+        name: pickRandom(names, rand()),
         isMale,
-        category: categories[Math.floor(rand() * categories.length)]
+        category: categories.map(({ id, values }) => ({ id, value: pickRandom(values, rand()) }))
       }
     })
 

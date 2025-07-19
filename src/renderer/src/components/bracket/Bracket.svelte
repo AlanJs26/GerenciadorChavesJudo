@@ -7,23 +7,17 @@
   import { computeCommandScore } from 'bits-ui'
   import { toast } from 'svelte-sonner'
 
-  import { BracketContainer, Categories, MatchContextMenu } from '.'
-  import { bracketsStore, playersStore, winnerStore } from '@/states.svelte'
+  import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte'
   import { retrieveWinners } from '@lib/bracket-lib'
   import { get_match_data_for_element, installBracketUI } from '@lib/bracket-lib/rendering'
+  import type { Category } from '@lib/types/bracket-lib'
   import { createBracket } from 'bracketry'
-
-  let {
-    isMale
-  }: {
-    isMale: boolean
-  } = $props()
+  import { BracketContainer, Categories, MatchContextMenu } from '.'
 
   let bracketsEl: HTMLDivElement = $state()
   let bracketry: ReturnType<typeof createBracket> = null
 
   // ==================== State Variables ====================
-  let currentCategory = $state('')
   let matchContextVisible = $state(false)
   let openCommand = $state(false)
   let bracketFullscreen = $state(false)
@@ -33,35 +27,38 @@
   let selectedMatch = $state<Bracket['matches'][2]>()
 
   // ==================== Derived States ====================
-  let winners: Winners = $derived(winnerStore.winnersByCategory[currentCategory])
-  let gender: 'male' | 'female' = $derived(isMale ? 'male' : 'female')
-  let selectedBrackets: Record<string, Bracket> = $derived(bracketsStore.brackets[gender])
+  let winners: Winners = $derived(
+    winnerStore.get(genderStore.gender, bracketsStore.selectedCategory)
+  )
 
   let currentBracket: Bracket = $derived(
-    bracketsStore.brackets[gender][currentCategory] ?? {
+    bracketsStore.getRaw(genderStore.gender, bracketsStore.selectedCategory) ?? {
       matches: [],
       rounds: [],
       contestants: {}
     }
   )
   let filteredPlayers = $derived(
-    playersStore.players.filter((player) => player.isMale == isMale && player.present)
+    playersStore.players[genderStore.gender].filter((player) => player.present)
   )
 
   // ==================== Lifecycle Hooks ====================
   $effect(() => {
-    currentCategory = currentCategory
-    update()
+    update(bracketsStore.selectedCategory)
   })
 
-  export function update(): void {
+  export function update(_s: Category): void {
     // Make sure we have a valid category selected
-    if (!currentCategory || !(currentCategory in selectedBrackets)) {
-      const availableCategories = Object.keys(selectedBrackets)
-      currentCategory = availableCategories.length > 0 ? availableCategories[0] : ''
-      if (!currentCategory) {
+    if (!bracketsStore.has(genderStore.gender, bracketsStore.selectedCategory)) {
+      if (bracketsStore.categories[genderStore.gender].length == 0) return
+
+      const categories = bracketsStore.categories[genderStore.gender]
+      bracketsStore.selectedCategory = categories.at(0) ?? []
+      if (bracketsStore.selectedCategory.length == 0) {
         return
       }
+      console.log($state.snapshot(bracketsStore.selectedCategory))
+      console.log(bracketsStore.getRaw(genderStore.gender, bracketsStore.selectedCategory))
     }
 
     if (bracketry) {
@@ -80,6 +77,7 @@
       }
     }
 
+    console.log(currentBracket)
     bracketry = installBracketUI(
       bracketsEl,
       currentBracket,
@@ -89,6 +87,10 @@
           (e.target as HTMLDivElement).closest('.match-body') ||
           ((e.target as HTMLDivElement).closest('.match-wrapper') && match_data.roundIndex == 0)
         ) {
+          if (match_data === undefined) {
+            throw Error('Invalid match_data for Bracket', currentBracket)
+          }
+          console.log(selectedMatch)
           selectedMatch = match_data
           matchContextVisible = true
           return
@@ -173,7 +175,7 @@
     updateSide(0, left)
     updateSide(1, right)
 
-    const bracket = bracketsStore.brackets[gender][currentCategory]
+    const bracket = bracketsStore.getRaw(genderStore.gender, bracketsStore.selectedCategory)
 
     bracket.contestants = {
       ...bracket.contestants,
@@ -188,7 +190,7 @@
       }
     ])
 
-    bracketsStore.brackets[gender][currentCategory] = bracketry.getAllData()
+    bracketsStore.setRaw(genderStore.gender, bracketsStore.selectedCategory, bracketry.getAllData())
 
     if (
       bracket.rounds.length == roundIndex ||
@@ -198,9 +200,10 @@
     ) {
       if ((!left && right) || (left && !right)) {
         const winnerContestantId = left ?? right
-        winnerStore.winnersByCategory[currentCategory] = retrieveWinners(
-          bracket,
-          playersStore.byContestantId[winnerContestantId]
+        winnerStore.set(
+          genderStore.gender,
+          bracketsStore.selectedCategory,
+          retrieveWinners(bracket, playersStore.byContestantId[winnerContestantId])
         )
         winnerStore.winnersByCategory = { ...winnerStore.winnersByCategory }
       }
@@ -210,7 +213,7 @@
 
 <Button
   variant="default"
-  class="fixed bottom-2 right-2 z-10"
+  class="fixed right-2 bottom-2 z-10"
   onclick={() => {
     bracketFullscreen = true
     window.api.printPDF().then((result) => {
@@ -223,7 +226,7 @@
 >
 
 <div class={cn('brackets-container', 'flex h-full w-full flex-col items-center')}>
-  <Categories {isMale} bind:currentCategory />
+  <Categories />
 
   <MatchContextMenu
     {selectedMatch}
@@ -248,11 +251,11 @@
       })
     }}
   >
-    <BracketContainer {bracketFullscreen} {currentCategory} bind:bracketsEl />
+    <BracketContainer {bracketFullscreen} bind:bracketsEl />
   </MatchContextMenu>
 </div>
 
-<!-- 
+<!--
 MARK: New Player Dialog
  -->
 <Command.Dialog bind:open={openCommand} filter={customCommandFilter} bind:value={commandValue}>
@@ -268,7 +271,7 @@ MARK: New Player Dialog
   <Command.List>
     <Command.Empty>Não encontrado.</Command.Empty>
     <Command.Group heading="Participantes">
-      {#each filteredPlayers as player}
+      {#each filteredPlayers as player (player.contestantId)}
         <Command.Item
           value={player.contestantId}
           onclick={() => {
@@ -291,10 +294,12 @@ MARK: New Player Dialog
 </Command.Dialog>
 
 <style>
+  @reference '../../assets/main.css';
   .brackets-container {
+    @apply bg-background;
     grid-area: brackets;
-    background-color: #ffffff;
     min-height: 0;
     min-width: 0;
+    overflow: hidden;
   }
 </style>

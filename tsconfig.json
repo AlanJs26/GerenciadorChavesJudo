@@ -10,14 +10,19 @@
   ],
   "compilerOptions": {
     "composite": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/renderer/src/*"],
+      "@/*": [
+        "./src/renderer/src/*"
+      ],
     },
     "moduleResolution": "node",
     // "skipLibCheck": true,
     "esModuleInterop": true,
+    "useDefineForClassFields": true,
     // "resolveJsonModule": true,
     // "allowSyntheticDefaultImports": true
   },

@@ -1,3 +1,33 @@
+@reference 'tailwindcss';
+/* ===== Scrollbar CSS ===== */
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-primary/15;
+  border-radius: 10px;
+}
+
+/* ===== Scrollbar CSS (End) ===== */
+
+body,
+#app {
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+
 *,
 *::before,
 *::after {
@@ -7,7 +37,7 @@
 }
 
 *:focus-visible {
-  box-shadow: none!important;
+  box-shadow: none !important;
 }
 
 ul {

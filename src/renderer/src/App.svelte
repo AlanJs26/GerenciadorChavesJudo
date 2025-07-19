@@ -1,36 +1,39 @@
 <script lang="ts">
-  import { onMount, type Snippet } from 'svelte'
+  import type {
+    Gendered,
+    Organization,
+    Player,
+    State,
+    StatefullCategory
+  } from '@lib/types/bracket-lib'
   import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
-  import type { Organization, Player, State } from '@lib/types/bracket-lib'
-
+  import { onMount, type Snippet } from 'svelte'
   // Group imports by type/functionality
   // UI Components
-  import { ScrollArea } from '@components/ui/scroll-area'
-  import { Input } from '@components/ui/input'
-  import * as Tabs from '@components/ui/tabs'
-  import * as DropdownMenu from '@components/ui/dropdown-menu'
+  import { Button, buttonVariants } from '@/components/ui/button'
+  import { Checkbox } from '@components/ui/checkbox'
   import * as ContextMenu from '@components/ui/context-menu'
+  import * as DropdownMenu from '@components/ui/dropdown-menu'
+  import { Input } from '@components/ui/input'
+  import { Label } from '@components/ui/label'
+  import { ScrollArea } from '@components/ui/scroll-area'
   import { Separator } from '@components/ui/separator'
   import { Toaster } from '@components/ui/sonner'
-  import { Checkbox } from '@components/ui/checkbox'
-  import { Label } from '@components/ui/label'
-  import { Button, buttonVariants } from '@/components/ui/button'
+  import * as Tabs from '@components/ui/tabs'
   import { toast } from 'svelte-sonner'
-
+  import { ModeWatcher } from 'mode-watcher'
   // Icons
-  import { Bolt, FileDown, FileJson2, Download } from '@lucide/svelte'
-
+  import { Bolt, Download, FileDown, FileJson2 } from '@lucide/svelte'
   // Custom components
-  import * as RadioGroup from '@components/radio-group'
-  import PlayerCard from '@components/PlayerCard.svelte'
   import { Bracket } from '@/components/bracket'
-  import FileInput from '@components/FileInput.svelte'
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
+  import FileInput from '@components/FileInput.svelte'
   import PlayerTab from '@components/player-tab/PlayerTab.svelte'
-
+  import PlayerCard from '@components/PlayerCard.svelte'
+  import * as RadioGroup from '@components/radio-group'
   // Utilities and stores
-  import { createGroupedBrackets } from '@lib/bracket-lib'
-  import { playersStore, bracketsStore, winnerStore } from './states.svelte'
+  import { bracketsStore, playersStore, winnerStore, genderStore } from '@/states.svelte.ts'
+  import { createGroupedBrackets, gendered, generateRandomOrganizations } from '@lib/bracket-lib'
   import { randomContestantId } from '@lib/utils'
   import { handleResult } from '@shared/errors'
 
@@ -39,35 +42,37 @@
 
   // ==================== State Variables ====================
   let files: FileList | undefined = $state()
-  let radio_sex = $state('Feminino')
   let organizations: Organization[] = $state([])
   let filterText = $state('')
   let autosaveInterval: ReturnType<typeof setInterval> | null = $state(null)
 
-  // ==================== Computed Values ====================
-  let isMale = $derived(radio_sex === 'Masculino')
-  const gender = $derived(isMale ? 'male' : 'female')
-
   // ==================== Effect Handlers ====================
   // Process organizations into players
   $effect(() => {
-    playersStore.players = organizations
-      .reduce((acc: Player[], org) => {
-        return acc.concat(
-          org.players.map((player) => ({
+    const newPlayers = organizations.reduce(
+      (acc, org) => {
+        for (const player of org.players) {
+          const gender = player.isMale ? 'male' : 'female'
+          acc[gender].push({
             ...player,
             organization: org.organization,
             present: true,
             contestantId: randomContestantId()
-          }))
-        )
-      }, [])
-      .sort((a, b) => a.organization.localeCompare(b.organization))
+          })
+        }
+        return acc
+      },
+      gendered(() => [] as Player[])
+    )
+    newPlayers.male.sort((a, b) => a.organization.localeCompare(b.organization))
+    newPlayers.female.sort((a, b) => a.organization.localeCompare(b.organization))
+
+    playersStore.players = newPlayers
   })
 
   // ==================== Derived Values ====================
-  let nFemale = $derived(playersStore.players.filter((player) => !player.isMale).length)
-  let nMale = $derived(playersStore.players.filter((player) => player.isMale).length)
+  let nFemale = $derived(playersStore.players.female.length)
+  let nMale = $derived(playersStore.players.male.length)
 
   // Apply text normalization once instead of twice
   let normalizedFilterText = $derived(
@@ -78,54 +83,50 @@
   )
 
   let filteredPlayers = $derived(
-    playersStore.players.filter(
-      (player) =>
-        player.isMale == isMale &&
-        player.name
-          .normalize('NFD')
-          .replace(/\p{Diacritic}/gu, '')
-          .toLowerCase()
-          .includes(normalizedFilterText)
+    playersStore.players[genderStore.gender].filter((player) =>
+      player.name
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .includes(normalizedFilterText)
     )
   )
 
-  let categories = $derived(
-    Array.from(
-      new Set(
-        playersStore.players
-          .map((player) => `${player.category}¨${player.isMale}`)
-          .concat(Object.keys(bracketsStore.brackets[gender]).map((c) => `${c}¨${isMale}`))
-      )
+  let statefullCategories: Gendered<StatefullCategory[]> = $derived(
+    gendered((gender) =>
+      playersStore.categories[gender].map((category) => ({
+        category,
+        state: true
+      }))
     )
-      .map((key) => {
-        const [category, isMale] = key.split('¨')
-        return { category, isMale: isMale === 'true', state: false }
-      })
-      .sort((a, b) => a.category.localeCompare(b.category))
   )
 
   // ==================== Functions ====================
   function generateAllBrackets(): void {
     // Generate brackets for each category and gender
-    for (const { category, state, isMale } of categories) {
-      if (!state) continue
+    bracketsStore.clear()
+    for (const [gender, statefullCategory] of Object.entries(statefullCategories)) {
+      for (const { category, state } of statefullCategory) {
+        if (!state) continue
 
-      const genderPlayers = playersStore.players.filter(
-        (player) => player.present && player.category === category && player.isMale === isMale
-      )
+        const players = playersStore.get(gender, category).filter((player) => player.present)
 
-      if (genderPlayers.length === 0) continue
+        if (players.length === 0) continue
 
-      const groupedBrackets = createGroupedBrackets(genderPlayers, category, isMale)
+        const groupedBrackets = createGroupedBrackets(players)
 
-      Object.entries(groupedBrackets).forEach(([categoryName, bracket]) => {
-        bracketsStore.brackets[isMale ? 'male' : 'female'][categoryName] = bracket
-      })
+        for (const bracket of groupedBrackets) {
+          bracketsStore.setTagged(gender, bracket)
+        }
+      }
     }
 
-    winnerStore.winnersByCategory = Object.fromEntries(
-      Array.from(categories, (c) => [c.category, { matches: {}, winners: [] }])
-    )
+    winnerStore.clear()
+    for (const [gender, categories] of Object.entries(bracketsStore.categories)) {
+      for (const category of categories) {
+        winnerStore.set(gender, category, { matches: {}, winners: [] })
+      }
+    }
   }
 
   function exportState(defaultPath?: string) {
@@ -223,7 +224,8 @@
 
   // ==================== Lifecycle Hooks ====================
   onMount(() => {
-    importState('~/.chaves-judo/dados.json')
+    // importState('~/.chaves-judo/dados.json')
+    organizations = generateRandomOrganizations(4, 50)
 
     // Clear all previous intervals
     clearAllIntervals()
@@ -242,6 +244,7 @@
   }
 </script>
 
+<ModeWatcher />
 <Toaster />
 
 {#snippet importDropdown()}
@@ -276,7 +279,7 @@
 {/snippet}
 
 <main>
-  <aside class="p-1">
+  <aside class="border-r p-1">
     <div class="flex w-full flex-row">
       {@render importDropdown()}
       <FileInput bind:files>
@@ -285,7 +288,7 @@
       </FileInput>
     </div>
 
-    <RadioGroup.Root bind:group={radio_sex}>
+    <RadioGroup.Root bind:group={genderStore.radio} class="!mt-1">
       <RadioGroup.Item value="Feminino">
         {nFemale} Feminino
       </RadioGroup.Item>
@@ -294,40 +297,41 @@
       </RadioGroup.Item>
     </RadioGroup.Root>
 
-    <Input id="busca" class="w-100" placeholder="Filtrar Nomes..." bind:value={filterText} />
+    <Input id="busca" class="!my-1 w-full" placeholder="Filtrar Nomes..." bind:value={filterText} />
 
-    <Separator class="my-2" />
+    <Separator />
 
     {#snippet playersScrollview()}
       <ScrollArea class="flex flex-1 flex-col" type="auto">
-        {#each filteredPlayers as _player, i}
+        {#each filteredPlayers as _player, i (_player.contestantId)}
           <PlayerCard bind:player={() => filteredPlayers[i], () => {}} />
         {/each}
       </ScrollArea>
     {/snippet}
     {@render contextmenu(playersScrollview)}
 
-    <Separator class="my-2" />
+    <Separator class="!mb-2" />
 
     <div class="flex flex-row">
-      <CategoryDropdown categories={categories.filter((c) => c.isMale == isMale)}>
+      <CategoryDropdown statefullCategories={statefullCategories[genderStore.gender]}>
         <Bolt class="h-4 w-4" />
       </CategoryDropdown>
 
       <Button
         class="w-full rounded-s-none"
+        variant="defaultDark"
         onclick={(): void => {
           generateAllBrackets()
           bracketRenderer.update()
-          enableAutosave()
+          // enableAutosave()
         }}>Atualizar Chaves</Button
       >
     </div>
   </aside>
 
-  <div class="tabs-container">
+  <div class="tabs-container min-w-0">
     <Tabs.Root value="chaves" class="h-full w-full">
-      <Tabs.List class="grid w-full grid-cols-2">
+      <Tabs.List class="grid w-full grid-cols-2 rounded-none">
         <Tabs.Trigger value="participantes">Participantes</Tabs.Trigger>
         <Tabs.Trigger value="chaves">Chaves</Tabs.Trigger>
       </Tabs.List>
@@ -335,7 +339,7 @@
         <PlayerTab />
       </Tabs.Content>
       <Tabs.Content value="chaves" class="mt-0 h-full w-full">
-        <Bracket bind:this={bracketRenderer} {isMale} />
+        <Bracket bind:this={bracketRenderer} />
       </Tabs.Content>
     </Tabs.Root>
   </div>
@@ -365,7 +369,7 @@
         <Label
           id="player-checkbox-label"
           for="player-checkbox"
-          class="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          class="ml-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Alternar Tudo
         </Label>
@@ -375,6 +379,7 @@
 {/snippet}
 
 <style>
+  @reference './assets/main.css';
   main {
     padding: 0;
     margin: 0;
@@ -392,11 +397,11 @@
 
   .tabs-container {
     grid-area: brackets;
-    min-width: 0;
   }
 
   aside {
-    background: #eee;
+    @apply bg-background;
+    /* background: #eee; */
     display: flex;
     flex-direction: column;
     grid-area: aside;

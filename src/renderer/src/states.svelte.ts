@@ -1,98 +1,171 @@
+import { gendered, hashCategory, unhashCategory } from '@lib/bracket-lib'
 import type {
-  Player,
+  Bracket,
   BracketCollection,
+  Category,
+  Gendered,
+  Player,
+  TaggedBracket,
   WinnersByCategory,
-  Winners,
-  Bracket
+  Tag
 } from '@lib/types/bracket-lib'
+import { compareObject, filterObject } from '@lib/utils'
 
-/**
- * Create a generic store factory for consistent state management
- */
-function createStore<T>(initialValue: T) {
-  let state: T = $state(initialValue)
+class GenderedStore<T> {
+  protected state: Gendered<Record<string, T>> = $state(gendered(() => ({})))
 
-  return {
-    get state(): T {
-      return state
-    },
-    set state(value: T) {
-      state = value
-    },
-    update(updater: (value: T) => T): void {
-      state = updater(state)
+  get(gender: 'female' | 'male', category: Category) {
+    if (!category) return null
+    const hash = hashCategory(category)
+    if (hash in this.state[gender]) {
+      return this.state[gender][hash]
     }
+    return null
+  }
+  has(gender: 'female' | 'male', category: Category) {
+    return Boolean(this.get(gender, category))
+  }
+  set(gender: 'female' | 'male', category: Category, value: T) {
+    this.state[gender][hashCategory(category)] = value
+  }
+  clear() {
+    this.state.male = {}
+    this.state.female = {}
+  }
+  delete(gender: 'female' | 'male', category: Category) {
+    const found = this.get(gender, category)
+    if (found) {
+      delete this.state[gender][hashCategory(category)]
+      return found
+    }
+    return null
   }
 }
 
 // Players store
-const playersStoreInternal = createStore<Player[]>([])
-const playerByContestantId: Record<string, Player> = $derived(
-  playersStoreInternal.state.reduce((acc, player) => {
-    if (player.contestantId) {
-      acc[player.contestantId] = player
-    }
-    return acc
-  }, {})
-)
+class PlayerStore extends GenderedStore<Player[]> {
+  declare protected state: Gendered<Record<string, Player[]>>
+  private flatPlayers: Gendered<Player[]> = $derived(
+    gendered((gender) => Object.values(this.state[gender]).flat())
+  )
 
-export const playersStore = {
-  get players(): Player[] {
-    return playersStoreInternal.state
-  },
-  get byContestantId(): Record<string, Player> {
-    return playerByContestantId
-  },
-  set players(value: Player[]) {
-    playersStoreInternal.state = value
-  },
-  addPlayer(player: Player): void {
-    playersStoreInternal.update((players) => [...players, player])
-  },
-  updatePlayer(index: number, player: Player): void {
-    playersStoreInternal.update((players) => {
-      const newPlayers = [...players]
-      newPlayers[index] = player
-      return newPlayers
-    })
+  readonly byContestantId: Record<string, Player> = $derived(
+    [...this.flatPlayers.female, ...this.flatPlayers.male].reduce((acc, player) => {
+      if (player.contestantId) {
+        acc[player.contestantId] = player
+      }
+      return acc
+    }, {})
+  )
+
+  readonly categories: Gendered<Category[]> = $derived(
+    gendered((gender) => this.uniqueCategories(this.flatPlayers[gender]))
+  )
+
+  get players(): Gendered<Player[]> {
+    return this.flatPlayers
+  }
+  set players(value: Gendered<Player[]>) {
+    this.state = gendered((gender) => this.createCategoryRecord(value[gender]))
+  }
+
+  private createCategoryRecord(players: Player[]): Record<string, Player[]> {
+    return players.reduce((acc, player) => {
+      const hash = hashCategory(player.category)
+      if (hash in acc) {
+        acc[hash].push(player)
+      } else {
+        acc[hash] = [player]
+      }
+      return acc
+    }, {})
+  }
+
+  private uniqueCategories(players: Player[]): Category[] {
+    return Array.from(new Set(players.map((p) => hashCategory(p.category))))
+      .sort((a, b) => a.localeCompare(b))
+      .map((hashed) => unhashCategory(hashed))
   }
 }
 
 // Brackets store
-const bracketsStoreInternal = createStore<BracketCollection>({ male: {}, female: {} })
+class BracketStore extends GenderedStore<TaggedBracket> {
+  declare protected state: Gendered<Record<string, TaggedBracket>>
+  selectedCategory: Category = $state([])
 
-export const bracketsStore = {
-  get brackets(): BracketCollection {
-    return bracketsStoreInternal.state
-  },
-  set brackets(value: BracketCollection) {
-    bracketsStoreInternal.state = value
-  },
-  addBracket(gender: 'male' | 'female', category: string, bracket: Bracket): void {
-    bracketsStoreInternal.update((brackets) => ({
-      ...brackets,
-      [gender]: {
-        ...brackets[gender],
-        [category]: bracket
+  private derivedState: Gendered<TaggedBracket[]> = $derived(
+    gendered((gender) => Object.values(this.state[gender]))
+  )
+
+  categories: Gendered<Category[]> = $derived(
+    gendered((gender) => this.derivedState[gender].map((ds) => ds.category))
+  )
+
+  tagById: Gendered<Record<string, Tag[]>> = $derived(
+    gendered(gender => this.categories[gender].reduce((acc, category) => {
+      for (const tag of category) {
+        if (acc[tag.id]?.find(t => compareObject(t, tag))) continue
+        if (tag.id in acc) {
+          acc[tag.id].push(tag)
+        } else {
+          acc[tag.id] = [tag]
+        }
       }
-    }))
+      return acc
+    }, {} as Record<string, Tag[]>))
+  )
+
+  get brackets(): BracketCollection {
+    return this.derivedState
+  }
+  set brackets(value: BracketCollection) {
+    this.state.female = Object.fromEntries(
+      value.female.map((bracket) => [hashCategory(bracket.category), bracket])
+    )
+    this.state.male = Object.fromEntries(
+      value.male.map((bracket) => [hashCategory(bracket.category), bracket])
+    )
+  }
+  setTagged(gender: 'female' | 'male', bracket: TaggedBracket) {
+    this.state[gender][hashCategory(bracket.category)] = bracket
+  }
+  getRaw(gender: 'female' | 'male', category: Category): Bracket | null {
+    const taggedBracket = this.get(gender, category)
+    if (!taggedBracket) return taggedBracket
+    return filterObject(taggedBracket, (key) => key != 'category')
+  }
+  setRaw(gender: 'female' | 'male', category: Category, bracket: Bracket) {
+    this.state[gender][hashCategory(category)] = { ...bracket, category }
   }
 }
 
+// Gender store
+class GenderStore {
+  isMale: boolean = $state(false)
+  private gender_ = $derived(this.isMale ? 'male' : 'female')
+  private radio_ = $derived(this.isMale ? 'Masculino' : 'Feminino')
+  get gender(): string {
+    return this.gender_
+  }
+  set gender(value: string) {
+    this.isMale = value == 'male'
+  }
+  get radio(): string {
+    return this.radio_
+  }
+  set radio(value: string) {
+    this.isMale = value == 'Masculino'
+  }
+  toggle() {
+    this.isMale = !this.isMale
+  }
+}
 // Winners store
-const winnerStoreInternal = createStore<WinnersByCategory>({})
-
-export const winnerStore = {
-  get winnersByCategory(): WinnersByCategory {
-    return winnerStoreInternal.state
-  },
-  set winnersByCategory(value: WinnersByCategory) {
-    winnerStoreInternal.state = value
-  },
-  updateCategoryWinner(category: string, winners: Winners): void {
-    winnerStoreInternal.update((state) => ({
-      ...state,
-      [category]: winners
-    }))
-  }
+class WinnerStore extends GenderedStore<WinnersByCategory> {
+  winnersByCategory = this.state
 }
+
+export const playersStore = new PlayerStore()
+export const bracketsStore = new BracketStore()
+export const winnerStore = new WinnerStore()
+export const genderStore = new GenderStore()

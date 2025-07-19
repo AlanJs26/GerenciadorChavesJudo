@@ -1,23 +1,25 @@
 <script lang="ts">
-  import * as DropdownMenu from '@components/ui/dropdown-menu'
   import { buttonVariants } from '@/components/ui/button'
-  import { Separator } from '@components/ui/separator'
+  import * as DropdownMenu from '@components/ui/dropdown-menu'
   import { ScrollArea } from '@components/ui/scroll-area'
+  import { Separator } from '@components/ui/separator'
+  import { cn } from '@lib/utils'
 
+  import type { StatefullCategory } from '@lib/types/bracket-lib'
   import type { Snippet } from 'svelte'
 
   let {
-    categories = $bindable(),
+    statefullCategories = $bindable(),
     children
   }: {
-    categories: { category: string; state: boolean; isMale: boolean }[]
+    statefullCategories: StatefullCategory[]
     children: Snippet
   } = $props()
 
-  let states: boolean[] = $state(categories.map((c) => c.state))
+  let states: boolean[] = $state(statefullCategories.map((c) => c.state))
 
   $effect(() => {
-    states = categories.map((c) => c.state)
+    states = statefullCategories.map((c) => c.state)
   })
 
   let allChecked = $derived(states.every((s) => s))
@@ -25,7 +27,10 @@
 
 <DropdownMenu.Root>
   <DropdownMenu.Trigger
-    class={buttonVariants({ variant: 'default' }) + ' rounded-e-none border-e border-gray-700'}
+    class={cn(
+      buttonVariants({ variant: 'defaultDark' }),
+      ' rounded-e-none border-e border-gray-700'
+    )}
   >
     {@render children?.()}
   </DropdownMenu.Trigger>
@@ -33,18 +38,18 @@
   <DropdownMenu.Content class="w-30">
     <DropdownMenu.Group>
       <ScrollArea class="flex max-h-[calc(32px*10)] flex-col" type="auto">
-        {#each categories as _selected, i}
+        {#each statefullCategories as category, i}
           <DropdownMenu.CheckboxItem
             closeOnSelect={false}
             bind:checked={
-              () => states?.[i] ?? categories[i].state,
+              () => states?.[i] ?? category.state,
               () => {
-                categories[i].state = !categories[i].state
-                states[i] = categories[i].state
+                category.state = !category.state
+                states[i] = category.state
               }
             }
           >
-            {categories[i].category}
+            {category.category.map((c) => c.value).join(' | ')}
           </DropdownMenu.CheckboxItem>
         {/each}
       </ScrollArea>
@@ -55,9 +60,9 @@
           () => allChecked,
           () => {
             const prevAllChecked = allChecked
-            categories.forEach((_, i) => {
-              categories[i].state = !prevAllChecked
-              states[i] = categories[i].state
+            statefullCategories.forEach((_, i) => {
+              statefullCategories[i].state = !prevAllChecked
+              states[i] = statefullCategories[i].state
             })
           }
         }>Alternar Todos</DropdownMenu.CheckboxItem

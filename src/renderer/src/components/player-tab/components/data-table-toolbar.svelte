@@ -23,6 +23,7 @@
   const isMaleCol = $derived(table.getColumn('isMale'))
   const isMales = $derived(colFn('isMale', (v) => (v ? 'Masc.' : 'Fem.')))
 
+  // TODO: Change the way categories are stored inside the player-tab table
   const categoryCol = $derived(table.getColumn('category'))
   const categories = $derived(colFn('category'))
 

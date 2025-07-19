@@ -28,7 +28,7 @@
 
   <ContextMenu.Content class="flex w-64 flex-col items-center" updatePositionStrategy="always">
     {@const sides = selectedMatch.sides}
-    {@const filteredSides = selectedMatch.sides.filter((s) => s?.contestantId)}
+    {@const filteredSides = sides.filter((s) => s?.contestantId)}
     {#if filteredSides.length > 0}
       <span class="font-bold">Escolha um Vencedor</span>
     {/if}
@@ -40,7 +40,11 @@
             onSubmitWinner(contestantId, selectedMatch)
           }}
         >
-          {playersStore.byContestantId?.[contestantId].name ?? ''}</ContextMenu.Item
+          {(() => {
+            console.log(playersStore.byContestantId)
+            console.log(contestantId)
+            return playersStore.byContestantId?.[contestantId].name ?? ''
+          })()}</ContextMenu.Item
         >
       {/each}
     </ContextMenu.Group>

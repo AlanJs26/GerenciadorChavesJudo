@@ -1,6 +1,7 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import path from 'path'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
@@ -28,6 +29,6 @@ export default defineConfig({
         '@shared': path.resolve('src/shared')
       }
     },
-    plugins: [svelte()]
+    plugins: [svelte(), tailwindcss()]
   }
 })

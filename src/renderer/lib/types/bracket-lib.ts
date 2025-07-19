@@ -1,42 +1,33 @@
-export type Organization = {
-  organization: string
-  players: Omit<Player, 'organization' | 'present' | 'contestantId'>[]
+export type Gendered<T> = {
+  male: T
+  female: T
+} & Record<string, T>
+
+export interface Tag {
+  id: string
+  value: string
 }
 
-export type Player = {
+export type Category = Tag[]
+export type StatefullCategory = {
+  category: Category
+  state: boolean
+}
+
+export interface Player {
   name: string
   isMale: boolean
-  category: string
+  category: Tag[]
   organization: string
   present: boolean
   contestantId: string
 }
 
-export type BracketCollection = {
-  male: Record<string, Bracket>
-  female: Record<string, Bracket>
+export interface TaggedBracket extends Bracket {
+  category: Category
 }
 
-export type Bracket = {
-  rounds: { name: string }[]
-  contestants: Record<string, Contestant>
-  matches: Match[]
-}
-
-export type Contestant = { players: { title: string; nationality: string }[] }
-
-export type Match = {
-  roundIndex: number
-  order: number
-  sides: { contestantId?: string }[]
-}
-
-export type PlayerColumn = Omit<
-  {
-    [K in keyof Player]: string
-  },
-  'contestantId'
->
+export type BracketCollection = Gendered<TaggedBracket[]>
 
 export type WinnersByCategory = Record<string, Winners>
 
@@ -53,8 +44,40 @@ export type Winners = {
   }[]
 }
 
+// App State
+
 export type State = {
   players: Player[]
   brackets: BracketCollection
   winnersByCategory: WinnersByCategory
+}
+
+// CSV Data
+
+export interface Organization {
+  organization: string
+  players: Omit<Player, 'organization' | 'present' | 'contestantId'>[]
+}
+
+export type PlayerColumn = Omit<
+  {
+    [K in keyof Player]: string
+  },
+  'contestantId'
+>
+
+// Bracketry
+
+export interface Bracket {
+  rounds: { name: string }[]
+  contestants: Record<string, Contestant>
+  matches: Match[]
+}
+
+export type Contestant = { players: { title: string; nationality: string }[] }
+
+export type Match = {
+  roundIndex: number
+  order: number
+  sides: { contestantId?: string }[]
 }

@@ -11,14 +11,15 @@
 </label>
 
 <style>
+  @reference '../../assets/main.css';
+
   .radio-item {
+    @apply text-muted-foreground/70 cursor-pointer;
     border-radius: 5px;
     padding: 5px;
     background: transparent;
     width: 100%;
     text-align: center;
-    cursor: pointer;
-    color: rgba(0, 0, 0, 60%);
     transition:
       color 100ms ease,
       background-color 100ms ease;
@@ -28,12 +29,10 @@
     }
 
     &:hover {
-      background: #ffffff48;
+      @apply bg-primary/10;
     }
     &:has(input:checked) {
-      background: #ffffff;
-      box-shadow: 0 0 5px #00000015;
-      color: black;
+      @apply bg-background text-foreground cursor-default shadow-md;
     }
   }
 </style>

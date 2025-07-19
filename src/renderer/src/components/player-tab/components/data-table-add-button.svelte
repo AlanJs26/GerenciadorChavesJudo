@@ -8,6 +8,8 @@
   import type { Table } from '@tanstack/table-core'
   import type { WithoutChildren } from 'bits-ui'
   import { cn } from '@lib/utils'
+  import type { Gendered } from '@lib/types/bracket-lib'
+  import { isGendered } from '@lib/bracket-lib'
   import { Button, buttonVariants } from '@/components/ui/button'
   import * as Dialog from '@components/ui/dialog'
   import { Label } from '@components/ui/label'
@@ -28,11 +30,8 @@
   let selectedValues: Record<string, string> = $state({})
   let dialogOpen = $state(false)
 
-  const categories = $derived(
-    Array.from(new Set(playersStore.players.map((player) => player.category))).sort((a, b) =>
-      a.localeCompare(b)
-    )
-  )
+  // TODO: Make a new category selection for each Tag
+  const categories = $derived(playersStore.categories)
   const organizations = $derived(
     Array.from(new Set(playersStore.players.map((player) => player.organization))).sort((a, b) =>
       a.localeCompare(b)
@@ -109,13 +108,20 @@
 </div>
 
 {#snippet form()}
-  {#each Object.entries(playerInputTypes) as [key, _value]}
-    {@const inputType: InputTypeValue = playerInputTypes[key]}
+  {#each Object.entries(playerInputTypes) as [key, inputType]}
+    <!-- {@const inputType: InputTypeValue = playerInputTypes[key]} -->
 
     {#if typeof inputType == 'string'}
       <div class="grid grid-cols-3 items-center gap-4">
         <Label for="width">{playerInputLabels[key]}</Label>
         <Input id="width" bind:value={selectedValues[key]} class="col-span-2 h-8" />
+      </div>
+    {:else if isGendered(inputType)}
+      {@const genderText = selectedValues['isMale']}
+      {@const gender = ['male', 'female'].includes(genderText) ? genderText : ''}
+      <div class="grid grid-cols-3 items-center gap-4">
+        <Label for="width">{playerInputLabels[key]}</Label>
+        {@render select((inputType as Gendered<unknown>)[gender], key)}
       </div>
     {:else}
       <div class="grid grid-cols-3 items-center gap-4">

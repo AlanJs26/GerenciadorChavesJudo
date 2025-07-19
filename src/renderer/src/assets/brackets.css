@@ -1,16 +1,56 @@
-.match-winner {
-    color: #4c4c4c;
-    font-size: 12pt;
+@referece 'tailwindcss';
 
-    &.first {
-        color: red;
-        font-weight: bold;
+.match-winner {
+  @apply text-muted-foreground;
+  /* color: #4c4c4c; */
+  font-size: 12pt;
+
+  &.first {
+    color: red;
+    font-weight: bold;
+  }
+}
+
+.brackets {
+  & .player-wrapper {
+    @apply text-foreground;
+  }
+
+  & .side-wrapper:hover .player-title {
+    @apply !text-blue-800;
+  }
+
+  & .bracket-root {
+    @apply border-border;
+
+    & .round-titles-grid-item {
+      @apply border-b-border;
     }
+  }
+
+  & .round-title {
+    @apply text-foreground;
+  }
+}
+
+.dark .brackets {
+  & .side-wrapper:hover .player-title {
+    @apply !text-blue-500;
+  }
+
+  & .match-lines-area .line-wrapper {
+    @apply !text-border !border-border;
+  }
+
+  & .round-wrapper:last-of-type .line-wrapper {
+    color: transparent !important;
+  }
 }
 
 .fullscreen .brackets {
 
-    & .round-titles-grid-item, & .navigation-button {
-        display: none !important;
-      }
+  & .round-titles-grid-item,
+  & .navigation-button {
+    display: none !important;
+  }
 }

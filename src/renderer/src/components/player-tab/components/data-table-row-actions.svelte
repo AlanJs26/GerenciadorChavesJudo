@@ -22,6 +22,7 @@
   const player = $derived(row.original as Player)
   let selectedValues: Record<string, string> = $state({})
 
+  // TODO: Make a new category selection for each Tag
   const categories = $derived(
     Array.from(new Set(playersStore.players.map((player) => player.category))).sort((a, b) =>
       a.localeCompare(b)
@@ -72,7 +73,7 @@
       <Button
         {...props}
         variant="ghost"
-        class="flex h-8 w-8 justify-self-center p-0 data-[state=open]:bg-muted"
+        class="data-[state=open]:bg-muted flex h-8 w-8 justify-self-center p-0"
       >
         <Ellipsis />
         <span class="sr-only">Open Menu</span>

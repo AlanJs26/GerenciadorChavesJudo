@@ -8,25 +8,33 @@
     "src/renderer/src/**/*.svelte.ts",
     "src/preload/*.d.ts",
     "src/renderer/lib/*.ts",
-    "src/renderer/lib/types/*.ts", "src/renderer/lib/bracket-lib", "src/renderer/lib", "src/main/errors.ts", "src/main/errors.ts", "src/shared/errors.ts",
+    "src/renderer/lib/types/*.ts",
+    "src/renderer/lib/bracket-lib",
+    "src/renderer/lib",
+    "src/main/errors.ts",
+    "src/main/errors.ts",
+    "src/shared/errors.ts",
   ],
   "compilerOptions": {
     "verbatimModuleSyntax": true,
-    "useDefineForClassFields": true,
-    "strict": false,
-    "allowJs": true,
-    "checkJs": true,
+    // "useDefineForClassFields": true,
+    "strict": true,
+    "allowJs": false,
+    // "checkJs": true,
     "composite": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    // "noUnusedLocals": false,
+    // "noUnusedParameters": false,
     "lib": [
       "ESNext",
       "DOM",
       "DOM.Iterable"
     ],
+    "useDefineForClassFields": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/renderer/src/*"],
+      "@/*": [
+        "src/renderer/src/*"
+      ],
       "@components/*": [
         "src/renderer/src/components/*"
       ],
