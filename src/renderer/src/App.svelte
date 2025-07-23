@@ -7,10 +7,11 @@
     StatefullCategory
   } from '@lib/types/bracket-lib'
   import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
-  import { onMount, type Snippet } from 'svelte'
+  import { onMount, untrack, type Snippet } from 'svelte'
   // Group imports by type/functionality
   // UI Components
   import { Button, buttonVariants } from '@/components/ui/button'
+
   import { Checkbox } from '@components/ui/checkbox'
   import * as ContextMenu from '@components/ui/context-menu'
   import * as DropdownMenu from '@components/ui/dropdown-menu'
@@ -21,9 +22,9 @@
   import { Toaster } from '@components/ui/sonner'
   import * as Tabs from '@components/ui/tabs'
   import { toast } from 'svelte-sonner'
-  import { ModeWatcher } from 'mode-watcher'
+  import { ModeWatcher, toggleMode } from 'mode-watcher'
   // Icons
-  import { Bolt, Download, FileDown, FileJson2 } from '@lucide/svelte'
+  import { Bolt, Download, FileDown, FileJson2, SunIcon, MoonIcon } from '@lucide/svelte'
   // Custom components
   import { Bracket } from '@/components/bracket'
   import CategoryDropdown from '@components/CategoryDropdown.svelte'
@@ -34,7 +35,7 @@
   // Utilities and stores
   import { bracketsStore, playersStore, winnerStore, genderStore } from '@/states.svelte.ts'
   import { createGroupedBrackets, gendered, generateRandomOrganizations } from '@lib/bracket-lib'
-  import { randomContestantId } from '@lib/utils'
+  import { addInvalidContestantIds, randomContestantId } from '@lib/utils'
   import { handleResult } from '@shared/errors'
 
   // ==================== DOM References ====================
@@ -64,10 +65,13 @@
       },
       gendered(() => [] as Player[])
     )
-    newPlayers.male.sort((a, b) => a.organization.localeCompare(b.organization))
-    newPlayers.female.sort((a, b) => a.organization.localeCompare(b.organization))
+    untrack(() => {
+      newPlayers.male.sort((a, b) => a.organization.localeCompare(b.organization))
+      newPlayers.female.sort((a, b) => a.organization.localeCompare(b.organization))
 
-    playersStore.players = newPlayers
+      console.log(newPlayers)
+      playersStore.players = newPlayers
+    })
   })
 
   // ==================== Derived Values ====================
@@ -105,10 +109,15 @@
   function generateAllBrackets(): void {
     // Generate brackets for each category and gender
     bracketsStore.clear()
+    winnerStore.clear()
     for (const [gender, statefullCategory] of Object.entries(statefullCategories)) {
       for (const { category, state } of statefullCategory) {
         if (!state) continue
 
+        const bla = playersStore.get(gender, category)
+        if (bla == null) {
+          console.log(gender, category)
+        }
         const players = playersStore.get(gender, category).filter((player) => player.present)
 
         if (players.length === 0) continue
@@ -121,7 +130,6 @@
       }
     }
 
-    winnerStore.clear()
     for (const [gender, categories] of Object.entries(bracketsStore.categories)) {
       for (const category of categories) {
         winnerStore.set(gender, category, { matches: {}, winners: [] })
@@ -184,6 +192,7 @@
           playersStore.players = state.players
           bracketsStore.brackets = state.brackets
           winnerStore.winnersByCategory = state.winnersByCategory
+          addInvalidContestantIds(Object.keys(playersStore.byContestantId))
           enableAutosave()
         },
         (error) => {
@@ -254,8 +263,9 @@
     </DropdownMenu.Trigger>
     <DropdownMenu.Content class="w-56">
       <DropdownMenu.Group>
-        <DropdownMenu.DropdownMenuGroupHeading>Outras Formas</DropdownMenu.DropdownMenuGroupHeading>
-        <DropdownMenu.Separator />
+        <DropdownMenu.DropdownMenuGroupHeading class="!font-bold"
+          >Sessão</DropdownMenu.DropdownMenuGroupHeading
+        >
         <DropdownMenu.Item
           onclick={() => {
             importState()
@@ -272,6 +282,23 @@
         >
           <Download class="h-4 w-4" />
           <span>Exportar Sessão</span>
+        </DropdownMenu.Item>
+      </DropdownMenu.Group>
+
+      <DropdownMenu.Group>
+        <DropdownMenu.Separator />
+        <DropdownMenu.DropdownMenuGroupHeading class="!font-bold"
+          >Tema</DropdownMenu.DropdownMenuGroupHeading
+        >
+
+        <DropdownMenu.Item closeOnSelect={false} onclick={toggleMode}>
+          <SunIcon
+            class="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 !transition-all dark:scale-0 dark:-rotate-90"
+          />
+          <MoonIcon
+            class="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 !transition-all dark:scale-100 dark:rotate-0"
+          />
+          <span>Mudar Tema</span>
         </DropdownMenu.Item>
       </DropdownMenu.Group>
     </DropdownMenu.Content>
@@ -322,7 +349,7 @@
         variant="defaultDark"
         onclick={(): void => {
           generateAllBrackets()
-          bracketRenderer.update()
+          // bracketRenderer.update()
           // enableAutosave()
         }}>Atualizar Chaves</Button
       >

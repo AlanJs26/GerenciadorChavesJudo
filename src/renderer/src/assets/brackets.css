@@ -31,6 +31,10 @@
   & .round-title {
     @apply text-foreground;
   }
+
+  & .entry-status>p {
+    @apply text-foreground border p-1 border-muted;
+  }
 }
 
 .dark .brackets {

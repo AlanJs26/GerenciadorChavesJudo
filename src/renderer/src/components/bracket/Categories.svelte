@@ -1,23 +1,20 @@
 <script lang="ts">
-  import { NewCategoryPopover } from '@/components/bracket'
   import { Button } from '@/components/ui/button'
   import { bracketsStore, genderStore } from '@/states.svelte'
   import { Badge } from '@components/ui/badge'
-  import * as Popover from '@components/ui/popover'
-  import { ScrollArea } from '@components/ui/scroll-area'
-  import type { Bracket, Tag } from '@lib/types/bracket-lib'
-  import { onMount, untrack, type Snippet } from 'svelte'
+  import type { Tag } from '@lib/types/bracket-lib'
+  import { clamp, cn, compareObject, isSubsetOf } from '@lib/utils'
+  import { ArrowRightLeft, GripVertical } from '@lucide/svelte'
   import { draggable, droppable, type DragDropState } from '@thisux/sveltednd'
-  import { ArrowRightLeft, Component, GripVertical } from '@lucide/svelte'
-  import { cn, compareObject, isSubsetOf, mapExtend, mapFilter, clamp } from '@lib/utils'
+  import { untrack } from 'svelte'
   import { flip } from 'svelte/animate'
   import { fade } from 'svelte/transition'
 
-  let selectedBrackets: Record<string, Bracket> = $derived(
-    bracketsStore.brackets[genderStore.gender]
-  )
-
-  let openDeletePopover: Record<string, boolean> = $state({})
+  // let selectedBrackets: Record<string, Bracket> = $derived(
+  //   bracketsStore.brackets[genderStore.gender]
+  // )
+  //
+  // let openDeletePopover: Record<string, boolean> = $state({})
 
   const ITEM_REM_HEIGHT = 3
 
@@ -134,93 +131,106 @@
   })
 </script>
 
-<div
-  class="flex w-full border-b"
-  style={`min-height:${ITEM_REM_HEIGHT * bracketsStore.tagById[genderStore.gender].length}rem`}
->
-  <div>
-    {#each tagOrder as tagId, index (tagId)}
-      <div
-        use:draggable={{ container: index.toString(), dragData: tagId }}
-        use:droppable={{
-          container: index.toString(),
-          callbacks: { onDrop: handleDrop }
+<div class="flex !w-full flex-col">
+  <div
+    class="flex w-full border-b"
+    style={`min-height:${ITEM_REM_HEIGHT * bracketsStore.tagById[genderStore.gender].length}rem`}
+  >
+    <div>
+      {#each tagOrder as tagId, index (tagId)}
+        <div
+          use:draggable={{ container: index.toString(), dragData: tagId }}
+          use:droppable={{
+            container: index.toString(),
+            callbacks: { onDrop: handleDrop }
+          }}
+          animate:flip={{ duration: 200 }}
+          in:fade={{ duration: 150 }}
+          out:fade={{ duration: 150 }}
+          style={`height:${ITEM_REM_HEIGHT}rem`}
+          class={cn(
+            'svelte-dnd-touch-feedback',
+            'relative flex items-center',
+            'ring-ring/10 ring-1 transition-all duration-200 hover:z-10 hover:ring-2 hover:ring-blue-200 ',
+            'bg-background cursor-grab p-3 '
+          )}
+        >
+          <h3 class="text-foreground flex-1 font-medium">
+            {tagId}
+          </h3>
+          <GripVertical size={16} class="ml-3 opacity-30" />
+        </div>
+      {/each}
+    </div>
+
+    <div class="ml-[1px] flex flex-col">
+      <div class="flex-1"></div>
+      <Button
+        variant="outline"
+        class="item-height bg-background ring-ring/10 text-md flex h-[3rem] w-30 cursor-pointer items-center gap-2 rounded-none border-none p-3 ring-1"
+        onclick={() => {
+          genderStore.toggle()
         }}
-        animate:flip={{ duration: 200 }}
-        in:fade={{ duration: 150 }}
-        out:fade={{ duration: 150 }}
-        style={`height:${ITEM_REM_HEIGHT}rem`}
-        class={cn(
-          'svelte-dnd-touch-feedback',
-          'relative flex items-center',
-          'ring-ring/10 ring-1 transition-all duration-200 hover:z-10 hover:ring-2 hover:ring-blue-200 ',
-          'bg-background cursor-grab p-3 '
-        )}
       >
-        <h3 class="text-foreground flex-1 font-medium">
-          {tagId}
-        </h3>
-        <GripVertical size={16} class="ml-3 opacity-30" />
-      </div>
-    {/each}
-  </div>
+        <ArrowRightLeft size={16} class="opacity-30" />
+        <h3 class="text-foreground font-medium">{genderStore.radio}</h3>
+      </Button>
+    </div>
 
-  <div class="ml-[1px] flex flex-col">
-    <div class="flex-1"></div>
-    <Button
-      variant="outline"
-      class="item-height bg-background ring-ring/10 text-md flex h-[3rem] w-30 cursor-pointer items-center gap-2 rounded-none border-none p-3 ring-1"
-      onclick={() => {
-        genderStore.toggle()
-      }}
-    >
-      <ArrowRightLeft size={16} class="opacity-30" />
-      <h3 class="text-foreground font-medium">{genderStore.radio}</h3>
-    </Button>
-  </div>
-
-  <div class="flex-1">
-    {#each orderedTagValues as tagValues, index (tagValues.join())}
-      <div class="item-height flex flex-wrap items-center justify-center gap-1">
-        {#if tagValues.length != 1 || !tagValues.at(0).startsWith('ignore')}
-          {#each tagValues as tagValue (tagValue)}
-            <Badge
-              variant={isSelected({ id: tagOrder[index], value: tagValue }) ? 'default' : 'outline'}
-              onclick={() => {
-                const gender = genderStore.gender
-                selectedTags[clamp(index, 0, selectedTags.length - 1)] = {
-                  id: tagOrder[index],
-                  value: tagValue
-                }
-
-                if (bracketsStore.get(gender, selectedTags)) {
-                  bracketsStore.selectedCategory = selectedTags
-                } else {
-                  let newSelection = findValidCategory(tagOrder, selectedTags)
-                  for (let i = -1; i >= -selectedTags.length; i--) {
-                    if (bracketsStore.has(gender, newSelection)) break
-
-                    const contraints = selectedTags.slice(0, i)
-                    newSelection = findValidCategory(tagOrder, contraints)
+    <div class="flex-1">
+      {#each orderedTagValues as tagValues, index (tagValues.join())}
+        <div class="item-height flex flex-wrap items-center justify-center gap-1">
+          {#if tagValues.length != 1 || !tagValues.at(0).startsWith('ignore')}
+            {#each tagValues as tagValue (tagValue)}
+              <Badge
+                variant={isSelected({ id: tagOrder[index], value: tagValue })
+                  ? 'default'
+                  : 'outline'}
+                onclick={() => {
+                  const gender = genderStore.gender
+                  selectedTags[clamp(index, 0, selectedTags.length - 1)] = {
+                    id: tagOrder[index],
+                    value: tagValue
                   }
 
-                  if (!bracketsStore.has(gender, newSelection)) {
-                    console.error('Invalid selected category', newSelection)
+                  if (bracketsStore.get(gender, selectedTags)) {
+                    bracketsStore.selectedCategory = selectedTags
                   } else {
-                    selectedTags = newSelection
-                    bracketsStore.selectedCategory = newSelection
+                    let newSelection = findValidCategory(tagOrder, selectedTags)
+                    for (let i = -1; i >= -selectedTags.length; i--) {
+                      if (bracketsStore.has(gender, newSelection)) break
+
+                      const contraints = selectedTags.slice(0, i)
+                      newSelection = findValidCategory(tagOrder, contraints)
+                    }
+
+                    if (!bracketsStore.has(gender, newSelection)) {
+                      console.error('Invalid selected category', newSelection)
+                    } else {
+                      selectedTags = newSelection
+                      bracketsStore.selectedCategory = newSelection
+                    }
                   }
-                }
-              }}
-              class="h-7 cursor-pointer border-zinc-500"
-            >
-              {tagValue}
-            </Badge>
-          {/each}
-        {/if}
-      </div>
-    {/each}
+                }}
+                class="h-7 cursor-pointer border-zinc-500"
+              >
+                {tagValue}
+              </Badge>
+            {/each}
+          {/if}
+        </div>
+      {/each}
+    </div>
   </div>
+
+  {#if bracketsStore.selectedCategory?.length}
+    <div class="flex !w-full items-center px-5 py-2">
+      <p class="!font-bold">{bracketsStore.selectedCategory.map((c) => c.value).join(' | ')}</p>
+
+      <div class="flex-1"></div>
+      <Button variant="default" class="self-end">Imprimir</Button>
+    </div>
+  {/if}
 </div>
 
 <!-- <div class="categories p-2">

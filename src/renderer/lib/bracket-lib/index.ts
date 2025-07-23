@@ -8,11 +8,12 @@ import type {
   Gendered
 } from '@lib/types/bracket-lib'
 import { splitEvenly, buildRandomGen, pickRandom } from '@lib/utils'
+import { playersStore } from '@/states.svelte'
 
 export const ROUNDS = ['1', '2', '3', '4', 'FIM']
 
 // ==================== Tournament Order Generation ====================
-function generateTournamentOrder(size: number): number[] {
+export function generateTournamentOrder(size: number): number[] {
   if (size === 1) return [1]
 
   const halfSize = Math.max(Math.floor(size / 2), 1)
@@ -77,6 +78,7 @@ export function retrieveWinners(bracket: Bracket, player: Player): Winners {
 
 // ==================== Bracket Generation ====================
 export function buildBracket(players: Player[]): TaggedBracket {
+  players = players.map((p) => playersStore.byContestantId[p.contestantId])
   if (
     players.some((player) => hashCategory(player.category) != hashCategory(players[0].category))
   ) {
@@ -137,7 +139,8 @@ export function createGroupedBrackets(players: Player[]): TaggedBracket[] {
   for (const [i, chunk] of chunks.entries()) {
     if (chunks.length > 1) {
       for (const player of chunk) {
-        player.category.push({ id: 'Grupo', value: letterGen(i) })
+        playersStore.attachTags(player, [{ id: 'Grupo', value: letterGen(i) }])
+        // player.category.push({ id: 'Grupo', value: letterGen(i) })
       }
     }
 

@@ -26,14 +26,23 @@
   import type { Player } from '@lib/types/bracket-lib'
   import { randomContestantId } from '@lib/utils'
 
-  let { columns, data = $bindable() }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } =
-    $props()
+  let { columns, data }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } = $props()
 
   let rowSelection = $state<RowSelectionState>({})
   let columnVisibility = $state<VisibilityState>({})
   let columnFilters = $state<ColumnFiltersState>([])
   let sorting = $state<SortingState>([])
   let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 100 })
+
+  function buildChangeCallback<T>(getFn: () => T, setFn: (T) => void) {
+    return (updater) => {
+      if (typeof updater === 'function') {
+        setFn(updater(getFn()))
+      } else {
+        setFn(updater)
+      }
+    }
+  }
 
   const table = createSvelteTable({
     get data() {
@@ -63,7 +72,7 @@
         const index = (data as Player[]).findIndex((p) => p.contestantId == player.contestantId)
         if (index !== -1) {
           data.splice(index, 1)
-          data = [...data]
+          // data = [...data]
         }
       },
       addPlayer: (player: Omit<Player, 'contestantId'>) => {
@@ -73,45 +82,29 @@
           contestantId = randomContestantId()
         }
         players.push({ ...player, contestantId })
-        ;(data as Player[]) = [...players]
+        // ;(data as Player[]) = [...players]
       }
     },
-    onRowSelectionChange: (updater) => {
-      if (typeof updater === 'function') {
-        rowSelection = updater(rowSelection)
-      } else {
-        rowSelection = updater
-      }
-    },
-    onSortingChange: (updater) => {
-      if (typeof updater === 'function') {
-        sorting = updater(sorting)
-      } else {
-        sorting = updater
-      }
-      data = [...data]
-    },
-    onColumnFiltersChange: (updater) => {
-      if (typeof updater === 'function') {
-        columnFilters = updater(columnFilters)
-      } else {
-        columnFilters = updater
-      }
-    },
-    onColumnVisibilityChange: (updater) => {
-      if (typeof updater === 'function') {
-        columnVisibility = updater(columnVisibility)
-      } else {
-        columnVisibility = updater
-      }
-    },
-    onPaginationChange: (updater) => {
-      if (typeof updater === 'function') {
-        pagination = updater(pagination)
-      } else {
-        pagination = updater
-      }
-    },
+    onRowSelectionChange: buildChangeCallback(
+      () => rowSelection,
+      (v) => (rowSelection = v)
+    ),
+    onSortingChange: buildChangeCallback(
+      () => sorting,
+      (v) => (sorting = v)
+    ),
+    onColumnFiltersChange: buildChangeCallback(
+      () => columnFilters,
+      (v) => (columnFilters = v)
+    ),
+    onColumnVisibilityChange: buildChangeCallback(
+      () => columnVisibility,
+      (v) => (columnVisibility = v)
+    ),
+    onPaginationChange: buildChangeCallback(
+      () => pagination,
+      (v) => (pagination = v)
+    ),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -123,7 +116,7 @@
 
 <div class="h-full space-y-4">
   <DataTableToolbar {table} />
-  <div class="h-full rounded-md border">
+  <div class="!mt-1 h-full rounded-md border">
     <Table.Root class="h-full">
       <Table.Header>
         {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}

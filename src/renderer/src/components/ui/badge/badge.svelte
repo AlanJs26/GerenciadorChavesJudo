@@ -1,18 +1,36 @@
 <script lang="ts">
   import { type Variant, badgeVariants } from './index'
+  import type { Category } from '@lib/types/bracket-lib'
   import { cn } from '@lib/utils'
 
-  let className: string | undefined | null = undefined
-  export let href: string | undefined = undefined
-  export let variant: Variant = 'default'
-  export { className as class }
+  let {
+    category,
+    href,
+    variant = 'default',
+    children,
+    class: className,
+    ...props
+  }: { category?: Category; href?: string; variant: Variant; class?: string } = $props()
 </script>
 
-<svelte:element
-  this={href ? 'a' : 'span'}
-  {href}
-  class={cn(badgeVariants({ variant, className }))}
-  {...$$restProps}
->
-  <slot />
-</svelte:element>
+{#if category}
+  {#each category as tag (tag.value)}
+    <svelte:element
+      this={href ? 'a' : 'span'}
+      {href}
+      class={cn(badgeVariants({ variant }), className)}
+      {...props}
+    >
+      {tag.value}
+    </svelte:element>
+  {/each}
+{:else}
+  <svelte:element
+    this={href ? 'a' : 'span'}
+    {href}
+    class={cn(badgeVariants({ variant }), className)}
+    {...props}
+  >
+    {@render children?.()}
+  </svelte:element>
+{/if}

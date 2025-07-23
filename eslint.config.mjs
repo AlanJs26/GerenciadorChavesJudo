@@ -23,6 +23,11 @@ export default tseslint.config(
   },
   {
     files: ['**/*.{ts,tsx,svelte}'],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser
+      }
+    },
     rules: {
       'no-unused-vars': ['off', { varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-unused-vars': [

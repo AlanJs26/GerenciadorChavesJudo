@@ -33,7 +33,7 @@
       <span class="font-bold">Escolha um Vencedor</span>
     {/if}
     <ContextMenu.Group class="flex w-full flex-row">
-      {#each filteredSides as { contestantId }}
+      {#each filteredSides as { contestantId } (contestantId)}
         <ContextMenu.Item
           class="flex-1 justify-center"
           onclick={() => {
@@ -41,9 +41,8 @@
           }}
         >
           {(() => {
-            console.log(playersStore.byContestantId)
-            console.log(contestantId)
-            return playersStore.byContestantId?.[contestantId].name ?? ''
+            const player = playersStore.byContestantId?.[contestantId]
+            return player?.name ?? ''
           })()}</ContextMenu.Item
         >
       {/each}
@@ -53,7 +52,7 @@
     {#if filteredSides.length < 2}
       <span class="font-bold">Adicionar Jogador</span>
       <div class="grid w-full grid-cols-2">
-        {#each [0, 1] as side}
+        {#each [0, 1] as side (side)}
           {#if !sides?.[side]?.contestantId}
             <ContextMenu.Item
               class={`col-start-${side + 1} flex w-full justify-center`}
@@ -78,7 +77,7 @@
         Apagar</ContextMenu.SubTrigger
       >
       <ContextMenu.SubContent class="w-48">
-        {#each selectedMatch.sides.filter((s) => s?.contestantId) as { contestantId }}
+        {#each selectedMatch.sides.filter((s) => s?.contestantId) as { contestantId } (contestantId)}
           <ContextMenu.Item
             onclick={() => {
               onSubmitDelete(contestantId, selectedMatch)

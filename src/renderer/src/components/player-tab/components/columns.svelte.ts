@@ -11,15 +11,21 @@ import {
   DataTableRowActions,
   DataTableAddButton
 } from './index'
+
+// @ts-ignore typescript is not able to find exported snippets from .svelte files
+import { tagsCellSnippet } from '@components/player-tab/components/tags-cell.svelte'
 import { renderComponent } from '@components/ui/data-table'
 import type { Player } from '@lib/types/bracket-lib'
 import { winnerStore } from '@/states.svelte'
+import { compareCategory, hashCategory, unhashCategory } from '@lib/bracket-lib'
 
 function getPoints(player: Player): number {
+  const gender = player.isMale ? 'male' : 'female'
   let points = 0
 
-  for (const [category, winners] of Object.entries(winnerStore.winnersByCategory)) {
-    if (category != player.category) continue
+  for (const [hashedCategory, winners] of Object.entries(winnerStore.winnersByCategory[gender])) {
+    const category = unhashCategory(hashedCategory)
+    if (!compareCategory(category, player.category)) continue
 
     const winner = winners.winners?.find((w) => w.contestantId == player.contestantId)
     if (!winner) {
@@ -42,7 +48,7 @@ function getPoints(player: Player): number {
   return points
 }
 
-export const columns: ColumnDef<Player>[] = [
+export const columns: ColumnDef<Player, string>[] = [
   // {
   //   id: 'select',
   //   header: ({ table }) =>
@@ -64,13 +70,13 @@ export const columns: ColumnDef<Player>[] = [
   // },
   {
     accessorKey: 'name',
-    header: ({ column }): unknown => {
-      return renderComponent(DataTableColumnHeader<Player, unknown>, {
+    header: ({ column }) => {
+      return renderComponent(DataTableColumnHeader, {
         column,
         title: 'Nome'
       })
     },
-    cell: ({ row }): unknown => {
+    cell: ({ row }) => {
       return renderComponent(DataTableCell, {
         value: row.original.name
       })
@@ -79,9 +85,8 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     accessorKey: 'isMale',
-    header: ({ column }) =>
-      renderComponent(DataTableColumnHeader<Player, unknown>, { column, title: 'Sexo' }),
-    cell: ({ row }): unknown => {
+    header: ({ column }) => renderComponent(DataTableColumnHeader, { column, title: 'Sexo' }),
+    cell: ({ row }) => {
       return renderComponent(DataTableCell, {
         value: row.original.isMale ? 'Masc.' : 'Fem.'
       })
@@ -92,9 +97,8 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     accessorKey: 'organization',
-    header: ({ column }) =>
-      renderComponent(DataTableColumnHeader<Player, unknown>, { column, title: 'Escola' }),
-    cell: ({ row }): unknown => {
+    header: ({ column }) => renderComponent(DataTableColumnHeader, { column, title: 'Escola' }),
+    cell: ({ row }) => {
       return renderComponent(DataTableCell, {
         value: row.original.organization
       })
@@ -104,48 +108,47 @@ export const columns: ColumnDef<Player>[] = [
     }
   },
   {
-    accessorKey: 'category',
+    id: 'category',
+    accessorFn: (player: Player, _index: number) => hashCategory(player.category),
     header: ({ column }) =>
-      renderComponent(DataTableColumnHeader<Player, unknown>, {
+      renderComponent(DataTableColumnHeader, {
         column,
         title: 'Categoria'
       }),
-    cell: ({ row }): unknown => {
+    cell: ({ row }) => {
       return renderComponent(DataTableCell, {
+        snippet: tagsCellSnippet,
         value: row.original.category
       })
-    },
-    filterFn: (row, id, value): boolean => {
-      return value.includes(row.getValue(id))
     }
   },
   {
     id: 'points',
     accessorFn: (player: Player, _index: number) => getPoints(player).toString(),
     header: ({ column, table }) =>
-      renderComponent(DataTableColumnHeader<Player, unknown>, {
+      renderComponent(DataTableColumnHeader, {
         column,
-        title: `Pontos (${table.getRowModel().flatRows.reduce((acc, row) => acc + +row.getValue('points'), 0)})`
+        title: `Pontos (${table.getRowModel().flatRows.reduce((acc, row) => acc + +row.getValue<string>('points'), 0)})`
       }),
-    cell: ({ row }): unknown => {
+    cell: ({ row }) => {
       return renderComponent(DataTableCell, {
         value: getPoints(row.original),
         center: true
       })
     },
     sortingFn: (rowA, rowB, id): number => {
-      return +rowA.getValue(id) - +rowB.getValue(id)
+      return +rowA.getValue<string>(id) - +rowB.getValue<string>(id)
     }
   },
   {
     accessorKey: 'present',
-    header: ({ column }): unknown => {
-      return renderComponent(DataTableColumnHeader<Player, unknown>, {
+    header: ({ column }) => {
+      return renderComponent(DataTableColumnHeader, {
         title: 'Presença',
         column
       })
     },
-    cell: ({ row }): unknown => {
+    cell: ({ row }) => {
       return renderComponent(DataTableCell, {
         value: row.original.present ? 'Sim' : 'Não'
       })
@@ -153,11 +156,11 @@ export const columns: ColumnDef<Player>[] = [
   },
   {
     id: 'actions',
-    header: ({ table }): unknown => {
-      return renderComponent(DataTableAddButton<Player>, {
+    header: ({ table }) => {
+      return renderComponent(DataTableAddButton, {
         table
       })
     },
-    cell: ({ row, table }) => renderComponent(DataTableRowActions<Player>, { row, table })
+    cell: ({ row, table }) => renderComponent(DataTableRowActions, { row, table })
   }
 ]

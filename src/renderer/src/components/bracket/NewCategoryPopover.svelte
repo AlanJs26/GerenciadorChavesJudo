@@ -53,7 +53,7 @@
           <Select.Trigger class="col-span-2 h-8">{popoverSelectedValue}</Select.Trigger>
           <Select.Content>
             <Select.Group>
-              {#each validBracketSizes as size}
+              {#each validBracketSizes as size (size)}
                 <Select.Item value={size} label={size}>{size}</Select.Item>
               {/each}
             </Select.Group>

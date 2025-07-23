@@ -16,11 +16,7 @@
     children: Snippet
   } = $props()
 
-  let states: boolean[] = $state(statefullCategories.map((c) => c.state))
-
-  $effect(() => {
-    states = statefullCategories.map((c) => c.state)
-  })
+  let states: boolean[] = $derived(statefullCategories.map((c) => c.state))
 
   let allChecked = $derived(states.every((s) => s))
 </script>
@@ -38,7 +34,7 @@
   <DropdownMenu.Content class="w-30">
     <DropdownMenu.Group>
       <ScrollArea class="flex max-h-[calc(32px*10)] flex-col" type="auto">
-        {#each statefullCategories as category, i}
+        {#each statefullCategories as category, i (category)}
           <DropdownMenu.CheckboxItem
             closeOnSelect={false}
             bind:checked={

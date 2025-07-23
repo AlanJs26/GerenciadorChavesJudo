@@ -8,7 +8,7 @@
   import { toast } from 'svelte-sonner'
 
   import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte'
-  import { retrieveWinners } from '@lib/bracket-lib'
+  import { retrieveWinners, generateTournamentOrder } from '@lib/bracket-lib'
   import { get_match_data_for_element, installBracketUI } from '@lib/bracket-lib/rendering'
   import type { Category } from '@lib/types/bracket-lib'
   import { createBracket } from 'bracketry'
@@ -57,8 +57,8 @@
       if (bracketsStore.selectedCategory.length == 0) {
         return
       }
-      console.log($state.snapshot(bracketsStore.selectedCategory))
-      console.log(bracketsStore.getRaw(genderStore.gender, bracketsStore.selectedCategory))
+      // console.log($state.snapshot(bracketsStore.selectedCategory))
+      // console.log(bracketsStore.getRaw(genderStore.gender, bracketsStore.selectedCategory))
     }
 
     if (bracketry) {
@@ -77,7 +77,6 @@
       }
     }
 
-    console.log(currentBracket)
     bracketry = installBracketUI(
       bracketsEl,
       currentBracket,
@@ -90,7 +89,6 @@
           if (match_data === undefined) {
             throw Error('Invalid match_data for Bracket', currentBracket)
           }
-          console.log(selectedMatch)
           selectedMatch = match_data
           matchContextVisible = true
           return
@@ -98,6 +96,20 @@
         matchContextVisible = false
       },
       {
+        getEntryStatusHTML: (_entryStatus, context) => {
+          if (context.roundIndex != 0) return ''
+
+          const nMatches = currentBracket.matches.filter((match) => match.roundIndex == 0).length
+          const contextMatch = currentBracket.matches.find(
+            (match) => match.roundIndex === context.roundIndex && match.order === context.matchOrder
+          )
+          const sideIndex = contextMatch.sides
+            .map((s) => s.contestantId)
+            .indexOf(context.contestantId)
+          const tournamentOrder = generateTournamentOrder(2 * nMatches)
+          const index = tournamentOrder.at(2 * contextMatch.order + sideIndex)
+          return `<p>${index}</p>`
+        },
         getMatchTopHTML: (match: Match) => {
           const { roundIndex, order } = match
           const winnerInfo = winners?.matches?.[`${roundIndex}:${order}`]

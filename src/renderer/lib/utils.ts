@@ -1,4 +1,3 @@
-import { Component } from '@lucide/svelte'
 import type { Table } from '@tanstack/table-core'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -8,25 +7,24 @@ export function cn(...inputs: ClassValue[]): ReturnType<typeof twMerge> {
 }
 
 export function buildColFn<TData>(table: Table<TData>) {
-  return (
-    key: string,
-    mapFn?: (value: unknown) => string
-  ): {
-    value: string | boolean
-    label: string
-    icon: typeof Component | undefined
-  }[] =>
-    Array.from(
-      new Set(table.getPreFilteredRowModel().flatRows.map((row) => row.original[key]))
+  function colFn<T = string>(key: string, mapFn?: (value: string) => T) {
+    return Array.from(
+      new Set(table.getPreFilteredRowModel().flatRows.map((row) => row.getValue(key)))
     ).map((value) => ({
-      value,
-      label: mapFn ? mapFn(value) : value,
+      value: value as string,
+      label: (mapFn?.(value as string) ?? value) as T,
       icon: undefined
     }))
+  }
+  return colFn
 }
 
-const invalidContestantIds: string[] = []
+let invalidContestantIds: string[] = []
 const rand = buildRandomGen('seed')
+
+export function addInvalidContestantIds(ids: string[]) {
+  invalidContestantIds = Array.from(new Set([...invalidContestantIds, ...ids]))
+}
 
 export function randomContestantId(): string {
   const gen = () => Math.floor(rand() * 10000).toString()
@@ -51,6 +49,16 @@ export function mapFilter<T, U>(
   }, [] as U[])
 }
 
+export function uniqueList<T>(list: T[], hashFn: (value: T) => string) {
+  const keys: string[] = []
+  return list.filter((item) => {
+    const hash = hashFn(item)
+    if (keys.includes(hash)) return false
+    keys.push(hash)
+    return true
+  })
+}
+
 function isIterable(obj) {
   // checks for null and undefined
   if (obj == null) {
@@ -66,6 +74,12 @@ export function clamp(num: number, min: number, max: number) {
 export function isSubsetOf<T>(inner: T[], outer: T[], comparator: (a: T, b: T) => boolean) {
   return inner.every((innerItem) => {
     return outer.some((outerItem) => comparator(innerItem, outerItem))
+  })
+}
+
+export function isEqualSet<T>(source: T[], target: T[], comparator: (a: T, b: T) => boolean) {
+  return source.every((sourceItem) => {
+    return target.every((targetItem) => comparator(sourceItem, targetItem))
   })
 }
 

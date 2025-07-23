@@ -19,9 +19,6 @@
   import * as Select from '@components/ui/select'
   import { ScrollArea } from '@components/ui/scroll-area'
 
-  type Keys = keyof typeof playerInputTypes
-  type InputTypeValue = (typeof playerInputTypes)[Keys]
-
   type Props = HTMLAttributes<HTMLDivElement> & {
     table: Table<TData>
   }
@@ -108,7 +105,7 @@
 </div>
 
 {#snippet form()}
-  {#each Object.entries(playerInputTypes) as [key, inputType]}
+  {#each Object.entries(playerInputTypes) as [key, inputType] (key)}
     <!-- {@const inputType: InputTypeValue = playerInputTypes[key]} -->
 
     {#if typeof inputType == 'string'}
@@ -147,7 +144,7 @@
     <Select.Content>
       <Select.Group>
         <ScrollArea class="flex max-h-[30vh] flex-col" type="auto">
-          {#each inputType as item}
+          {#each inputType as item (item)}
             {#if typeof item == 'string'}
               <Select.Item value={item} label={item}>{item}</Select.Item>
             {/if}

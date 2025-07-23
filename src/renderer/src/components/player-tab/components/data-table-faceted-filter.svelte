@@ -14,15 +14,23 @@
   import { cn } from '@lib/utils'
   import { Separator } from '@components/ui/separator'
   import { Badge } from '@components/ui/badge'
+  import type { Category } from '@lib/types/bracket-lib'
 
   type Props<TData, TValue> = {
     column: Column<TData, TValue>
     title: string
-    options: {
-      label: string
-      value: string | boolean
-      icon?: typeof Component
-    }[]
+    options: (
+      | {
+          label: string
+          value: string
+          icon?: typeof Component
+        }
+      | {
+          label: Category
+          value: Category
+          icon?: typeof Component
+        }
+    )[]
   }
 
   let { column, title, options }: Props<TData, TValue> = $props()
@@ -50,10 +58,18 @@
                 {selectedValues.size} selected
               </Badge>
             {:else}
-              {#each options.filter((opt) => selectedValues.has(opt.value)) as option (option)}
-                <Badge variant="secondary" class="rounded-sm px-1 font-normal">
-                  {option.label}
-                </Badge>
+              {#each options.filter( (opt) => selectedValues.has(opt.value) ) as option (option.value)}
+                {#if typeof option.label == 'string'}
+                  <Badge variant="secondary" class="rounded-sm px-1 font-normal">
+                    {option.label}
+                  </Badge>
+                {:else}
+                  <Badge
+                    category={option.label}
+                    variant="secondary"
+                    class="rounded-sm px-1 font-normal"
+                  />
+                {/if}
               {/each}
             {/if}
           </div>
@@ -67,7 +83,7 @@
       <Command.List>
         <Command.Empty>No results found.</Command.Empty>
         <Command.Group>
-          {#each options as option (option)}
+          {#each options as option (option.value)}
             {@const isSelected = selectedValues.has(option.value)}
             <Command.Item
               onSelect={() => {
@@ -93,9 +109,18 @@
                 <Icon class="text-muted-foreground" />
               {/if}
 
-              <span>{option.label}</span>
+              {#if typeof option.label == 'string'}
+                <span>{option.label}</span>
+              {:else}
+                <Badge
+                  category={option.label}
+                  variant="secondary"
+                  class="rounded-sm px-1 font-normal"
+                />
+              {/if}
+
               {#if facets?.get(option.value)}
-                <span class="ml-auto flex size-4 items-center justify-center font-mono text-xs">
+                <span class="!ml-auto flex size-4 items-center justify-center font-mono text-xs">
                   {facets.get(option.value)}
                 </span>
               {/if}

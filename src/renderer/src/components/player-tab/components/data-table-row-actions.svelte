@@ -13,7 +13,7 @@
   import { cn } from '@lib/utils'
   import type { Player } from '@lib/types/bracket-lib'
   import type { PlayerTableMeta } from '@lib/types/player-table'
-  import { playersStore } from '@/states.svelte'
+  import { playersStore, genderStore } from '@/states.svelte'
   import * as Select from '@components/ui/select'
   import type { Table } from '@tanstack/table-core'
   import type { Row } from '@tanstack/table-core'
@@ -22,22 +22,16 @@
   const player = $derived(row.original as Player)
   let selectedValues: Record<string, string> = $state({})
 
-  // TODO: Make a new category selection for each Tag
-  const categories = $derived(
-    Array.from(new Set(playersStore.players.map((player) => player.category))).sort((a, b) =>
-      a.localeCompare(b)
-    )
-  )
   const organizations = $derived(
-    Array.from(new Set(playersStore.players.map((player) => player.organization))).sort((a, b) =>
-      a.localeCompare(b)
-    )
+    Array.from(
+      new Set(playersStore.players[genderStore.gender].map((player) => player.organization))
+    ).sort((a, b) => a.localeCompare(b))
   )
 
   const playerInputTypes = $derived({
     name: 'string',
     isMale: ['Masc.', 'Fem.'],
-    category: categories,
+    category: playersStore.categories[genderStore.gender],
     organization: organizations,
     present: ['Sim', 'Não']
   })
@@ -102,7 +96,7 @@
     <Popover.Content class="w-80">
       <div class="grid gap-4">
         <div class="grid gap-2">
-          {#each Object.entries(player) as [key, value]}
+          {#each Object.entries(player) as [key, value] (key)}
             {#if key in playerInputTypes}
               {@const inputType: InputTypeValue = playerInputTypes[key]}
 
@@ -145,7 +139,7 @@
                     <Select.Trigger class="w-[180px]">{selectedValues[key]}</Select.Trigger>
                     <Select.Content>
                       <Select.Group>
-                        {#each inputType as item}
+                        {#each inputType as item (item)}
                           {#if typeof item == 'string'}
                             <Select.Item value={item} label={item}>{item}</Select.Item>
                           {/if}

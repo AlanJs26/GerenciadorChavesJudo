@@ -4,13 +4,16 @@
   let {
     children,
     value,
+    snippet,
     center = false,
     ...restProps
-  }: { children?: Snippet; value?: string | number; center?: boolean } = $props()
+  }: { children?: Snippet; snippet?: Snippet; value?: string | number; center?: boolean } = $props()
 </script>
 
 <div {...restProps}>
-  {#if value}
+  {#if snippet}
+    {@render snippet(value)}
+  {:else if value}
     {#if center}
       <div class="flex justify-center">{value}</div>
     {:else}

@@ -3,6 +3,8 @@ export type Gendered<T> = {
   female: T
 } & Record<string, T>
 
+export type Gender = 'male' | 'female'
+
 export interface Tag {
   id: string
   value: string
@@ -17,7 +19,7 @@ export type StatefullCategory = {
 export interface Player {
   name: string
   isMale: boolean
-  category: Tag[]
+  category: Category
   organization: string
   present: boolean
   contestantId: string

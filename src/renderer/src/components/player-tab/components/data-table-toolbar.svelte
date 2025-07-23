@@ -3,13 +3,14 @@
 </script>
 
 <script lang="ts" generics="TData">
+  import Button from '@/components/ui/button/button.svelte'
+  import { Input } from '@components/ui/input'
+  import { unhashCategory } from '@lib/bracket-lib'
+  import type { Player, PlayerColumn } from '@lib/types/bracket-lib'
+  import { buildColFn } from '@lib/utils'
   import { X } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
   import { DataTableFacetedFilter, DataTableViewOptions } from './index'
-  import Button from '@/components/ui/button/button.svelte'
-  import { Input } from '@components/ui/input'
-  import type { PlayerColumn } from '@lib/types/bracket-lib'
-  import { buildColFn } from '@lib/utils'
 
   let { table }: { table: Table<TData> } = $props()
 
@@ -25,17 +26,17 @@
 
   // TODO: Change the way categories are stored inside the player-tab table
   const categoryCol = $derived(table.getColumn('category'))
-  const categories = $derived(colFn('category'))
+  const categories = $derived(colFn('category', (v) => unhashCategory(v)))
 
   const presentCol = $derived(table.getColumn('present'))
   const presencies = $derived(colFn('present', (v) => (v ? 'Sim' : 'Não')))
 </script>
 
 <div class="flex items-center justify-between overflow-x-auto">
-  <div class="flex flex-1 items-center space-x-2">
+  <div class="flex flex-1 items-center gap-1 space-x-2">
+    <!-- value={(table.getColumn('name')?.getFilterValue() as string) ?? ''} -->
     <Input
       placeholder="Filtrar Nomes..."
-      value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
       oninput={(e) => {
         table.getColumn('name')?.setFilterValue(e.currentTarget.value)
       }}
@@ -68,11 +69,11 @@
   <DataTableViewOptions {table} />
   <Button
     variant="default"
-    class="ml-2 h-8"
+    class="!ml-1 h-8"
     onclick={async () => {
       const tablePlayers: PlayerColumn[] = table
         .getFilteredRowModel()
-        .rows.map<PlayerColumn>((row) => row.original as PlayerColumn)
+        .rows.map((row) => row.original as Player)
         .map((original) => ({
           name: original.name,
           isMale: original.isMale,
