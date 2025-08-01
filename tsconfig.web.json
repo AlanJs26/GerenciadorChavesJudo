@@ -16,7 +16,7 @@
     "src/shared/errors.ts"
   ],
   "compilerOptions": {
-    "verbatimModuleSyntax": true,
+    // "verbatimModuleSyntax": true,
     // "useDefineForClassFields": true,
     "strict": true,
     "allowJs": false,

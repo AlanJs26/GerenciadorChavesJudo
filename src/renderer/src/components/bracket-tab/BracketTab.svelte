@@ -1,17 +1,17 @@
 <script lang="ts">
   import type { Bracket, Classification, Contestant, Match, Winners } from '@lib/types/bracket-lib'
 
-  import { Button } from '@/components/ui/button'
   import * as Command from '@components/ui/command'
   import { cn } from '@lib/utils'
   import { computeCommandScore } from 'bits-ui'
   import { toast } from 'svelte-sonner'
 
   import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte'
-  import { retrieveWinners, generateTournamentOrder } from '@lib/bracket-lib'
+  import { generateTournamentOrder, retrieveWinners } from '@lib/bracket-lib'
   import { get_match_data_for_element, installBracketUI } from '@lib/bracket-lib/rendering'
   import type { Category } from '@lib/types/bracket-lib'
   import { createBracket } from 'bracketry'
+  import { mode, setMode, type Mode } from 'mode-watcher'
   import { BracketContainer, Categories, MatchContextMenu } from '.'
 
   let bracketsEl: HTMLDivElement = $state()
@@ -23,6 +23,7 @@
   let bracketFullscreen = $state(false)
   let commandValue = $state('')
   let newPlayerSide = $state(0)
+  let previousMode: Mode = $state('system')
 
   let selectedMatch = $state<Bracket['matches'][2]>()
 
@@ -223,22 +224,21 @@
   }
 </script>
 
-<Button
-  variant="default"
-  class="fixed right-2 bottom-2 z-10"
-  onclick={() => {
-    bracketFullscreen = true
-    window.api.printPDF().then((result) => {
-      if (result.status == false) {
-        console.warn(result.error)
-      }
-      bracketFullscreen = false
-    })
-  }}>Print</Button
->
-
 <div class={cn('brackets-container', 'flex h-full w-full flex-col items-center')}>
-  <Categories />
+  <Categories
+    onPrint={() => {
+      bracketFullscreen = true
+      previousMode = mode.current
+      setMode('light')
+      window.api.printPDF().then((result) => {
+        setMode(previousMode)
+        if (result.status == false) {
+          console.warn(result.error)
+        }
+        bracketFullscreen = false
+      })
+    }}
+  />
 
   <MatchContextMenu
     {selectedMatch}

@@ -1,9 +1,10 @@
 <script lang="ts">
-  import DataTable from './components/data-table.svelte'
-  import { columns } from './components/columns.svelte'
+  import DataTable from './data-table/DataTable.svelte'
+  import { columns } from './data-table/columns.svelte'
   import { playersStore } from '@/states.svelte'
 
-  const flatPlayers = $derived(Object.values(playersStore.players).flat())
+  const flatPlayers = $derived([...playersStore.players['male'], ...playersStore.players['female']])
+  // console.log(flatPlayers)
   // TODO: Fix all errors caused by changing category: string to category: Tag[]
 </script>
 

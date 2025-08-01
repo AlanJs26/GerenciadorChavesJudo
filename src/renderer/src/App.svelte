@@ -26,11 +26,11 @@
   // Icons
   import { Bolt, Download, FileDown, FileJson2, SunIcon, MoonIcon } from '@lucide/svelte'
   // Custom components
-  import { Bracket } from '@/components/bracket'
-  import CategoryDropdown from '@components/CategoryDropdown.svelte'
-  import FileInput from '@components/FileInput.svelte'
+  import { Bracket as BracketTab } from '@/components/bracket-tab'
+  import CategoryDropdown from '@components/category-dropdown.svelte'
+  import FileInput from '@components/file-input.svelte'
   import PlayerTab from '@components/player-tab/PlayerTab.svelte'
-  import PlayerCard from '@components/PlayerCard.svelte'
+  import PlayerCard from '@components/player-card.svelte'
   import * as RadioGroup from '@components/radio-group'
   // Utilities and stores
   import { bracketsStore, playersStore, winnerStore, genderStore } from '@/states.svelte.ts'
@@ -39,7 +39,7 @@
   import { handleResult } from '@shared/errors'
 
   // ==================== DOM References ====================
-  let bracketRenderer: Bracket
+  let bracketRenderer: BracketTab
 
   // ==================== State Variables ====================
   let files: FileList | undefined = $state()
@@ -366,7 +366,7 @@
         <PlayerTab />
       </Tabs.Content>
       <Tabs.Content value="chaves" class="mt-0 h-full w-full">
-        <Bracket bind:this={bracketRenderer} />
+        <BracketTab bind:this={bracketRenderer} />
       </Tabs.Content>
     </Tabs.Root>
   </div>

@@ -164,8 +164,10 @@ export function unhashCategory(hashed: string): Category {
   })
 }
 
-export function compareCategory(a: Category, b: Category) {
-  return hashCategory(a) == hashCategory(b)
+export function compareCategory(a: Category, b: Category, excludeIds: string[] = []) {
+  const excludeFn = (category: Category) => category.filter((tag) => !excludeIds.includes(tag.id))
+
+  return hashCategory(excludeFn(a)) == hashCategory(excludeFn(b))
 }
 
 export function gendered<T>(fn: (gender: 'female' | 'male') => T): Gendered<T> {

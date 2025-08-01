@@ -1,4 +1,4 @@
-import { gendered, hashCategory, unhashCategory } from '@lib/bracket-lib'
+import { compareCategory, gendered, hashCategory, unhashCategory } from '@lib/bracket-lib'
 import type {
   Bracket,
   BracketCollection,
@@ -11,7 +11,8 @@ import type {
   Gender,
   Winners
 } from '@lib/types/bracket-lib'
-import { compareObject, filterObject } from '@lib/utils'
+import { addInvalidContestantIds, compareObject, filterObject } from '@lib/utils'
+import { SvelteSet as Set } from 'svelte/reactivity'
 
 class GenderedStore<T> {
   protected state: Gendered<Record<string, T>> = $state(gendered(() => ({})))
@@ -46,7 +47,7 @@ class GenderedStore<T> {
 
 // Players store
 class PlayerStore extends GenderedStore<Player[]> {
-  declare protected state: Gendered<Record<string, Player[]>>
+  // declare protected state: Gendered<Record<string, Player[]>>
 
   private dynamicCategoryByContestantId_: Gendered<Record<string, Category>> = $state(
     gendered(() => ({}))
@@ -71,6 +72,14 @@ class PlayerStore extends GenderedStore<Player[]> {
     ...this.dynamicCategoryByContestantId_.male
   })
 
+  dynamicTagIds: string[] = $derived([
+    ...new Set(
+      Object.values(this.dynamicCategoryByContestantId)
+        .flat()
+        .map((t) => t.id)
+    )
+  ])
+
   byContestantId: Record<string, Player> = $derived(
     [...this.flatPlayers.female, ...this.flatPlayers.male].reduce((acc, player) => {
       acc[player.contestantId] = player
@@ -82,12 +91,54 @@ class PlayerStore extends GenderedStore<Player[]> {
     gendered((gender) => this.uniqueCategories(this.flatPlayers[gender]))
   )
 
+  tagIds: Gendered<string[]> = $derived(
+    gendered((gender) => [...new Set(this.categories[gender].flat().map((t) => t.id))])
+  )
+
   get players(): Gendered<Player[]> {
     return this.flatPlayers
   }
   set players(value: Gendered<Player[]>) {
     this.state = gendered((gender) => this.createCategoryRecord(value[gender]))
     this.clearDynamicCategories()
+  }
+
+  setPlayer(newPlayer: Player) {
+    const originalPlayer = this.byContestantId?.[newPlayer.contestantId]
+    const dynamicTags = newPlayer.category.filter((t) => this.dynamicTagIds.includes(t.id))
+
+    const newGender = newPlayer.isMale ? 'male' : 'female'
+
+    this.dynamicCategoryByContestantId_[newGender][newPlayer.contestantId] = dynamicTags
+
+    if (
+      originalPlayer &&
+      (!compareCategory(originalPlayer.category, newPlayer.category, this.dynamicTagIds) ||
+        originalPlayer.isMale != newPlayer.isMale)
+    ) {
+      const originalPlayers = this.get(newGender, originalPlayer.category)!
+      const originalGender = originalPlayer?.isMale ? 'male' : 'female'
+
+      this.set(
+        originalGender,
+        originalPlayer.category,
+        originalPlayers.filter((p) => p.contestantId != originalPlayer.contestantId)
+      )
+    }
+
+    const newPlayers = this.get(newGender, newPlayer.category)
+
+    this.set(newGender, newPlayer.category, [
+      ...(newPlayers?.filter((p) => p.contestantId != newPlayer.contestantId) ?? []),
+      {
+        ...newPlayer,
+        category: this.removeDynamicCategories(newPlayer.category)
+      }
+    ])
+
+    if (!originalPlayer) {
+      addInvalidContestantIds([newPlayer.contestantId])
+    }
   }
 
   attachTags(player: Player, newTags: Tag[]) {
@@ -107,6 +158,14 @@ class PlayerStore extends GenderedStore<Player[]> {
     }
   }
 
+  set(gender: Gender, category: Category, value: Player[]) {
+    super.set(gender, this.removeDynamicCategories(category), value)
+  }
+
+  get(gender: Gender, category: Category) {
+    return super.get(gender, this.removeDynamicCategories(category))
+  }
+
   clear(): void {
     super.clear()
     this.clearDynamicCategories()
@@ -114,6 +173,10 @@ class PlayerStore extends GenderedStore<Player[]> {
 
   clearDynamicCategories(): void {
     this.dynamicCategoryByContestantId_ = gendered(() => ({}))
+  }
+
+  private removeDynamicCategories(category: Category) {
+    return category.filter((tag) => !this.dynamicTagIds.includes(tag.id))
   }
 
   private createCategoryRecord(players: Player[]): Record<string, Player[]> {
@@ -129,7 +192,7 @@ class PlayerStore extends GenderedStore<Player[]> {
   }
 
   private uniqueCategories(players: Player[]): Category[] {
-    return Array.from(new Set(players.map((p) => hashCategory(p.category))))
+    return [...new Set(players.map((p) => hashCategory(p.category)))]
       .sort((a, b) => a.localeCompare(b))
       .map((hashed) => unhashCategory(hashed))
   }

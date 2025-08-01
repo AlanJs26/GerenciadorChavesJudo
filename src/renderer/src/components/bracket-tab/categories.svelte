@@ -9,12 +9,15 @@
   import { untrack } from 'svelte'
   import { flip } from 'svelte/animate'
   import { fade } from 'svelte/transition'
+  import { SvelteSet as Set } from 'svelte/reactivity'
 
   // let selectedBrackets: Record<string, Bracket> = $derived(
   //   bracketsStore.brackets[genderStore.gender]
   // )
   //
   // let openDeletePopover: Record<string, boolean> = $state({})
+
+  let { onPrint }: { onPrint?: () => void } = $props()
 
   const ITEM_REM_HEIGHT = 3
 
@@ -50,15 +53,16 @@
 
   let orderedTagValues = $derived(
     tagOrder.map((tagId, i) => {
-      const tag = selectedTags.find((t) => t.id == tagId)
-      if (!tag) return ['ignore' + i]
-      const index = selectedTags.indexOf(tag)
-      if (index == 0) {
+      const index = selectedTags.findIndex((t) => t.id == tagId)
+
+      const tag = selectedTags[index]
+      // if (!tag) return ['ignore' + i]
+      if (index == 0 && tag.id in bracketsStore.tagById[genderStore.gender]) {
         return bracketsStore.tagById[genderStore.gender][tag.id].map((t) => t.value)
       }
-      return Array.from(
-        new Set(computePossibleTags(tag.id, selectedTags.slice(0, index)).map((tag) => tag.value))
-      ).toSorted()
+      return [
+        ...new Set(computePossibleTags(tagId, selectedTags.slice(0, i)).map((tag) => tag.value))
+      ].toSorted()
     })
   )
 
@@ -178,7 +182,7 @@
     </div>
 
     <div class="flex-1">
-      {#each orderedTagValues as tagValues, index (tagValues.join())}
+      {#each orderedTagValues as tagValues, index (tagValues.join() + index)}
         <div class="item-height flex flex-wrap items-center justify-center gap-1">
           {#if tagValues.length != 1 || !tagValues.at(0).startsWith('ignore')}
             {#each tagValues as tagValue (tagValue)}
@@ -228,7 +232,7 @@
       <p class="!font-bold">{bracketsStore.selectedCategory.map((c) => c.value).join(' | ')}</p>
 
       <div class="flex-1"></div>
-      <Button variant="default" class="self-end">Imprimir</Button>
+      <Button variant="default" class="self-end" onclick={() => onPrint?.()}>Imprimir</Button>
     </div>
   {/if}
 </div>

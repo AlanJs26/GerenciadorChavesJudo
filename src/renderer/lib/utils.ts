@@ -1,6 +1,7 @@
 import type { Table } from '@tanstack/table-core'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { SvelteSet as Set } from 'svelte/reactivity'
 
 export function cn(...inputs: ClassValue[]): ReturnType<typeof twMerge> {
   return twMerge(clsx(inputs))
@@ -8,9 +9,9 @@ export function cn(...inputs: ClassValue[]): ReturnType<typeof twMerge> {
 
 export function buildColFn<TData>(table: Table<TData>) {
   function colFn<T = string>(key: string, mapFn?: (value: string) => T) {
-    return Array.from(
-      new Set(table.getPreFilteredRowModel().flatRows.map((row) => row.getValue(key)))
-    ).map((value) => ({
+    return [
+      ...new Set(table.getPreFilteredRowModel().flatRows.map((row) => row.getValue(key)))
+    ].map((value) => ({
       value: value as string,
       label: (mapFn?.(value as string) ?? value) as T,
       icon: undefined
@@ -23,7 +24,7 @@ let invalidContestantIds: string[] = []
 const rand = buildRandomGen('seed')
 
 export function addInvalidContestantIds(ids: string[]) {
-  invalidContestantIds = Array.from(new Set([...invalidContestantIds, ...ids]))
+  invalidContestantIds = [...new Set([...invalidContestantIds, ...ids])]
 }
 
 export function randomContestantId(): string {

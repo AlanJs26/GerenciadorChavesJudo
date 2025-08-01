@@ -30,14 +30,14 @@
   onDestroy(() => {
     observer.disconnect()
   })
-  const fullscreenVariant = 'bg-background fixed top-0 left-0 z-[100] !h-screen'
 </script>
 
 <div
   class={cn(
     'flex h-full w-full flex-col items-center',
     !isBracketVisible ? 'hidden' : '',
-    bracketFullscreen ? fullscreenVariant : ''
+    bracketFullscreen ? 'fullscreen' : ''
+    // 'fullscreen'
   )}
 >
   {#if bracketFullscreen}
@@ -71,7 +71,7 @@
       <h1 class="p-1 text-[8pt]">Vencedores</h1>
       <Separator />
 
-      {#each ['🏆 1º', '🥈 2º', '🥉 3º', '🥉 3º'] as classification, i (classification)}
+      {#each ['🏆 1º', '🥈 2º', '🥉 3º', '🥉 3º'] as classification, i (i)}
         {@const winnerClassification = sortedWinners?.[i]?.classification?.toString()}
         <div
           class="m-0 flex w-full flex-row border-t-[1px] border-solid border-inherit p-0 text-[8pt]"
@@ -104,12 +104,18 @@
 {/if}
 
 <style>
+  @reference './../../assets/main.css';
   .brackets {
     min-width: 0;
     min-height: 0;
-    height: calc(100% - 80px);
+    /* height: calc(100% - 80px); */
+    height: 100%;
   }
-  .fullscreen .brackets {
-    height: 100% !important;
+  .fullscreen {
+    @apply bg-background fixed top-0 left-0 z-[100] !h-screen;
+
+    & .brackets {
+      height: 100% !important;
+    }
   }
 </style>

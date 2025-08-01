@@ -4,6 +4,12 @@
 </script>
 
 <script lang="ts" generics="TData, TValue">
+  import { playersStore } from '@/states.svelte.ts'
+  import { createSvelteTable } from '@components/ui/data-table/data-table.svelte'
+  import FlexRender from '@components/ui/data-table/flex-render.svelte'
+  import * as Table from '@components/ui/table'
+  import type { Player } from '@lib/types/bracket-lib'
+  import { randomContestantId } from '@lib/utils'
   import {
     type ColumnDef,
     type ColumnFiltersState,
@@ -18,13 +24,8 @@
     getPaginationRowModel,
     getSortedRowModel
   } from '@tanstack/table-core'
-  import DataTableToolbar from './data-table-toolbar.svelte'
-  import DataTablePagination from './data-table-pagination.svelte'
-  import { createSvelteTable } from '@components/ui/data-table/data-table.svelte'
-  import FlexRender from '@components/ui/data-table/flex-render.svelte'
-  import * as Table from '@components/ui/table'
-  import type { Player } from '@lib/types/bracket-lib'
-  import { randomContestantId } from '@lib/utils'
+  import DataTablePagination from './pagination.svelte'
+  import DataTableToolbar from './toolbar.svelte'
 
   let { columns, data }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } = $props()
 
@@ -69,20 +70,18 @@
     enableRowSelection: false,
     meta: {
       removePlayer: (player: Player) => {
-        const index = (data as Player[]).findIndex((p) => p.contestantId == player.contestantId)
-        if (index !== -1) {
-          data.splice(index, 1)
-          // data = [...data]
-        }
+        const gender = player.isMale ? 'male' : 'female'
+        const players = playersStore.get(gender, player.category)
+
+        playersStore.set(
+          gender,
+          player.category,
+          players.filter((p) => p.contestantId != player.contestantId)
+        )
       },
       addPlayer: (player: Omit<Player, 'contestantId'>) => {
-        const players = data as Player[]
-        let contestantId = randomContestantId()
-        while (players.find((p) => p.contestantId == contestantId)) {
-          contestantId = randomContestantId()
-        }
-        players.push({ ...player, contestantId })
-        // ;(data as Player[]) = [...players]
+        const contestantId = randomContestantId()
+        playersStore.setPlayer({ ...player, contestantId })
       }
     },
     onRowSelectionChange: buildChangeCallback(

@@ -13,7 +13,7 @@ import {
 } from './index'
 
 // @ts-ignore typescript is not able to find exported snippets from .svelte files
-import { tagsCellSnippet } from '@components/player-tab/components/tags-cell.svelte'
+import { tagsCellSnippet } from '@components/player-tab/data-table/tags-cell.svelte'
 import { renderComponent } from '@components/ui/data-table'
 import type { Player } from '@lib/types/bracket-lib'
 import { winnerStore } from '@/states.svelte'

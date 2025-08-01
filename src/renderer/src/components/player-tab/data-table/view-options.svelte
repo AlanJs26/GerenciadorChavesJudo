@@ -24,8 +24,8 @@
   </DropdownMenu.Trigger>
   <DropdownMenu.Content>
     <DropdownMenu.Group>
-      <DropdownMenu.GroupHeading>Toggle columns</DropdownMenu.GroupHeading>
-      <DropdownMenu.Separator />
+      <DropdownMenu.GroupHeading class="!font-bold">Toggle columns</DropdownMenu.GroupHeading>
+
       {#each table
         .getAllColumns()
         .filter((col) => typeof col.accessorFn !== 'undefined' && col.getCanHide()) as column (column)}
