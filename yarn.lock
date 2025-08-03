@@ -1104,15 +1104,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucide/svelte@npm:^0.525.0":
-  version: 0.525.0
-  resolution: "@lucide/svelte@npm:0.525.0"
-  peerDependencies:
-    svelte: ^5
-  checksum: 10c0/0b606e8b881b0f80ef72fe50f57b78811e581afa3e40b413382bc0a2aae4c622cdf222f4372d0ad501106c5ba60638f06fc391e077bc75fbcef39bbf62d09140
-  languageName: node
-  linkType: hard
-
 "@malept/cross-spawn-promise@npm:^2.0.0":
   version: 2.0.0
   resolution: "@malept/cross-spawn-promise@npm:2.0.0"
@@ -4672,7 +4663,6 @@ __metadata:
     "@electron-toolkit/preload": "npm:^3.0.1"
     "@electron-toolkit/tsconfig": "npm:^1.0.1"
     "@electron-toolkit/utils": "npm:^4.0.0"
-    "@lucide/svelte": "npm:^0.525.0"
     "@rollup/plugin-alias": "npm:^5.1.1"
     "@sveltejs/vite-plugin-svelte": "npm:^6.1.0"
     "@tailwindcss/vite": "npm:^4.1.11"

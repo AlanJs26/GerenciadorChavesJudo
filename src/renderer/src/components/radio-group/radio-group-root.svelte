@@ -1,27 +1,21 @@
 <script lang="ts">
-  import { setContext, type Snippet } from 'svelte'
+  import { RadioGroup as RadioGroupPrimitive } from 'bits-ui'
   import { cn } from '@lib/utils'
-
   let {
-    group = $bindable(),
-    class: className = '',
-    children
-  }: { group: string; class: string; children: Snippet } = $props()
-
-  // Define o contexto para compartilhar o valor selecionado com os itens filhos
-  setContext('RADIO_GROUP', {
-    get group() {
-      return group
-    },
-    set group(v) {
-      group = v
-    }
-  })
+    ref = $bindable(null),
+    class: className,
+    value = $bindable(''),
+    ...restProps
+  }: RadioGroupPrimitive.RootProps = $props()
 </script>
 
-<div class={cn(className, 'radio-group bg-secondary')}>
-  {@render children?.()}
-</div>
+<RadioGroupPrimitive.Root
+  bind:ref
+  bind:value
+  data-slot="radio-group"
+  class={cn('bg-secondary flex items-center justify-around rounded-md p-1', className)}
+  {...restProps}
+/>
 
 <style>
   .radio-group {
