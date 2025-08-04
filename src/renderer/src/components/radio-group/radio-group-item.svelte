@@ -18,7 +18,7 @@
         'text-muted-foreground/70 h-auto w-full p-2',
         checked
           ? 'bg-background text-foreground hover:bg-background cursor-default shadow-md'
-          : 'hover:bg-transparent',
+          : 'hover:bg-primary/10',
         className
       )}
     >
