@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { bracketsStore } from '@/states.svelte'
-  import * as Popover from '@components/ui/popover'
-  import { Button, buttonVariants } from '@/components/ui/button'
-  import { Plus } from '@lucide/svelte'
-  import { Label } from '@components/ui/label'
+  import { Button, buttonVariants } from '@components/ui/button'
   import { Input } from '@components/ui/input'
+  import { Label } from '@components/ui/label'
+  import * as Popover from '@components/ui/popover'
   import * as Select from '@components/ui/select'
-  import { toast } from 'svelte-sonner'
   import { roundsBySize } from '@lib/bracket-lib'
+  import { Plus } from '@lucide/svelte'
+  import { toast } from 'svelte-sonner'
+
+  import { bracketsStore } from '@/states.svelte'
 
   let {
     isMale,

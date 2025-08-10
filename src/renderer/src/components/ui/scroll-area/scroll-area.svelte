@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { ScrollArea as ScrollAreaPrimitive, type WithoutChild } from 'bits-ui'
-  import { Scrollbar } from './index'
   import { cn } from '@lib/utils'
+  import { ScrollArea as ScrollAreaPrimitive, type WithoutChild } from 'bits-ui'
+
+  import { Scrollbar } from './index'
 
   let viewportEl: HTMLDivElement = $state(null)
 

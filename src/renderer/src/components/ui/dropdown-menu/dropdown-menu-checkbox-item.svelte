@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { DropdownMenu as DropdownMenuPrimitive, type WithoutChildrenOrChild } from 'bits-ui'
+  import { cn } from '@lib/utils'
   import { Check } from '@lucide/svelte'
   import { Minus } from '@lucide/svelte'
-  import { cn } from '@lib/utils'
+  import { DropdownMenu as DropdownMenuPrimitive, type WithoutChildrenOrChild } from 'bits-ui'
   import type { Snippet } from 'svelte'
 
   let {

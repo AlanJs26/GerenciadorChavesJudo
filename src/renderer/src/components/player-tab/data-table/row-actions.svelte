@@ -3,25 +3,26 @@
 </script>
 
 <script lang="ts" generics="TData">
-  import { Ellipsis, Plus } from '@lucide/svelte'
+  import type { SelectItem } from '@components/command-select'
+  import CommandSelect from '@components/command-select/CommandSelect.svelte'
+  import NewTagPopover from '@components/player-tab/data-table/new-tag-popover.svelte'
+  import { Badge, BadgeButton } from '@components/ui/badge'
+  import { Button } from '@components/ui/button'
+  import { buttonVariants } from '@components/ui/button'
   import * as DropdownMenu from '@components/ui/dropdown-menu'
-  import * as Popover from '@components/ui/popover'
-  import { Button } from '@/components/ui/button'
-  import { Label } from '@components/ui/label'
   import { Input } from '@components/ui/input'
-  import { buttonVariants } from '@/components/ui/button'
-  import { cn, compareObject } from '@lib/utils'
+  import { Label } from '@components/ui/label'
+  import * as Popover from '@components/ui/popover'
+  import * as Select from '@components/ui/select'
   import type { Player, Tag } from '@lib/types/bracket-lib'
   import type { PlayerTableMeta } from '@lib/types/player-table'
-  import { playersStore } from '@/states.svelte'
-  import * as Select from '@components/ui/select'
+  import { cn, compareObject } from '@lib/utils'
+  import { Ellipsis, Plus } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
   import type { Row } from '@tanstack/table-core'
-  import CommandSelect from '@/components/command-select/CommandSelect.svelte'
-  import type { SelectItem } from '@/components/command-select'
-  import { Badge, BadgeButton } from '@/components/ui/badge'
   import { SvelteSet as Set } from 'svelte/reactivity'
-  import NewTagPopover from '@/components/player-tab/data-table/new-tag-popover.svelte'
+
+  import { playersStore } from '@/states.svelte'
 
   let { row, table }: { row: Row<TData>; table: Table<TData> } = $props()
   let selectedValues: Record<string, string> = $state({})

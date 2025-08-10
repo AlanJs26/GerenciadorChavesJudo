@@ -1,4 +1,4 @@
-import RadioGroupRoot from './radio-group-root.svelte'
 import RadioGroupItem from './radio-group-item.svelte'
+import RadioGroupRoot from './radio-group-root.svelte'
 
-export { RadioGroupRoot as Root, RadioGroupItem as Item }
+export { RadioGroupItem as Item, RadioGroupRoot as Root }

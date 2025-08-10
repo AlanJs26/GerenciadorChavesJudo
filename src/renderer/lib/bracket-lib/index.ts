@@ -1,13 +1,14 @@
 import type {
   Bracket,
-  Player,
-  Organization,
-  Winners,
   Category,
+  Gendered,
+  Organization,
+  Player,
   TaggedBracket,
-  Gendered
+  Winners
 } from '@lib/types/bracket-lib'
-import { splitEvenly, buildRandomGen, pickRandom } from '@lib/utils'
+import { buildRandomGen, pickRandom, splitEvenly } from '@lib/utils'
+
 import { playersStore } from '@/states.svelte'
 
 export const ROUNDS = ['1', '2', '3', '4', 'FIM']
@@ -125,8 +126,7 @@ export function buildBracket(players: Player[]): TaggedBracket {
 }
 
 // Helper function to split players and create brackets
-export function createGroupedBrackets(players: Player[]): TaggedBracket[] {
-  const maxChunk = 8
+export function createGroupedBrackets(players: Player[], maxChunk = 8): TaggedBracket[] {
   const nChunks = Math.ceil(players.length / maxChunk)
   const chunks = splitEvenly(players, nChunks)
 
@@ -140,7 +140,6 @@ export function createGroupedBrackets(players: Player[]): TaggedBracket[] {
     if (chunks.length > 1) {
       for (const player of chunk) {
         playersStore.attachTags(player, [{ id: 'Grupo', value: letterGen(i) }])
-        // player.category.push({ id: 'Grupo', value: letterGen(i) })
       }
     }
 
@@ -184,6 +183,7 @@ export function isGendered<T>(obj: T) {
 
   return true
 }
+
 // ==================== Data Generation ====================
 
 export function generateRandomOrganizations(

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { buttonVariants } from '@/components/ui/button'
+  import { buttonVariants } from '@components/ui/button'
   import { cn, type WithoutChildrenOrChild } from '@lib/utils'
   import { RadioGroup as RadioGroupPrimitive } from 'bits-ui'
   let {

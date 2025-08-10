@@ -3,13 +3,13 @@
 </script>
 
 <script lang="ts" generics="TData">
+  import { Button } from '@components/ui/button'
+  import * as Select from '@components/ui/select'
   import { ChevronRight } from '@lucide/svelte'
   import { ChevronLeft } from '@lucide/svelte'
   import { ChevronsRight } from '@lucide/svelte'
   import { ChevronsLeft } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
-  import * as Select from '@components/ui/select'
-  import { Button } from '@/components/ui/button'
 
   let { table }: { table: Table<TData> } = $props()
 </script>

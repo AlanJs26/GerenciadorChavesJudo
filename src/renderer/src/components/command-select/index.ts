@@ -1,6 +1,7 @@
 import Item from '@components/ui/command/command-item.svelte'
-import CommandSelect from './CommandSelect.svelte'
 import type { Snippet } from 'svelte'
+
+import CommandSelect from './CommandSelect.svelte'
 
 export interface SelectItem<T = unknown> {
   label: string
@@ -9,4 +10,4 @@ export interface SelectItem<T = unknown> {
 }
 
 export default CommandSelect
-export { Item, CommandSelect }
+export { CommandSelect, Item }

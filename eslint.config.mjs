@@ -1,28 +1,30 @@
 import tseslint from '@electron-toolkit/eslint-config-ts'
 import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier'
 import eslintPluginSvelte from 'eslint-plugin-svelte'
+import simpleImportSort from 'eslint-plugin-simple-import-sort'
 
 export default tseslint.config(
   { ignores: ['**/node_modules', '**/dist', '**/out'] },
   tseslint.configs.recommended,
   eslintPluginSvelte.configs['flat/recommended'],
+  eslintConfigPrettier,
+
   {
     files: ['**/*.svelte'],
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser
       }
-    }
-  },
-  eslintConfigPrettier,
-  {
-    files: ['**/*.{tsx,svelte}'],
+    },
     rules: {
       'svelte/no-unused-svelte-ignore': 'off'
     }
   },
   {
-    files: ['**/*.{ts,tsx,svelte}'],
+    files: ['**/*.{ts,svelte}'],
+    plugins: {
+      'simple-import-sort': simpleImportSort
+    },
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser
@@ -42,7 +44,9 @@ export default tseslint.config(
           ignoreRestSiblings: true
         }
       ],
-      '@typescript-eslint/explicit-function-return-type': 'off'
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      'simple-import-sort/imports': 'warn',
+      'simple-import-sort/exports': 'warn'
     }
   }
 )

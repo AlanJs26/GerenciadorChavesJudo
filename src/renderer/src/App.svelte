@@ -1,18 +1,25 @@
 <script lang="ts">
   // UI Components
+  import AppSidebar from '@components/app-sidebar.svelte'
+  // Custom components
+  import { Bracket as BracketTab } from '@components/bracket-tab'
+  import PlayerTab from '@components/player-tab/PlayerTab.svelte'
+  import ResultTab from '@components/result-tab/ResultTab.svelte'
   import * as Sidebar from '@components/ui/sidebar'
-
   import { Toaster } from '@components/ui/sonner'
   import * as Tabs from '@components/ui/tabs'
   import { ModeWatcher } from 'mode-watcher'
-  // Custom components
-  import { Bracket as BracketTab } from '@/components/bracket-tab'
-  import PlayerTab from '@components/player-tab/PlayerTab.svelte'
-  import ResultTab from '@components/result-tab/ResultTab.svelte'
-  import AppSidebar from '@/components/app-sidebar.svelte'
+  import { onMount } from 'svelte'
+
+  import { generateAllBrackets } from '@/components/bracket-tab/bracket-state.svelte'
+  import { sidebarStore } from '@/states.svelte'
 
   // ==================== DOM References ====================
   let bracketRenderer: BracketTab
+
+  onMount(() => {
+    generateAllBrackets()
+  })
 </script>
 
 <ModeWatcher />
@@ -22,7 +29,18 @@
   <AppSidebar />
   <main>
     <div class="tabs-container min-w-0">
-      <Tabs.Root value="resultados" class="h-full w-full">
+      <Tabs.Root
+        value="chaves"
+        class="h-full w-full"
+        onValueChange={(value) => {
+          switch (value) {
+            case 'participantes':
+            case 'chaves':
+              sidebarStore.tab = value
+              break
+          }
+        }}
+      >
         <Tabs.List class="grid w-full grid-cols-[auto_1fr_1fr_1fr] rounded-none">
           <Sidebar.Trigger />
           <Tabs.Trigger value="participantes">Participantes</Tabs.Trigger>

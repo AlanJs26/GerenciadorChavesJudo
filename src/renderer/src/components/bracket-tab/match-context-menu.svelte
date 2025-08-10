@@ -1,9 +1,10 @@
 <script lang="ts">
-  import type { Match } from '@lib/types/bracket-lib'
+  import { buttonVariants } from '@components/ui/button'
   import * as ContextMenu from '@components/ui/context-menu'
-  import { playersStore } from '@/states.svelte'
-  import { buttonVariants } from '@/components/ui/button'
+  import type { Match } from '@lib/types/bracket-lib'
   import { Plus, Trash2 } from '@lucide/svelte'
+
+  import { playersStore } from '@/states.svelte'
 
   let {
     selectedMatch,

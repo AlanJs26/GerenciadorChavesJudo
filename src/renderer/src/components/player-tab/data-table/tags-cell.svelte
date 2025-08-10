@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  import Badge from '@/components/ui/badge/badge.svelte'
+  import Badge from '@components/ui/badge/badge.svelte'
   import type { Tag } from '@lib/types/bracket-lib'
   export { tagsCellSnippet }
 </script>

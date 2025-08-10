@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { ContextMenu as ContextMenuPrimitive, type WithoutChild } from 'bits-ui'
-  import Circle from '@lucide/svelte/icons/circle'
   import { cn } from '@lib/utils'
+  import Circle from '@lucide/svelte/icons/circle'
+  import { ContextMenu as ContextMenuPrimitive, type WithoutChild } from 'bits-ui'
 
   let {
     ref = $bindable(null),

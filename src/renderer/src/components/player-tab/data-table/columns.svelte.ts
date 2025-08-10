@@ -1,23 +1,24 @@
-import type { ColumnDef } from '@tanstack/table-core'
-// import { createRawSnippet } from 'svelte'
-// import type { Task } from '../(data)/schemas'
-import {
-  // DataTableCheckbox,
-  DataTableColumnHeader,
-  DataTableCell,
-  // DataTablePriorityCell,
-  // DataTableStatusCell,
-  // DataTableTitleCell,
-  DataTableRowActions,
-  DataTableAddButton
-} from './index'
-
 // @ts-ignore typescript is not able to find exported snippets from .svelte files
 import { tagsCellSnippet } from '@components/player-tab/data-table/tags-cell.svelte'
 import { renderComponent } from '@components/ui/data-table'
-import type { Player } from '@lib/types/bracket-lib'
-import { winnerStore } from '@/states.svelte'
 import { compareCategory, hashCategory, unhashCategory } from '@lib/bracket-lib'
+import type { Player } from '@lib/types/bracket-lib'
+import type { ColumnDef } from '@tanstack/table-core'
+
+import { winnerStore } from '@/states.svelte'
+
+// import { createRawSnippet } from 'svelte'
+// import type { Task } from '../(data)/schemas'
+import {
+  DataTableAddButton,
+  DataTableCell,
+  // DataTableCheckbox,
+  DataTableColumnHeader,
+  // DataTablePriorityCell,
+  // DataTableStatusCell,
+  // DataTableTitleCell,
+  DataTableRowActions
+} from './index'
 
 function getPoints(player: Player): number {
   const gender = player.isMale ? 'male' : 'female'

@@ -4,16 +4,16 @@
 </script>
 
 <script lang="ts" generics="TData, TValue">
+  import Button from '@components/ui/button/button.svelte'
+  import * as DropdownMenu from '@components/ui/dropdown-menu'
+  import { cn } from '@lib/utils'
   import { EyeOff } from '@lucide/svelte'
   import { ArrowDown } from '@lucide/svelte'
   import { ArrowUp } from '@lucide/svelte'
   import { ChevronsUpDown } from '@lucide/svelte'
-  import type { HTMLAttributes } from 'svelte/elements'
   import type { Column } from '@tanstack/table-core'
   import type { WithoutChildren } from 'bits-ui'
-  import { cn } from '@lib/utils'
-  import * as DropdownMenu from '@components/ui/dropdown-menu'
-  import Button from '@/components/ui/button/button.svelte'
+  import type { HTMLAttributes } from 'svelte/elements'
 
   type Props = HTMLAttributes<HTMLDivElement> & {
     column: Column<TData, TValue>

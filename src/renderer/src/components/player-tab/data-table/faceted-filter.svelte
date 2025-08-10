@@ -4,17 +4,17 @@
 </script>
 
 <script lang="ts" generics="TData, TValue">
+  import { Badge } from '@components/ui/badge'
+  import { Button } from '@components/ui/button'
+  import * as Command from '@components/ui/command'
+  import * as Popover from '@components/ui/popover'
+  import { Separator } from '@components/ui/separator'
+  import type { Category } from '@lib/types/bracket-lib'
+  import { cn } from '@lib/utils'
   import { CirclePlus, Component } from '@lucide/svelte'
   import { Check } from '@lucide/svelte'
   import type { Column } from '@tanstack/table-core'
   import { SvelteSet } from 'svelte/reactivity'
-  import * as Command from '@components/ui/command'
-  import * as Popover from '@components/ui/popover'
-  import { Button } from '@/components/ui/button'
-  import { cn } from '@lib/utils'
-  import { Separator } from '@components/ui/separator'
-  import { Badge } from '@components/ui/badge'
-  import type { Category } from '@lib/types/bracket-lib'
 
   type Props<TData, TValue> = {
     column: Column<TData, TValue>

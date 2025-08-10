@@ -1,7 +1,7 @@
 import type { Table } from '@tanstack/table-core'
 import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
 import { SvelteSet as Set } from 'svelte/reactivity'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]): ReturnType<typeof twMerge> {
   return twMerge(clsx(inputs))

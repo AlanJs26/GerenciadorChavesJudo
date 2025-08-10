@@ -3,10 +3,10 @@
 </script>
 
 <script lang="ts" generics="TData">
+  import { buttonVariants } from '@components/ui/button'
+  import * as DropdownMenu from '@components/ui/dropdown-menu'
   import { Settings2 } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
-  import { buttonVariants } from '@/components/ui/button'
-  import * as DropdownMenu from '@components/ui/dropdown-menu'
 
   let { table }: { table: Table<TData> } = $props()
 </script>

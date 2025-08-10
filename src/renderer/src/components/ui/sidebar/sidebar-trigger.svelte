@@ -3,6 +3,7 @@
   import { cn } from '@lib/utils.js'
   import { PanelLeft } from '@lucide/svelte'
   import type { ComponentProps } from 'svelte'
+
   import { useSidebar } from './context.svelte.js'
 
   let {

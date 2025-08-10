@@ -3,26 +3,27 @@
 </script>
 
 <script lang="ts" generics="TData">
+  import type { SelectItem } from '@components/command-select'
+  import CommandSelect from '@components/command-select/CommandSelect.svelte'
+  import NewTagPopover from '@components/player-tab/data-table/new-tag-popover.svelte'
+  import { Badge, BadgeButton } from '@components/ui/badge'
+  import { Button, buttonVariants } from '@components/ui/button'
+  import * as Dialog from '@components/ui/dialog'
+  import { Input } from '@components/ui/input'
+  import { Label } from '@components/ui/label'
+  import { ScrollArea } from '@components/ui/scroll-area'
+  import * as Select from '@components/ui/select'
+  import { isGendered } from '@lib/bracket-lib'
+  import type { Gendered, Tag } from '@lib/types/bracket-lib'
+  import type { PlayerTableMeta } from '@lib/types/player-table'
+  import { cn, compareObject } from '@lib/utils'
   import { Plus } from '@lucide/svelte'
-  import type { HTMLAttributes } from 'svelte/elements'
   import type { Table } from '@tanstack/table-core'
   import type { WithoutChildren } from 'bits-ui'
-  import { cn, compareObject } from '@lib/utils'
-  import type { Gendered, Tag } from '@lib/types/bracket-lib'
-  import { isGendered } from '@lib/bracket-lib'
-  import { Button, buttonVariants } from '@/components/ui/button'
-  import * as Dialog from '@components/ui/dialog'
-  import { Label } from '@components/ui/label'
-  import { Input } from '@components/ui/input'
-  import { playersStore } from '@/states.svelte'
-  import type { PlayerTableMeta } from '@lib/types/player-table'
-  import * as Select from '@components/ui/select'
-  import { ScrollArea } from '@components/ui/scroll-area'
+  import type { HTMLAttributes } from 'svelte/elements'
   import { SvelteSet as Set } from 'svelte/reactivity'
-  import type { SelectItem } from '@/components/command-select'
-  import { Badge, BadgeButton } from '@/components/ui/badge'
-  import CommandSelect from '@/components/command-select/CommandSelect.svelte'
-  import NewTagPopover from '@/components/player-tab/data-table/new-tag-popover.svelte'
+
+  import { playersStore } from '@/states.svelte'
 
   type Props = HTMLAttributes<HTMLDivElement> & {
     table: Table<TData>

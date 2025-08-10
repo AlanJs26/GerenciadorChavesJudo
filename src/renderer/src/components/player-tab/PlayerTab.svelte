@@ -1,7 +1,8 @@
 <script lang="ts">
-  import DataTable from './data-table/DataTable.svelte'
-  import { columns } from './data-table/columns.svelte'
   import { playersStore } from '@/states.svelte'
+
+  import { columns } from './data-table/columns.svelte'
+  import DataTable from './data-table/DataTable.svelte'
 
   const flatPlayers = $derived([...playersStore.players['male'], ...playersStore.players['female']])
 </script>

@@ -3,13 +3,13 @@ import type {
   Bracket,
   BracketCollection,
   Category,
+  Gender,
   Gendered,
   Player,
-  TaggedBracket,
-  WinnersByCategory,
   Tag,
-  Gender,
-  Winners
+  TaggedBracket,
+  Winners,
+  WinnersByCategory
 } from '@lib/types/bracket-lib'
 import { addInvalidContestantIds, compareObject, filterObject } from '@lib/utils'
 import { SvelteSet as Set } from 'svelte/reactivity'
@@ -143,19 +143,31 @@ class PlayerStore extends GenderedStore<Player[]> {
 
   attachTags(player: Player, newTags: Tag[]) {
     const gender = player.isMale ? 'male' : 'female'
-    const filtered = newTags.filter(
-      (tag) =>
-        !(this.dynamicCategoryByContestantId_[gender][player.contestantId] ?? []).find(
-          (t) => t.id == tag.id
-        )
-    )
-    if (filtered.length == 0) return
 
-    if (player.contestantId in this.dynamicCategoryByContestantId_[gender]) {
-      this.dynamicCategoryByContestantId_[gender][player.contestantId].push(...filtered)
-    } else {
-      this.dynamicCategoryByContestantId_[gender][player.contestantId] = filtered
-    }
+    const allDynSet = new Set(this.dynamicTagIds)
+    const allStaticSet = new Set(this.tagIds[gender]).difference(allDynSet)
+
+    const playerDynTags = this.dynamicCategoryByContestantId_[gender][player.contestantId] ?? []
+    const playerStaticTags = player.category.filter((tag) => allStaticSet.has(tag.id))
+
+    const newSet = new Set(newTags.map((t) => t.id))
+    const playerDynSet = new Set(playerDynTags.map((t) => t.id))
+    const playerStaticSet = new Set(playerStaticTags.map((t) => t.id))
+
+    const newDynTags = newTags.filter((tag) => allDynSet.has(tag.id))
+    const newStaticTags = newTags.filter((tag) => allStaticSet.has(tag.id))
+
+    const targetDynSet = playerDynSet.difference(newSet.difference(allStaticSet))
+    const filteredPlayerDynTags = playerDynTags.filter((tag) => targetDynSet.has(tag.id))
+
+    const targetStaticSet = playerStaticSet.difference(newSet.difference(allDynSet))
+    const filteredPlayerStaticTags = playerStaticTags.filter((tag) => targetStaticSet.has(tag.id))
+
+    this.dynamicCategoryByContestantId_[gender][player.contestantId] = [
+      ...filteredPlayerDynTags,
+      ...newDynTags
+    ]
+    playersStore.setPlayer({ ...player, category: [...filteredPlayerStaticTags, ...newStaticTags] })
   }
 
   set(gender: Gender, category: Category, value: Player[]) {
@@ -205,6 +217,10 @@ class BracketStore extends GenderedStore<TaggedBracket> {
 
   private derivedState: Gendered<TaggedBracket[]> = $derived(
     gendered((gender) => Object.values(this.state[gender]))
+  )
+
+  flatBrackets: TaggedBracket[] = $derived(
+    [this.derivedState.male, this.derivedState.female].flat()
   )
 
   selectedBracket: TaggedBracket | null = $derived(
@@ -288,7 +304,12 @@ class WinnerStore extends GenderedStore<Winners> {
   winnersByCategory: Gendered<WinnersByCategory> = this.state
 }
 
+class SidebarStore {
+  tab = $state('chaves')
+}
+
 export const playersStore = new PlayerStore()
 export const bracketsStore = new BracketStore()
 export const winnerStore = new WinnerStore()
 export const genderStore = new GenderStore()
+export const sidebarStore = new SidebarStore()

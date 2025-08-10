@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { buttonVariants } from '@/components/ui/button'
-  import * as Popover from '@components/ui/popover'
+  import type { SelectItem } from '@components/command-select'
+  import { buttonVariants } from '@components/ui/button'
   import * as Command from '@components/ui/command'
+  import * as Popover from '@components/ui/popover'
   import { cn } from '@lib/utils'
-
-  import { ChevronDown, Check, Plus } from '@lucide/svelte'
-  import type { SelectItem } from '@/components/command-select'
+  import { Check, ChevronDown, Plus } from '@lucide/svelte'
   import { onMount, type Snippet } from 'svelte'
 
   let {

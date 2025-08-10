@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { Button } from '@/components/ui/button'
-  import { type Variant, badgeVariants } from './index'
+  import { Button } from '@components/ui/button'
   import type { Category, Tag } from '@lib/types/bracket-lib'
   import { cn } from '@lib/utils'
   import { X } from '@lucide/svelte'
   import type { MouseEventHandler } from 'svelte/elements'
+
+  import { badgeVariants, type Variant } from './index'
 
   let {
     category,

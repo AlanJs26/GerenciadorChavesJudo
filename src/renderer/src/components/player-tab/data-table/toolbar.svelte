@@ -3,13 +3,14 @@
 </script>
 
 <script lang="ts" generics="TData">
-  import Button from '@/components/ui/button/button.svelte'
+  import Button from '@components/ui/button/button.svelte'
   import { Input } from '@components/ui/input'
   import { unhashCategory } from '@lib/bracket-lib'
   import type { Player, PlayerColumn } from '@lib/types/bracket-lib'
   import { buildColFn } from '@lib/utils'
   import { X } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
+
   import { DataTableFacetedFilter, DataTableViewOptions } from './index'
 
   let { table }: { table: Table<TData> } = $props()

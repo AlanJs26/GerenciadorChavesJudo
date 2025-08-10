@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { playersStore, winnerStore, bracketsStore, genderStore } from '@/states.svelte'
+  import { Separator } from '@components/ui/separator'
   import type { Winners } from '@lib/types/bracket-lib'
   import { cn } from '@lib/utils'
-  import { Separator } from '@components/ui/separator'
   import { onDestroy, onMount } from 'svelte'
+
+  import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte'
 
   let {
     bracketFullscreen,

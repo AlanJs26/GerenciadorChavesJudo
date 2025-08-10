@@ -1,6 +1,6 @@
 <script lang="ts">
-  import FormItem from '@/components/result-tab/config-popover/form-item.svelte'
   import * as RadioGroup from '@components/radio-group'
+  import FormItem from '@components/result-tab/config-popover/form-item.svelte'
 
   let {
     class: className,

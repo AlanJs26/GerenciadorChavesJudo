@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { buttonVariants } from '@/components/ui/button'
+  import { buttonVariants } from '@components/ui/button'
   import * as DropdownMenu from '@components/ui/dropdown-menu'
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Separator } from '@components/ui/separator'
-  import { cn } from '@lib/utils'
-
   import type { StatefullCategory } from '@lib/types/bracket-lib'
+  import { cn } from '@lib/utils'
   import type { Snippet } from 'svelte'
 
   let {

@@ -1,8 +1,9 @@
-import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { fail, success } from '@shared/errors'
 import type { State } from '@lib/types/bracket-lib'
+import { fail, success } from '@shared/errors'
+import { contextBridge, ipcRenderer } from 'electron'
 import { webUtils } from 'electron'
+
 import type { API } from './index.d'
 
 // Custom APIs for renderer

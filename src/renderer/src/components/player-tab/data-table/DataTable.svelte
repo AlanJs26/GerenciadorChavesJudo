@@ -4,7 +4,6 @@
 </script>
 
 <script lang="ts" generics="TData, TValue">
-  import { playersStore } from '@/states.svelte.ts'
   import { createSvelteTable } from '@components/ui/data-table/data-table.svelte'
   import FlexRender from '@components/ui/data-table/flex-render.svelte'
   import * as Table from '@components/ui/table'
@@ -13,17 +12,20 @@
   import {
     type ColumnDef,
     type ColumnFiltersState,
-    type PaginationState,
-    type RowSelectionState,
-    type SortingState,
-    type VisibilityState,
     getCoreRowModel,
     getFacetedRowModel,
     getFacetedUniqueValues,
     getFilteredRowModel,
     getPaginationRowModel,
-    getSortedRowModel
+    getSortedRowModel,
+    type PaginationState,
+    type RowSelectionState,
+    type SortingState,
+    type VisibilityState
   } from '@tanstack/table-core'
+
+  import { playersStore } from '@/states.svelte.ts'
+
   import DataTablePagination from './pagination.svelte'
   import DataTableToolbar from './toolbar.svelte'
 

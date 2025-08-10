@@ -1,17 +1,17 @@
 <script lang="ts">
-  import type { Bracket, Classification, Contestant, Match, Winners } from '@lib/types/bracket-lib'
-
   import * as Command from '@components/ui/command'
+  import { generateTournamentOrder, retrieveWinners } from '@lib/bracket-lib'
+  import { get_match_data_for_element, installBracketUI } from '@lib/bracket-lib/rendering'
+  import type { Bracket, Classification, Contestant, Match, Winners } from '@lib/types/bracket-lib'
+  import type { Category } from '@lib/types/bracket-lib'
   import { cn } from '@lib/utils'
   import { computeCommandScore } from 'bits-ui'
+  import { createBracket } from 'bracketry'
+  import { type Mode, mode, setMode } from 'mode-watcher'
   import { toast } from 'svelte-sonner'
 
   import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte'
-  import { generateTournamentOrder, retrieveWinners } from '@lib/bracket-lib'
-  import { get_match_data_for_element, installBracketUI } from '@lib/bracket-lib/rendering'
-  import type { Category } from '@lib/types/bracket-lib'
-  import { createBracket } from 'bracketry'
-  import { mode, setMode, type Mode } from 'mode-watcher'
+
   import { BracketContainer, Categories, MatchContextMenu } from '.'
 
   let bracketsEl: HTMLDivElement = $state()
