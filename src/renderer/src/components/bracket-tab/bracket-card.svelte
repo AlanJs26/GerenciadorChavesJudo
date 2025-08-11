@@ -21,7 +21,7 @@
 
 <button
   bind:this={el}
-  class="participante hover:bg-primary/5 flex w-full cursor-pointer gap-5 !pr-5"
+  class="participante hover:bg-primary/5 flex w-full cursor-pointer gap-0 !pr-5"
   onclick={function (): void {
     ;(this as HTMLDivElement).querySelector('input').click()
   }}
@@ -43,6 +43,14 @@
       ></Badge>
     </div>
     <div class="text-muted-foreground !mt-1 !ml-2 flex flex-col text-start text-xs">
+      <div class="flex flex-wrap">
+        <Badge
+          colors={bracketsStore.statusColors}
+          variant="outline"
+          class="w-fit px-2 text-[7pt]"
+          category={bracket.status}
+        />
+      </div>
       <span>
         {gender == 'male' ? 'Masculino' : 'Feminino'}
       </span>

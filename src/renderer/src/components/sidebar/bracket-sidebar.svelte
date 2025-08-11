@@ -153,9 +153,17 @@
           for (const player of players) {
             playersStore.attachTags(player, [groupTag ?? newTags[0]])
           }
-          for (const newTag of newTags) {
+          for (const [i, newTag] of Object.entries(newTags)) {
             const newCategory = [...bracket.category.filter((t) => t.id != 'Grupo'), newTag]
-            bracketsStore.set(gender, newCategory, { ...bracket, category: newCategory })
+            const newStatus = i == 1 ? [{ id: 'Duplicado', value: 'Duplicado' }] : []
+            bracketsStore.setTagged(gender, {
+              ...bracket,
+              category: newCategory,
+              status: [...bracket.status, ...newStatus]
+            })
+            if (i == 0) {
+              bracketsStore.selectedCategory = newCategory
+            }
           }
           if (!groupTag) {
             bracketsStore.delete(gender, bracket.category)
@@ -219,7 +227,7 @@
 
                     bracketsStore.delete(gender, bracket.category)
                     for (const newBracket of newBrackets) {
-                      bracketsStore.set(gender, newBracket.category, newBracket)
+                      bracketsStore.setTagged(gender, newBracket)
                     }
                     bracketsStore.selectedCategory = newBrackets[0].category
                   } else {

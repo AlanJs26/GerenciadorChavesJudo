@@ -216,6 +216,10 @@ class BracketStore extends GenderedStore<TaggedBracket> {
   declare protected state: Gendered<Record<string, TaggedBracket>>
   selectedCategory: Category = $state([])
 
+  statusColors: Record<string, string> = $state({
+    Impressão: 'rgb(from red r g b / 0.5)'
+  })
+
   private derivedState: Gendered<TaggedBracket[]> = $derived(
     gendered((gender) => Object.values(this.state[gender]))
   )
@@ -230,6 +234,10 @@ class BracketStore extends GenderedStore<TaggedBracket> {
 
   categories: Gendered<Category[]> = $derived(
     gendered((gender) => this.derivedState[gender].map((ds) => ds.category))
+  )
+
+  statuses: Gendered<Category[]> = $derived(
+    gendered((gender) => this.derivedState[gender].map((ds) => ds.status))
   )
 
   tagById: Gendered<Record<string, Tag[]>> = $derived(
@@ -268,10 +276,10 @@ class BracketStore extends GenderedStore<TaggedBracket> {
   getRaw(gender: Gender, category: Category): Bracket | null {
     const taggedBracket = this.get(gender, category)
     if (!taggedBracket) return taggedBracket
-    return filterObject(taggedBracket, (key) => key != 'category')
+    return filterObject(taggedBracket, (key) => key != 'category' && key != 'status')
   }
   setRaw(gender: Gender, category: Category, bracket: Bracket) {
-    this.state[gender][hashCategory(category)] = { ...bracket, category }
+    this.state[gender][hashCategory(category)] = { ...bracket, category, status: [] }
   }
   clear(): void {
     super.clear()

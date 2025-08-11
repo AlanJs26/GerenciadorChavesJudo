@@ -12,9 +12,11 @@
     onSubmitAdd,
     onSubmitDelete,
     visible = $bindable(),
+    class: className,
     children
   }: {
     selectedMatch: Match
+    class: string
     onSubmitWinner: (contestantId: string, selectedMatch: Match) => void
     onSubmitAdd: (side: 0 | 1, selectedMatch: Match) => void
     onSubmitDelete: (contestantId: string, selectedMatch: Match) => void
@@ -23,7 +25,7 @@
 </script>
 
 <ContextMenu.Root bind:open={() => visible, (open) => (!open ? (visible = open) : null)}>
-  <ContextMenu.Trigger class="h-full min-h-0 w-full">
+  <ContextMenu.Trigger class={className}>
     {@render children()}
   </ContextMenu.Trigger>
 

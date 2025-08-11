@@ -10,11 +10,13 @@
     variant = 'default',
     children,
     group = false,
+    colors = {},
     class: className,
     ...props
   }: {
     category?: Category
     group: boolean
+    colors: Record<string, string>
     href?: string
     variant: Variant
     class?: string
@@ -29,15 +31,27 @@
       return 'rounded-r-none rounded-l-none'
     }
   }
+
+  function colorStyle(variant: string, id: string) {
+    switch (variant) {
+      case 'default':
+        return id in colors ? `background-color: ${colors[id]}` : ''
+      case 'outline':
+      default:
+        return id in colors ? `border-color: ${colors[id]}` : ''
+    }
+  }
 </script>
 
 {#if category}
-  {#each category as tag, i (tag.value)}
+  {#each category as tag, i (tag.id)}
     <svelte:element
       this={href ? 'a' : 'span'}
       {href}
+      style={colorStyle(variant, tag.id)}
       class={cn(
         badgeVariants({ variant }),
+        'justify-center',
         group ? 'px-1' : '',
         group ? groupClass(i, category.length) : '',
         className

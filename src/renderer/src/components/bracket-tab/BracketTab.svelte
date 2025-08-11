@@ -241,6 +241,7 @@
 
   <MatchContextMenu
     {selectedMatch}
+    class="min-h-0 w-full flex-1"
     bind:visible={matchContextVisible}
     onSubmitWinner={(contestantId, selectedMatch) => {
       const { roundIndex, order } = selectedMatch

@@ -9,22 +9,26 @@
   import { Plus } from '@lucide/svelte'
   import { SvelteSet as Set } from 'svelte/reactivity'
 
-  import { playersStore } from '@/states.svelte'
+  import { bracketsStore, playersStore } from '@/states.svelte'
 
   let {
     gender,
     selectedTags = $bindable([]),
+    useStatus = false,
+    colors = {},
     onChange,
     class: className
   }: {
     onChange?: (tags: Tag[]) => void
     selectedTags: Tag[]
+    colors: Record<string, string>
+    useStatus: boolean
     gender: Gender
     class?: string
   } = $props()
 
   const tagitemById: Record<string, SelectItem[]> = $derived(
-    playersStore.categories[gender].reduce(
+    (useStatus ? bracketsStore.statuses : playersStore.categories)[gender].reduce(
       (acc, category) => {
         for (const tag of category) {
           if (acc[tag.id]?.find((item) => compareObject(item.value, tag))) continue
@@ -71,6 +75,7 @@
       {#if playerTag}
         <BadgeButton
           category={playerTag}
+          {colors}
           onClose={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -80,7 +85,7 @@
           }}
         ></BadgeButton>
       {:else}
-        <BadgeButton variant="outline" }>{tagId}</BadgeButton>
+        <BadgeButton {colors} variant="outline" class="border-dashed">{tagId}</BadgeButton>
       {/if}
     </CommandSelect>
   {/each}
@@ -103,6 +108,6 @@
 
 {#snippet tag_select_item(item: SelectItem)}
   <div class="flex flex-1 justify-center">
-    <Badge>{item.label}</Badge>
+    <Badge {colors} category={[item.value]}></Badge>
   </div>
 {/snippet}

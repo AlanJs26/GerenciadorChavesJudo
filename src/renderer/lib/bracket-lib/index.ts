@@ -128,6 +128,7 @@ export function buildBracket(players: Player[], bracketSize = 0, useStore = true
     rounds: rounds.map((name) => ({ name })),
     contestants,
     category: players[0].category,
+    status: [],
     matches: Object.entries(matchPairs).map(([k, pair]) => ({
       roundIndex: 0,
       order: parseInt(k),

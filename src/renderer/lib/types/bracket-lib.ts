@@ -27,6 +27,7 @@ export interface Player {
 
 export interface TaggedBracket extends Bracket {
   category: Category
+  status: Tag[]
 }
 
 export type BracketCollection = Gendered<TaggedBracket[]>

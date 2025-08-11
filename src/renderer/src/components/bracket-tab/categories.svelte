@@ -12,6 +12,7 @@
   import { flip } from 'svelte/animate'
   import { fade } from 'svelte/transition'
 
+  import CategorySelect from '@/components/category-select.svelte'
   import { bracketsStore, genderStore } from '@/states.svelte'
 
   let { onPrint }: { onPrint?: () => void } = $props()
@@ -61,7 +62,7 @@
     class="flex w-full border-b"
     style={`min-height:${ITEM_REM_HEIGHT * bracketsStore.tagById[genderStore.gender].length}rem`}
   >
-    <div>
+    <div class="flex flex-col">
       {#each categoryState.tagOrder as tagId, index (tagId)}
         <div
           use:draggable={{ container: index.toString(), dragData: tagId }}
@@ -72,12 +73,11 @@
           animate:flip={{ duration: 200 }}
           in:fade={{ duration: 150 }}
           out:fade={{ duration: 150 }}
-          style={`height:${ITEM_REM_HEIGHT}rem`}
           class={cn(
             'svelte-dnd-touch-feedback',
             'relative flex items-center',
             'ring-ring/10 ring-1 transition-all duration-200 hover:z-10 hover:ring-2 hover:ring-blue-200 ',
-            'bg-background cursor-grab p-3 '
+            'bg-background flex-1 cursor-grab p-3'
           )}
         >
           <h3 class="text-foreground flex-1 font-medium">
@@ -88,11 +88,13 @@
       {/each}
     </div>
 
-    <div class="ml-[1px] flex flex-col">
-      <div class="flex-1"></div>
+    <div
+      class="ml-[1px] grid"
+      style={`grid-template-rows: repeat(${categoryState.orderedTagValues.length}, 1fr)`}
+    >
       <Button
         variant="outline"
-        class="item-height bg-background ring-ring/10 text-md flex h-[3rem] w-auto cursor-pointer items-center gap-2 rounded-none border-none p-3 ring-1"
+        class="bg-background ring-ring/10 text-md -row-end-1 flex h-full w-auto cursor-pointer items-center gap-2 rounded-none border-none p-3 ring-1"
         onclick={() => {
           genderStore.toggle()
         }}
@@ -102,7 +104,10 @@
       </Button>
     </div>
 
-    <div class="flex-1">
+    <div
+      class={cn('grid flex-1')}
+      style={`grid-template-rows: repeat(${categoryState.orderedTagValues.length}, 1fr)`}
+    >
       {#each categoryState.orderedTagValues as tagValues, index (tagValues.join() + index)}
         <div class="item-height flex flex-wrap items-center justify-center gap-1">
           {#each tagValues as tagValue (tagValue)}
@@ -158,10 +163,33 @@
 
   {#if bracketsStore.selectedCategory?.length}
     <div class="flex !w-full items-center px-5 py-2">
-      <p class="!font-bold">{bracketsStore.selectedCategory.map((c) => c.value).join(' | ')}</p>
+      <!-- <p class="!mr-5 min-w-fit !font-bold"> -->
+      <!--   {bracketsStore.selectedCategory.map((c) => c.value).join(' | ')} -->
+      <!-- </p> -->
+
+      <div class="!mr-5">
+        <Badge
+          category={bracketsStore.selectedCategory}
+          group={true}
+          variant="outline"
+          class="p-2 px-4 text-xl !font-bold"
+        />
+      </div>
+
+      <span class="!mr-3 !font-bold">Status:</span>
+
+      <CategorySelect
+        selectedTags={bracketsStore.selectedBracket?.status ?? []}
+        gender={genderStore.gender}
+        colors={bracketsStore.statusColors}
+        useStatus={true}
+        onChange={(tags) => {
+          bracketsStore.selectedBracket.status = tags
+        }}
+      />
 
       <div class="flex-1"></div>
-      <Button variant="default" class="self-end" onclick={() => onPrint?.()}>Imprimir</Button>
+      <Button variant="default" class="!ml-5" onclick={() => onPrint?.()}>Imprimir</Button>
     </div>
   {/if}
 </div>
@@ -173,7 +201,7 @@
     @apply opacity-50 shadow-lg ring-2 ring-blue-400;
   }
 
-  .item-height {
-    height: 3rem;
-  }
+  /* .item-height { */
+  /*   height: 3rem; */
+  /* } */
 </style>

@@ -12,17 +12,29 @@
     variant = 'default',
     children,
     onClose,
+    colors = {},
     onclick,
     class: className,
     ...props
   }: {
     category?: Category | Tag
     variant: Variant
+    colors: Record<string, string>
     class?: string
     onClose?: MouseEventHandler<HTMLButtonElement>
     onclick?: (tag: Tag) => void
   } = $props()
   const tags = $derived(category && Array.isArray(category) ? category : [category])
+
+  function colorStyle(variant: string, id: string) {
+    switch (variant) {
+      case 'default':
+        return id in colors ? `background-color: ${colors[id]}` : ''
+      case 'outline':
+      default:
+        return id in colors ? `border-color: ${colors[id]}` : ''
+    }
+  }
 </script>
 
 {#if category}
@@ -31,6 +43,7 @@
       class={cn(badgeVariants({ variant }), 'cursor-pointer pr-0', className)}
       {...props}
       onclick={() => onclick?.(tag)}
+      style={colorStyle(variant, tag.id)}
     >
       {tag.value}
       {#if onClose}
