@@ -12,7 +12,7 @@
     items = $bindable(),
     value = $bindable(''),
     itemFactory,
-    defaultLabel: defaultValue = '',
+    defaultLabel: defaultValue = $bindable(''),
     onNewItem,
     onSelect,
     class: className,
@@ -42,6 +42,12 @@
     const index = commandItems?.findIndex((item) => item.label == defaultValue)
     selectedIndex = index
   })
+  $effect(() => {
+    if (defaultValue) {
+      const index = commandItems?.findIndex((item) => item.label == defaultValue)
+      selectedIndex = index
+    }
+  })
 </script>
 
 <Popover.Root bind:open={popoverOpen}>
@@ -61,7 +67,7 @@
   {/if}
 
   <Popover.Content class={cn('p-0', popoverClass)}>
-    <Command.Root bind:value>
+    <Command.Root>
       <Command.Input {placeholder} bind:value={inputValue} />
       <Command.List>
         <Command.Empty>Não encontrado</Command.Empty>
@@ -72,7 +78,10 @@
             onclick={() => {
               selectedIndex = i
               onSelect?.(commandItems.at(selectedIndex))
-              tempItem = null
+              if (item.label != tempItem?.label) {
+                tempItem = null
+              }
+              value = item.label
               inputValue = ''
               popoverOpen = false
             }}
@@ -92,9 +101,10 @@
             forceMount={true}
             onclick={() => {
               onNewItem?.(inputValue)
+              popoverOpen = false
               if (itemFactory) {
                 tempItem = itemFactory(inputValue)
-                value = inputValue
+                value = tempItem.label
                 selectedIndex = items.length
               }
               inputValue = ''

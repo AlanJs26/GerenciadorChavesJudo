@@ -2,8 +2,8 @@
   import * as Sidebar from '@components/ui/sidebar'
   import * as Tabs from '@components/ui/tabs'
 
-  import BracketSidebar from '@/components/bracket-sidebar.svelte'
-  import PlayerSidebar from '@/components/player-sidebar.svelte'
+  import BracketSidebar from '@/components/sidebar/bracket-sidebar.svelte'
+  import PlayerSidebar from '@/components/sidebar/player-sidebar.svelte'
   import { sidebarStore } from '@/states.svelte.ts'
 </script>
 

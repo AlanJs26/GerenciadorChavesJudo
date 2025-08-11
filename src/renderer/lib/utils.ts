@@ -165,8 +165,24 @@ export function buildRandomGen(seedStr: string) {
   return rand
 }
 
-export function pickRandom<T>(array: T[], seed: number): T {
-  return array[Math.floor(seed * array.length)]
+export function pickRandom<T>(array: T[], randomGen: () => number): T {
+  return array[Math.floor(randomGen() * array.length)]
+}
+
+export function shuffleArray<T>(array: T[], randomGen: () => number): T[] {
+  let currentIndex = array.length
+
+  // While there remain elements to shuffle.
+  while (currentIndex !== 0) {
+    // Pick a remaining element.
+    const randomIndex = Math.floor(randomGen() * currentIndex)
+    currentIndex--
+
+    // And swap it with the current element.
+    ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
+  }
+
+  return array
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

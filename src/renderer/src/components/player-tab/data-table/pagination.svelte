@@ -34,7 +34,7 @@
           {String(table.getState().pagination.pageSize)}
         </Select.Trigger>
         <Select.Content side="top">
-          {#each [10, 20, 30, 40, 50] as pageSize (pageSize)}
+          {#each [25, 50, 100, 300] as pageSize (pageSize)}
             <Select.Item value={`${pageSize}`}>
               {pageSize}
             </Select.Item>

@@ -23,7 +23,7 @@
 </script>
 
 <ContextMenu.Root bind:open={() => visible, (open) => (!open ? (visible = open) : null)}>
-  <ContextMenu.Trigger class="h-full w-full">
+  <ContextMenu.Trigger class="h-full min-h-0 w-full">
     {@render children()}
   </ContextMenu.Trigger>
 

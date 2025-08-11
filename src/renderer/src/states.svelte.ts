@@ -20,10 +20,10 @@ class GenderedStore<T> {
   get(gender: Gender, category: Category) {
     if (!category) return null
     const hash = hashCategory(category)
-    if (hash in this.state[gender]) {
-      return this.state[gender][hash]
-    }
-    return null
+    return this.state[gender][hash] ?? null
+  }
+  get_(gender: Gender, hash: string) {
+    return this.state[gender][hash] ?? null
   }
   has(gender: Gender, category: Category) {
     return Boolean(this.get(gender, category))
@@ -87,6 +87,15 @@ class PlayerStore extends GenderedStore<Player[]> {
     }, {})
   )
 
+  byContestantId_: Record<string, Player> = $derived(
+    Object.values(gendered((gender) => Object.values(this.state[gender]).flat()))
+      .flat()
+      .reduce((acc, player) => {
+        acc[player.contestantId] = player
+        return acc
+      }, {})
+  )
+
   categories: Gendered<Category[]> = $derived(
     gendered((gender) => this.uniqueCategories(this.flatPlayers[gender]))
   )
@@ -147,27 +156,19 @@ class PlayerStore extends GenderedStore<Player[]> {
     const allDynSet = new Set(this.dynamicTagIds)
     const allStaticSet = new Set(this.tagIds[gender]).difference(allDynSet)
 
-    const playerDynTags = this.dynamicCategoryByContestantId_[gender][player.contestantId] ?? []
-    const playerStaticTags = player.category.filter((tag) => allStaticSet.has(tag.id))
-
-    const newSet = new Set(newTags.map((t) => t.id))
-    const playerDynSet = new Set(playerDynTags.map((t) => t.id))
-    const playerStaticSet = new Set(playerStaticTags.map((t) => t.id))
-
-    const newDynTags = newTags.filter((tag) => allDynSet.has(tag.id))
-    const newStaticTags = newTags.filter((tag) => allStaticSet.has(tag.id))
-
-    const targetDynSet = playerDynSet.difference(newSet.difference(allStaticSet))
-    const filteredPlayerDynTags = playerDynTags.filter((tag) => targetDynSet.has(tag.id))
-
-    const targetStaticSet = playerStaticSet.difference(newSet.difference(allDynSet))
-    const filteredPlayerStaticTags = playerStaticTags.filter((tag) => targetStaticSet.has(tag.id))
-
     this.dynamicCategoryByContestantId_[gender][player.contestantId] = [
-      ...filteredPlayerDynTags,
-      ...newDynTags
+      ...(this.dynamicCategoryByContestantId_[gender][player.contestantId]?.filter(
+        (tag) => !newTags.find((t) => tag.id == t.id)
+      ) ?? []),
+      ...newTags.filter((tag) => !allStaticSet.has(tag.id))
     ]
-    playersStore.setPlayer({ ...player, category: [...filteredPlayerStaticTags, ...newStaticTags] })
+    playersStore.setPlayer({
+      ...player,
+      category: [
+        ...player.category.filter((tag) => !newTags.find((t) => tag.id == t.id)),
+        ...newTags
+      ]
+    })
   }
 
   set(gender: Gender, category: Category, value: Player[]) {

@@ -1,11 +1,9 @@
 <script lang="ts">
-  import {
-    categoryState,
-    findValidCategory,
-    setSelectedCategory
-  } from '@components/bracket-tab/bracket-state.svelte'
+  import { categoryState, setSelectedCategory } from '@components/bracket-tab/bracket-state.svelte'
+  import { sidebarState } from '@components/sidebar/sidebar-state.svelte.ts'
   import { Badge } from '@components/ui/badge'
   import { Button } from '@components/ui/button'
+  import { hashCategory } from '@lib/bracket-lib'
   import type { Tag } from '@lib/types/bracket-lib'
   import { clamp, cn, compareObject } from '@lib/utils'
   import { ArrowRightLeft, GripVertical } from '@lucide/svelte'
@@ -108,20 +106,47 @@
       {#each categoryState.orderedTagValues as tagValues, index (tagValues.join() + index)}
         <div class="item-height flex flex-wrap items-center justify-center gap-1">
           {#each tagValues as tagValue (tagValue)}
+            {@const isLast = index == bracketsStore.selectedCategory.length - 1}
+            {@const checkedBracket = sidebarState.checkedBrackets[genderStore.gender]}
             <Badge
               variant={isSelected({ id: categoryState.tagOrder[index], value: tagValue })
                 ? 'default'
                 : 'outline'}
-              onclick={() => {
+              onclick={(e) => {
                 const category = [...bracketsStore.selectedCategory]
                 category[clamp(index, 0, bracketsStore.selectedCategory.length - 1)] = {
                   id: categoryState.tagOrder[index],
                   value: tagValue
                 }
 
+                if (e.shiftKey) {
+                  if (isLast && bracketsStore.has(genderStore.gender, category)) {
+                    const hash = hashCategory(category)
+
+                    checkedBracket.set(hash, !(checkedBracket.get(hash) ?? false))
+                  }
+                  return
+                }
+
                 setSelectedCategory(category)
               }}
-              class="h-7 cursor-pointer border-zinc-500"
+              class={cn(
+                'h-7 cursor-pointer border-zinc-500',
+                isLast &&
+                  checkedBracket.get(
+                    hashCategory([
+                      ...bracketsStore.selectedCategory.filter(
+                        (t) => t.id != categoryState.tagOrder[index]
+                      ),
+                      {
+                        id: categoryState.tagOrder[index],
+                        value: tagValue
+                      }
+                    ])
+                  )
+                  ? 'border-blue-400'
+                  : ''
+              )}
             >
               {tagValue}
             </Badge>

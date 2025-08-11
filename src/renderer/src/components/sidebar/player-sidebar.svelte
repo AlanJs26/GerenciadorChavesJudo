@@ -1,6 +1,5 @@
 <script lang="ts">
   import { categoryState, generateAllBrackets } from '@components/bracket-tab/bracket-state.svelte'
-  // Custom components
   import CategoryDropdown from '@components/category-dropdown.svelte'
   import FileInput from '@components/file-input.svelte'
   import PlayerCard from '@components/player-card.svelte'
@@ -19,6 +18,8 @@
   import { addInvalidContestantIds, randomContestantId } from '@lib/utils'
   // Icons
   import { Bolt, Download, FileDown, FileJson2, MoonIcon, SunIcon } from '@lucide/svelte'
+  // Custom components
+  import createFuzzySearch from '@nozbe/microfuzz'
   import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
   import { handleResult } from '@shared/errors'
   import { toggleMode } from 'mode-watcher'
@@ -31,6 +32,7 @@
   // ==================== State Variables ====================
   let files: FileList | undefined = $state()
   let organizations: Organization[] = $state([])
+  let contextOpen = $state(false)
   let filterText = $state('')
   let autosaveInterval: ReturnType<typeof setInterval> | null = $state(null)
 
@@ -64,23 +66,23 @@
   let nFemale = $derived(playersStore.players.female.length)
   let nMale = $derived(playersStore.players.male.length)
 
-  // Apply text normalization once instead of twice
-  let normalizedFilterText = $derived(
-    filterText
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase()
+  const fuzzyFn = $derived(
+    createFuzzySearch(playersStore.players[genderStore.gender], {
+      getText: (player) => [
+        `${player.name} ${player.organization}`,
+        `${player.organization} ${player.name}`
+      ],
+      strategy: 'aggressive'
+    })
   )
 
-  let filteredPlayers = $derived(
-    playersStore.players[genderStore.gender].filter((player) =>
-      player.name
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
-        .toLowerCase()
-        .includes(normalizedFilterText)
-    )
-  )
+  let filteredPlayers = $derived.by(() => {
+    const filtered = fuzzyFn(filterText)
+      .toSorted((a, b) => a.score - b.score)
+      .map((x) => x.item)
+    if (filtered.length == 0 && !filterText) return playersStore.players[genderStore.gender]
+    return filtered
+  })
 
   // ==================== Functions ====================
 
@@ -209,6 +211,8 @@
     </FileInput>
   </div>
 
+  <span class="py-2 text-center text-xl font-bold">Presença</span>
+
   <RadioGroup.Root bind:value={genderStore.radio} class="!mt-1">
     <RadioGroup.Item value="Feminino">
       {nFemale} Feminino
@@ -225,7 +229,11 @@
   {#snippet playersScrollview()}
     <ScrollArea class="flex flex-1 flex-col" type="auto">
       {#each filteredPlayers as _player, i (_player.contestantId)}
-        <PlayerCard bind:player={() => filteredPlayers[i], () => {}} />
+        <PlayerCard
+          bind:player={
+            () => playersStore.byContestantId_[filteredPlayers[i].contestantId], () => {}
+          }
+        />
       {/each}
     </ScrollArea>
   {/snippet}
@@ -307,30 +315,32 @@
 {/snippet}
 
 {#snippet contextmenu(trigger: Snippet)}
-  <ContextMenu.Root>
+  <ContextMenu.Root bind:open={contextOpen}>
     <ContextMenu.Trigger class="flex min-h-0 flex-1 flex-col">
       {@render trigger()}
     </ContextMenu.Trigger>
 
-    <ContextMenu.Content class="flex flex-1 flex-col p-3" updatePositionStrategy="always">
+    <ContextMenu.Content class="z-10 flex flex-1 flex-col p-3" updatePositionStrategy="always">
       <ContextMenu.Group class="flex w-full cursor-pointer flex-row items-center">
         <Checkbox
           id="player-checkbox"
           aria-labelledby="player-checkbox-label"
+          class="cursor-pointer"
           bind:checked={
             () => filteredPlayers.every((p) => p.present),
             () => {
               const AllChecked = filteredPlayers.every((p) => p.present)
-              filteredPlayers.forEach((_, i) => {
-                filteredPlayers[i].present = !AllChecked
+              filteredPlayers.forEach((player) => {
+                playersStore.byContestantId_[player.contestantId].present = !AllChecked
               })
+              contextOpen = false
             }
           }
         />
         <Label
           id="player-checkbox-label"
           for="player-checkbox"
-          class="ml-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          class="!ml-2 cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           Alternar Tudo
         </Label>

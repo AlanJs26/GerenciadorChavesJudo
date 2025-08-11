@@ -4,12 +4,15 @@ import type {
   Gendered,
   Organization,
   Player,
+  Tag,
   TaggedBracket,
   Winners
 } from '@lib/types/bracket-lib'
-import { buildRandomGen, pickRandom, splitEvenly } from '@lib/utils'
+import { buildRandomGen, pickRandom, shuffleArray, splitEvenly } from '@lib/utils'
 
-import { playersStore } from '@/states.svelte'
+const rand = buildRandomGen('seed')
+
+import { bracketsStore, playersStore } from '@/states.svelte'
 
 export const ROUNDS = ['1', '2', '3', '4', 'FIM']
 
@@ -78,17 +81,25 @@ export function retrieveWinners(bracket: Bracket, player: Player): Winners {
 }
 
 // ==================== Bracket Generation ====================
-export function buildBracket(players: Player[]): TaggedBracket {
-  players = players.map((p) => playersStore.byContestantId[p.contestantId])
+export function buildBracket(players: Player[], bracketSize = 0, useStore = true): TaggedBracket {
+  if (useStore) {
+    players = players.map((p) => playersStore.byContestantId[p.contestantId])
+  }
   if (
     players.some((player) => hashCategory(player.category) != hashCategory(players[0].category))
   ) {
-    throw Error('Attempt to create Bracket with players of mixed categories')
+    console.warn('Attempt to create Bracket with players of mixed categories')
+  }
+
+  if (bracketSize != 0 && bracketSize < players.length) {
+    throw Error(
+      `Trying to create bracket smaller than number of players. players: ${players.length}; brackerSize: ${bracketSize}`
+    )
   }
 
   const numPlayers = players.length
-  const rounds = roundsBySize(numPlayers)
-  const order = generateTournamentOrder(2 ** Math.ceil(Math.log2(numPlayers)))
+  const rounds = roundsBySize(bracketSize || numPlayers)
+  const order = generateTournamentOrder(2 ** Math.ceil(Math.log2(bracketSize || numPlayers)))
 
   // Create contestant objects
   const contestants = players.reduce((prev, player) => {
@@ -125,28 +136,48 @@ export function buildBracket(players: Player[]): TaggedBracket {
   }
 }
 
-// Helper function to split players and create brackets
-export function createGroupedBrackets(players: Player[], maxChunk = 8): TaggedBracket[] {
-  const nChunks = Math.ceil(players.length / maxChunk)
-  const chunks = splitEvenly(players, nChunks)
+export function randomizedSort<T extends object>(items: T[], key: string): T[] {
+  const grouped = Object.groupBy(items, (obj) => obj[key] as string) as Record<string, T[]>
+  const groups = shuffleArray(Object.keys(grouped), rand)
+  return groups.flatMap((group) => shuffleArray(grouped[group], rand))
+}
 
-  const result: TaggedBracket[] = []
-  const letterGen = (n) => {
+// Helper function to split players and create brackets
+export function createGroupedBrackets(
+  players: Player[],
+  maxChunk = 8,
+  useStore = true
+): TaggedBracket[] {
+  const nChunks = Math.ceil(players.length / maxChunk)
+  const chunks = splitEvenly(randomizedSort(players, 'organization'), nChunks)
+
+  const letterGen = (n: number) => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     return letters[n % letters.length]
   }
 
-  for (const [i, chunk] of chunks.entries()) {
-    if (chunks.length > 1) {
-      for (const player of chunk) {
-        playersStore.attachTags(player, [{ id: 'Grupo', value: letterGen(i) }])
+  // Is expected that all players gender and category are equal
+  const gender = players[0].isMale ? 'male' : 'female'
+  const category = players[0].category
+
+  const newTags: Tag[] = []
+
+  if (nChunks > 1) {
+    for (let i = 0; i < 25; i++) {
+      if (newTags.length >= nChunks) break
+      const newTag: Tag = { id: 'Grupo', value: letterGen(i) }
+      if (!bracketsStore.has(gender, [...category.filter((t) => t.id != 'Grupo'), newTag])) {
+        newTags.push(newTag)
       }
     }
-
-    result.push(buildBracket(chunk))
+    for (const [i, chunk] of chunks.entries()) {
+      for (const player of chunk) {
+        playersStore.attachTags(player, [newTags[i]])
+      }
+    }
   }
 
-  return result
+  return chunks.map((chunk) => buildBracket(chunk, 0, useStore))
 }
 
 export function hashCategory(category: Category) {
@@ -190,7 +221,6 @@ export function generateRandomOrganizations(
   numOrgs: number,
   playersPerOrg: number
 ): Organization[] {
-  const rand = buildRandomGen('seed')
   const maleNames = [
     'Alan',
     'Lucas',
@@ -245,9 +275,9 @@ export function generateRandomOrganizations(
       const isMale = rand() > 0.5
       const names = isMale ? maleNames : femaleNames
       return {
-        name: pickRandom(names, rand()),
+        name: pickRandom(names, rand),
         isMale,
-        category: categories.map(({ id, values }) => ({ id, value: pickRandom(values, rand()) }))
+        category: categories.map(({ id, values }) => ({ id, value: pickRandom(values, rand) }))
       }
     })
 

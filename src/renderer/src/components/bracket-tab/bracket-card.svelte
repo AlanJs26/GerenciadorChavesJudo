@@ -8,12 +8,19 @@
 
   let {
     checked = $bindable(),
+    el = $bindable(),
     gender,
     bracket
-  }: { checked: boolean; gender: 'female' | 'male'; bracket: TaggedBracket } = $props()
+  }: {
+    checked: boolean
+    el: HTMLButtonElement
+    gender: 'female' | 'male'
+    bracket: TaggedBracket
+  } = $props()
 </script>
 
 <button
+  bind:this={el}
   class="participante hover:bg-primary/5 flex w-full cursor-pointer gap-5 !pr-5"
   onclick={function (): void {
     ;(this as HTMLDivElement).querySelector('input').click()

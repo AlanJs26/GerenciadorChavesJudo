@@ -35,7 +35,7 @@
   let columnVisibility = $state<VisibilityState>({})
   let columnFilters = $state<ColumnFiltersState>([])
   let sorting = $state<SortingState>([])
-  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 100 })
+  let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 })
 
   function buildChangeCallback<T>(getFn: () => T, setFn: (T) => void) {
     return (updater) => {

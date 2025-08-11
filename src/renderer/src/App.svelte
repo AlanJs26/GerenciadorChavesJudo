@@ -1,10 +1,10 @@
 <script lang="ts">
   // UI Components
-  import AppSidebar from '@components/app-sidebar.svelte'
   // Custom components
   import { Bracket as BracketTab } from '@components/bracket-tab'
   import PlayerTab from '@components/player-tab/PlayerTab.svelte'
   import ResultTab from '@components/result-tab/ResultTab.svelte'
+  import AppSidebar from '@components/sidebar/app-sidebar.svelte'
   import * as Sidebar from '@components/ui/sidebar'
   import { Toaster } from '@components/ui/sonner'
   import * as Tabs from '@components/ui/tabs'
@@ -28,7 +28,7 @@
 <Sidebar.Provider>
   <AppSidebar />
   <main>
-    <div class="tabs-container min-w-0">
+    <div class="tabs-container h-[100vh] min-w-0">
       <Tabs.Root
         value="chaves"
         class="h-full w-full"

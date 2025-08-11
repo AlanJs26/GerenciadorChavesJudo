@@ -3,25 +3,21 @@
 </script>
 
 <script lang="ts" generics="TData">
-  import type { SelectItem } from '@components/command-select'
   import CommandSelect from '@components/command-select/CommandSelect.svelte'
-  import NewTagPopover from '@components/player-tab/data-table/new-tag-popover.svelte'
-  import { Badge, BadgeButton } from '@components/ui/badge'
-  import { Button } from '@components/ui/button'
-  import { buttonVariants } from '@components/ui/button'
+  import { Button, buttonVariants } from '@components/ui/button'
   import * as DropdownMenu from '@components/ui/dropdown-menu'
   import { Input } from '@components/ui/input'
   import { Label } from '@components/ui/label'
   import * as Popover from '@components/ui/popover'
   import * as Select from '@components/ui/select'
-  import type { Player, Tag } from '@lib/types/bracket-lib'
+  import type { Player } from '@lib/types/bracket-lib'
   import type { PlayerTableMeta } from '@lib/types/player-table'
-  import { cn, compareObject } from '@lib/utils'
-  import { Ellipsis, Plus } from '@lucide/svelte'
-  import type { Table } from '@tanstack/table-core'
-  import type { Row } from '@tanstack/table-core'
+  import { cn } from '@lib/utils'
+  import { Ellipsis } from '@lucide/svelte'
+  import type { Row, Table } from '@tanstack/table-core'
   import { SvelteSet as Set } from 'svelte/reactivity'
 
+  import CategorySelect from '@/components/category-select.svelte'
   import { playersStore } from '@/states.svelte'
 
   let { row, table }: { row: Row<TData>; table: Table<TData> } = $props()
@@ -40,28 +36,6 @@
         label: organization,
         value: organization
       }))
-  )
-
-  const tagitemById: Record<string, SelectItem[]> = $derived(
-    playersStore.categories[player.isMale ? 'male' : 'female'].reduce(
-      (acc, category) => {
-        for (const tag of category) {
-          if (acc[tag.id]?.find((item) => compareObject(item.value, tag))) continue
-          const newItem = {
-            label: tag.value,
-            value: tag,
-            snippet: tag_select_item
-          }
-          if (tag.id in acc) {
-            acc[tag.id].push(newItem)
-          } else {
-            acc[tag.id] = [newItem]
-          }
-        }
-        return acc
-      },
-      {} as Record<string, SelectItem<Tag>[]>
-    )
   )
 
   const playerInputTypes = $derived({
@@ -191,6 +165,7 @@
           defaultLabel={player.organization}
           onNewItem={(value) => {
             playersStore.setPlayer({ ...player, organization: value })
+            selectedValues['organization'] = value
           }}
           onSelect={(item) => {
             playersStore.setPlayer({ ...player, organization: item.value })
@@ -199,75 +174,17 @@
 
         <!-- Categories -->
         <Label>Categoria</Label>
-        <div class="flex flex-wrap gap-1">
-          {#each Object.keys(tagitemById) as tagId (tagId)}
-            {@const playerTag = player.category.find((t) => t.id == tagId)}
-            <CommandSelect
-              popoverClass="w-auto"
-              items={tagitemById[tagId]}
-              defaultLabel={playerTag?.value}
-              onSelect={(item) => {
-                const newTag = item.value
-
-                playersStore.setPlayer({
-                  ...player,
-                  category: [...player.category, newTag]
-                })
-              }}
-            >
-              {#if playerTag}
-                <BadgeButton
-                  category={playerTag}
-                  onClose={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-
-                    playersStore.setPlayer({
-                      ...player,
-                      category: player.category.filter((t) => t.id != playerTag.id)
-                    })
-                  }}
-                ></BadgeButton>
-              {:else}
-                <BadgeButton
-                  variant="outline"
-                  onClose={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                  }}>{tagId}</BadgeButton
-                >
-              {/if}
-            </CommandSelect>
-          {/each}
-
-          <!-- TODO: Loop sobre as tags que existem, porém não fazem parte do player; mostrar como outline e ter o mesmo popup para alterar o seu valor -->
-
-          <NewTagPopover
-            invalidTags={playersStore.tagIds[player.isMale ? 'male' : 'female']}
-            class={cn(buttonVariants({ variant: 'outline' }), 'size-5 rounded-full p-3')}
-            onSubmit={(tagId, tagValue) => {
-              playersStore.setPlayer({
-                ...player,
-                category: [
-                  ...player.category,
-                  {
-                    id: tagId.trim(),
-                    value: tagValue.trim()
-                  }
-                ]
-              })
-            }}
-          >
-            <Plus class="size-4" />
-          </NewTagPopover>
-        </div>
+        <CategorySelect
+          selectedTags={player.category}
+          gender={player.isMale ? 'male' : 'female'}
+          onChange={(tags) => {
+            playersStore.setPlayer({
+              ...player,
+              category: tags
+            })
+          }}
+        />
       </div>
     </Popover.Content>
   </Popover.Root>
-{/snippet}
-
-{#snippet tag_select_item(item: SelectItem)}
-  <div class="flex flex-1 justify-center">
-    <Badge>{item.label}</Badge>
-  </div>
 {/snippet}

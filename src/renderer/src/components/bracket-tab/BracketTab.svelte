@@ -100,14 +100,13 @@
         getEntryStatusHTML: (_entryStatus, context) => {
           if (context.roundIndex != 0) return ''
 
-          const nMatches = currentBracket.matches.filter((match) => match.roundIndex == 0).length
           const contextMatch = currentBracket.matches.find(
             (match) => match.roundIndex === context.roundIndex && match.order === context.matchOrder
           )
           const sideIndex = contextMatch.sides
             .map((s) => s.contestantId)
             .indexOf(context.contestantId)
-          const tournamentOrder = generateTournamentOrder(2 * nMatches)
+          const tournamentOrder = generateTournamentOrder(Math.pow(2, currentBracket.rounds.length))
           const index = tournamentOrder.at(2 * contextMatch.order + sideIndex)
           return `<p>${index}</p>`
         },

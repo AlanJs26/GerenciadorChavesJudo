@@ -116,7 +116,7 @@ export function findValidCategory(tagOrder: string[], constraints?: Tag[]) {
   }
   return newSelection
 }
-export function setSelectedCategory(category: Tag[]) {
+export function setSelectedCategory(category: Tag[]): Tag[] {
   const gender = genderStore.gender
 
   // const tagById = bracketsStore.tagById[gender]
@@ -129,6 +129,7 @@ export function setSelectedCategory(category: Tag[]) {
 
   if (bracketsStore.get(gender, category)) {
     bracketsStore.selectedCategory = category
+    return category
   } else {
     let newSelection = findValidCategory(categoryState.tagOrder, category)
     for (let i = -1; i >= -category.length; i--) {
@@ -140,8 +141,10 @@ export function setSelectedCategory(category: Tag[]) {
 
     if (!newSelection || !bracketsStore.has(gender, newSelection)) {
       console.error('Invalid selected category', newSelection)
+      return bracketsStore.selectedCategory
     } else {
       bracketsStore.selectedCategory = newSelection
+      return newSelection
     }
   }
 }
