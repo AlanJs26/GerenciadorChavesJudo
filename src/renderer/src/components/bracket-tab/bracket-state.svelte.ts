@@ -56,7 +56,7 @@ export function generateAllBrackets(): void {
 
   for (const [gender, categories] of Object.entries(bracketsStore.categories)) {
     for (const category of categories) {
-      winnerStore.set(gender as Gender, category, { matches: {}, winners: [] })
+      winnerStore.set(gender as Gender, category, { matches: {}, winners: [], dirty: false })
     }
   }
 }

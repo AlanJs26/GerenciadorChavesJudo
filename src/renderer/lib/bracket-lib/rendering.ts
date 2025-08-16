@@ -4,7 +4,6 @@ import { createBracket, OptionsMap } from 'bracketry'
 export function get_match_data_for_element(el: Element, all_data: Bracket): Bracket['matches'][0] {
   const round_index = +(el.closest('.round-wrapper')?.getAttribute('round-index') || -1)
   const match_order = +(el.closest('.match-wrapper')?.getAttribute('match-order') || -1)
-  console.log(round_index, match_order)
   return (
     all_data.matches?.find((m) => {
       return m.roundIndex === round_index && m.order === match_order

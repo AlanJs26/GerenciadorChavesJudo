@@ -34,7 +34,7 @@ export type BracketCollection = Gendered<TaggedBracket[]>
 
 export type WinnersByCategory = Record<string, Winners>
 
-export type Classification = 1 | 2 | 3
+export type Classification = 1 | 2 | 3 | 4
 export type Winners = {
   matches: Record<
     string,
@@ -45,6 +45,7 @@ export type Winners = {
     contestantId: string
     classification: Classification
   }[]
+  dirty: boolean
 }
 
 // App State

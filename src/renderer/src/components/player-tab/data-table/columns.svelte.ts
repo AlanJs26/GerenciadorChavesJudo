@@ -41,6 +41,7 @@ function getPoints(player: Player): number {
         points += 5
         break
       case 3:
+      case 4:
         points += 3
         break
     }

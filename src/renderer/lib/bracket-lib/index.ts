@@ -47,11 +47,15 @@ export function retrieveWinners(bracket: Bracket, player: Player): Winners {
   ]
 
   for (const match of bracket.matches.toSorted((a, b) => b.roundIndex - a.roundIndex)) {
-    if (match.roundIndex < bracket.rounds.length - 2) continue
+    if (
+      match.roundIndex < bracket.rounds.length - 2 ||
+      match.roundIndex > bracket.rounds.length - 1
+    )
+      continue
 
     if (match.roundIndex == bracket.rounds.length - 1) {
       for (const [i, side] of match.sides.entries()) {
-        if (!side?.contestantId || side.contestantId == player.contestantId) continue
+        if (!side?.contestantId || player.contestantId == side.contestantId) continue
         winners.push({
           contestantId: side.contestantId,
           classification: 2
@@ -66,18 +70,19 @@ export function retrieveWinners(bracket: Bracket, player: Player): Winners {
 
     for (const [i, side] of match.sides.entries()) {
       if (!side?.contestantId || winners.some((w) => w.contestantId == side.contestantId)) continue
+      const classification = winners.find((w) => w.classification == 3) ? 4 : 3
       winners.push({
         contestantId: side.contestantId,
-        classification: 3
+        classification
       })
       matches[`${match.roundIndex}:${match.order}`] = {
         ...matches[`${match.roundIndex}:${match.order}`],
-        [i == 0 ? 'top' : 'bottom']: 3
+        [i == 0 ? 'top' : 'bottom']: classification
       }
       break
     }
   }
-  return { matches, winners }
+  return { matches, winners, dirty: false }
 }
 
 // ==================== Bracket Generation ====================

@@ -15,6 +15,7 @@
     defaultLabel: defaultValue = $bindable(''),
     onNewItem,
     onSelect,
+    newItemSnippet,
     class: className,
     popoverClass,
     children
@@ -28,6 +29,7 @@
     itemFactory?: (inputValue: string) => SelectItem
     onNewItem?: (inputValue: string) => void
     onSelect?: (value: SelectItem) => void
+    newItemSnippet?: Snippet
     children: Snippet
   } = $props()
 
@@ -110,10 +112,14 @@
               inputValue = ''
             }}
           >
-            <span class="flex size-3.5 items-center justify-center">
-              <Plus class="size-4" />
-            </span>
-            Adicionar
+            {#if newItemSnippet}
+              {@render newItemSnippet()}
+            {:else}
+              <span class="flex size-3.5 items-center justify-center">
+                <Plus class="size-4" />
+              </span>
+              Adicionar
+            {/if}
           </Command.Item>
         {/if}
       </Command.List>

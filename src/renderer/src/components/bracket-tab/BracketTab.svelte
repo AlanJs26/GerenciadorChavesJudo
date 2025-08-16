@@ -2,14 +2,21 @@
   import * as Command from '@components/ui/command'
   import { generateTournamentOrder, retrieveWinners } from '@lib/bracket-lib'
   import { get_match_data_for_element, installBracketUI } from '@lib/bracket-lib/rendering'
-  import type { Bracket, Classification, Contestant, Match, Winners } from '@lib/types/bracket-lib'
-  import type { Category } from '@lib/types/bracket-lib'
-  import { cn } from '@lib/utils'
-  import { computeCommandScore } from 'bits-ui'
+  import type {
+    Bracket,
+    Category,
+    Classification,
+    Contestant,
+    Match,
+    Winners
+  } from '@lib/types/bracket-lib'
+  import { cn, filterObject } from '@lib/utils'
+  import createFuzzySearch from '@nozbe/microfuzz'
   import { createBracket } from 'bracketry'
   import { type Mode, mode, setMode } from 'mode-watcher'
   import { toast } from 'svelte-sonner'
 
+  import BracketWinners from '@/components/bracket-tab/bracket-winners.svelte'
   import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte'
 
   import { BracketContainer, Categories, MatchContextMenu } from '.'
@@ -39,13 +46,38 @@
       contestants: {}
     }
   )
-  let filteredPlayers = $derived(
-    playersStore.players[genderStore.gender].filter((player) => player.present)
+
+  const fuzzyFn = $derived(
+    createFuzzySearch(
+      playersStore.players[genderStore.gender].filter((p) => p.present),
+      {
+        getText: (player) => [
+          `${player.name} ${player.organization}`,
+          `${player.organization} ${player.name}`
+        ],
+        strategy: 'aggressive'
+      }
+    )
   )
+
+  let commandInput = $state('')
+  let filteredPlayers = $derived.by(() => {
+    const filtered = fuzzyFn(commandInput)
+      .toSorted((a, b) => a.score - b.score)
+      .map((x) => x.item)
+    if (filtered.length == 0 && !commandInput) return playersStore.players[genderStore.gender]
+    return filtered.slice(0, 20)
+  })
 
   // ==================== Lifecycle Hooks ====================
   $effect(() => {
     update(bracketsStore.selectedCategory)
+  })
+
+  $effect(() => {
+    if (!openCommand) {
+      commandInput = ''
+    }
   })
 
   export function update(_s: Category): void {
@@ -74,6 +106,7 @@
         case 2:
           return `<span class='match-winner'>🥈 2º Lugar</span>`
         case 3:
+        case 4:
           return `<span class='match-winner'>🥉 3º Lugar</span>`
       }
     }
@@ -129,18 +162,6 @@
   }
 
   // ==================== Helper Functions ====================
-  function customCommandFilter(
-    commandValue: string,
-    search: string,
-    commandKeywords?: string[]
-  ): number {
-    const score = computeCommandScore(
-      playersStore.byContestantId?.[commandValue]?.name ?? '',
-      search,
-      commandKeywords
-    )
-    return score
-  }
 
   function updateMatchSides(
     roundIndex: number,
@@ -189,10 +210,14 @@
 
     const bracket = bracketsStore.getRaw(genderStore.gender, bracketsStore.selectedCategory)
 
-    bracket.contestants = {
-      ...bracket.contestants,
-      ...newContestants
-    }
+    bracket.contestants = filterObject(
+      {
+        ...bracket.contestants,
+        ...newContestants
+      },
+      (id, _) =>
+        bracket.matches.find((match) => match.sides.map((s) => s.contestantId).includes(id))
+    )
     bracketry.replaceData(bracket)
     bracketry.applyMatchesUpdates([
       {
@@ -265,14 +290,16 @@
   >
     <BracketContainer {bracketFullscreen} bind:bracketsEl />
   </MatchContextMenu>
+  <BracketWinners />
 </div>
 
 <!--
 MARK: New Player Dialog
  -->
-<Command.Dialog bind:open={openCommand} filter={customCommandFilter} bind:value={commandValue}>
+<Command.Dialog bind:open={openCommand} bind:value={commandValue} shouldFilter={false}>
   <Command.Input
     placeholder="Digite aqui..."
+    bind:value={commandInput}
     onkeydown={(e: KeyboardEvent) => {
       if (e.code != 'Enter') {
         return

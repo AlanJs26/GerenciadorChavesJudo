@@ -101,6 +101,13 @@ export function filterObject<T extends object, U = T>(
     .reduce((res, key) => ((res[key] = obj[key]), res), {} as U)
 }
 
+export function mapObject<T extends object, U = T>(
+  obj: T,
+  predicate: (key: string, value: T[keyof T]) => U
+): Record<string, U> {
+  return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, predicate(key, value)]))
+}
+
 // Helper function to split a list evenly
 export function splitEvenly<T>(list: T[], nGroups: number): T[][] {
   const result: T[][] = Array.from({ length: nGroups }, () => [])
