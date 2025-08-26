@@ -1,54 +1,14 @@
-// @ts-ignore typescript is not able to find exported snippets from .svelte files
-import { tagsCellSnippet } from '@components/player-tab/data-table/tags-cell.svelte'
+import { DataTableCell, DataTableColumnHeader } from '@components/data-table'
 import { renderComponent } from '@components/ui/data-table'
-import { compareCategory, hashCategory, unhashCategory } from '@lib/bracket-lib'
-import type { Player } from '@lib/types/bracket-lib'
+import { compareCategory, getPoints, hashCategory, unhashCategory } from '@lib/bracket-lib'
+import type { Category, Player } from '@lib/types/bracket-lib'
 import type { ColumnDef } from '@tanstack/table-core'
 
 import { winnerStore } from '@/states.svelte'
 
-// import { createRawSnippet } from 'svelte'
-// import type { Task } from '../(data)/schemas'
-import {
-  DataTableAddButton,
-  DataTableCell,
-  // DataTableCheckbox,
-  DataTableColumnHeader,
-  // DataTablePriorityCell,
-  // DataTableStatusCell,
-  // DataTableTitleCell,
-  DataTableRowActions
-} from './index'
-
-function getPoints(player: Player): number {
-  const gender = player.isMale ? 'male' : 'female'
-  let points = 0
-
-  for (const [hashedCategory, winners] of Object.entries(winnerStore.winnersByCategory[gender])) {
-    const category = unhashCategory(hashedCategory)
-    if (!compareCategory(category, player.category)) continue
-
-    const winner = winners.winners?.find((w) => w.contestantId == player.contestantId)
-    if (!winner) {
-      points += 0
-      continue
-    }
-    switch (winner.classification) {
-      case 1:
-        points += 7
-        break
-      case 2:
-        points += 5
-        break
-      case 3:
-      case 4:
-        points += 3
-        break
-    }
-  }
-
-  return points
-}
+import { DataTableAddButton, DataTableRowActions } from './index'
+// @ts-ignore typescript is not able to find exported snippets from .svelte files
+import { tagsCellSnippet } from './tags-cell.svelte'
 
 export const columns: ColumnDef<Player, string>[] = [
   // {
@@ -122,6 +82,9 @@ export const columns: ColumnDef<Player, string>[] = [
         snippet: tagsCellSnippet,
         value: row.original.category
       })
+    },
+    filterFn: (row, id, value: Category[]): boolean => {
+      return value.some((category) => category == row.getValue(id))
     }
   },
   {

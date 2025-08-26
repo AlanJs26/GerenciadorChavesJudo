@@ -12,9 +12,39 @@ import { buildRandomGen, pickRandom, shuffleArray, splitEvenly } from '@lib/util
 
 const rand = buildRandomGen('seed')
 
-import { bracketsStore, playersStore } from '@/states.svelte'
+import { bracketsStore, playersStore, winnerStore } from '@/states.svelte'
 
 export const ROUNDS = ['1', '2', '3', '4', 'FIM']
+
+export function getPoints(player: Player): number {
+  const gender = player.isMale ? 'male' : 'female'
+  let points = 0
+
+  for (const [hashedCategory, winners] of Object.entries(winnerStore.winnersByCategory[gender])) {
+    const category = unhashCategory(hashedCategory)
+    if (!compareCategory(category, player.category)) continue
+
+    const winner = winners.winners?.find((w) => w.contestantId == player.contestantId)
+    if (!winner) {
+      points += 0
+      continue
+    }
+    switch (winner.classification) {
+      case 1:
+        points += 7
+        break
+      case 2:
+        points += 5
+        break
+      case 3:
+      case 4:
+        points += 3
+        break
+    }
+  }
+
+  return points
+}
 
 // ==================== Tournament Order Generation ====================
 export function generateTournamentOrder(size: number): number[] {
@@ -176,11 +206,10 @@ export function createGroupedBrackets(
         newTags.push(newTag)
       }
     }
-    for (const [i, chunk] of chunks.entries()) {
-      for (const player of chunk) {
-        playersStore.attachTags(player, [newTags[i]])
-      }
-    }
+    playersStore.bulkAttachTags(
+      chunks.flat(),
+      chunks.map((players, i) => Array(players.length).fill([newTags[i]])).flat()
+    )
   }
 
   return chunks.map((chunk) => buildBracket(chunk, 0, useStore))

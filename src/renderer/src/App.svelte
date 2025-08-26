@@ -30,8 +30,8 @@
   <main>
     <div class="tabs-container h-[100vh] min-w-0">
       <Tabs.Root
-        value="chaves"
-        class="h-full w-full"
+        value="participantes"
+        class="flex h-full w-full flex-col"
         onValueChange={(value) => {
           switch (value) {
             case 'participantes':
@@ -47,13 +47,13 @@
           <Tabs.Trigger value="chaves">Chaves</Tabs.Trigger>
           <Tabs.Trigger value="resultados">Resultados</Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content value="participantes" class="h-[calc(100%-10em)]">
+        <Tabs.Content value="participantes" class="mt-0 h-[calc(100%-6em)]">
           <PlayerTab />
         </Tabs.Content>
-        <Tabs.Content value="chaves" class="mt-0 h-full w-full">
+        <Tabs.Content value="chaves" class="mt-0 flex-1">
           <BracketTab bind:this={bracketRenderer} />
         </Tabs.Content>
-        <Tabs.Content value="resultados" class="mt-0 h-full w-full">
+        <Tabs.Content value="resultados" class="mt-0 h-[calc(100%-6em)]">
           <ResultTab />
         </Tabs.Content>
       </Tabs.Root>

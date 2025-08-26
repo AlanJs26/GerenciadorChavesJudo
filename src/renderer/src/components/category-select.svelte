@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { SelectItem } from '@components/command-select'
   import CommandSelect from '@components/command-select/CommandSelect.svelte'
-  import NewTagPopover from '@components/player-tab/data-table/new-tag-popover.svelte'
+  import NewTagPopover from '@components/player-tab/new-tag-popover.svelte'
   import { Badge, BadgeButton } from '@components/ui/badge'
   import { buttonVariants } from '@components/ui/button'
   import type { Gender, Tag } from '@lib/types/bracket-lib'

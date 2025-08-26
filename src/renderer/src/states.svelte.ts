@@ -11,8 +11,8 @@ import type {
   Winners,
   WinnersByCategory
 } from '@lib/types/bracket-lib'
-import { addInvalidContestantIds, compareObject, filterObject } from '@lib/utils'
-import { SvelteSet as Set } from 'svelte/reactivity'
+import { compareObject, filterObject } from '@lib/utils'
+// import { SvelteSet as Set } from 'svelte/reactivity'
 
 class GenderedStore<T> {
   protected state: Gendered<Record<string, T>> = $state(gendered(() => ({})))
@@ -104,6 +104,10 @@ class PlayerStore extends GenderedStore<Player[]> {
     gendered((gender) => [...new Set(this.categories[gender].flat().map((t) => t.id))])
   )
 
+  organizations: Gendered<string[]> = $derived(
+    gendered((gender) => [...new Set(this.players[gender].flat().map((p) => p.organization))])
+  )
+
   get players(): Gendered<Player[]> {
     return this.flatPlayers
   }
@@ -144,24 +148,71 @@ class PlayerStore extends GenderedStore<Player[]> {
         category: this.removeDynamicCategories(newPlayer.category)
       }
     ])
+  }
+  bulkAttachTags(players: Player[], newTags: Tag[][]) {
+    const zip = <T, U>(a: T[], b: U[]) => a.map((ai, i) => [ai, b[i]] as [T, U])
 
-    if (!originalPlayer) {
-      addInvalidContestantIds([newPlayer.contestantId])
+    const genderedTuple = Object.groupBy(zip(players, newTags), ([p, _]) =>
+      p.isMale ? 'male' : 'female'
+    )
+
+    const newDynamicCategoryByContestantId = {}
+    for (const [gender, tuple] of Object.entries(genderedTuple)) {
+      const allDynSet = new Set(this.dynamicTagIds)
+      const allStaticSet = new Set(this.tagIds[gender]).difference(allDynSet)
+
+      for (const [player, newTags] of tuple) {
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
+        const seenIds = new Set<string>()
+
+        if (!(gender in newDynamicCategoryByContestantId)) {
+          newDynamicCategoryByContestantId[gender] = {}
+        }
+        newDynamicCategoryByContestantId[gender][player.contestantId] = [
+          ...(this.dynamicCategoryByContestantId_[gender][player.contestantId] ?? []),
+          ...newTags
+        ]
+          .toReversed()
+          .filter((tag) => {
+            if (allStaticSet.has(tag.id) || seenIds.has(tag.id)) return false
+            seenIds.add(tag.id)
+            return true
+          })
+      }
+    }
+
+    for (const gender of Object.keys(newDynamicCategoryByContestantId)) {
+      this.dynamicCategoryByContestantId_[gender] = {
+        ...this.dynamicCategoryByContestantId_[gender],
+        ...newDynamicCategoryByContestantId[gender]
+      }
     }
   }
-
   attachTags(player: Player, newTags: Tag[]) {
     const gender = player.isMale ? 'male' : 'female'
 
     const allDynSet = new Set(this.dynamicTagIds)
     const allStaticSet = new Set(this.tagIds[gender]).difference(allDynSet)
 
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const seenIds = new Set<string>()
     this.dynamicCategoryByContestantId_[gender][player.contestantId] = [
-      ...(this.dynamicCategoryByContestantId_[gender][player.contestantId]?.filter(
-        (tag) => !newTags.find((t) => tag.id == t.id)
-      ) ?? []),
-      ...newTags.filter((tag) => !allStaticSet.has(tag.id))
+      ...(this.dynamicCategoryByContestantId_[gender][player.contestantId] ?? []),
+      ...newTags
     ]
+      .toReversed()
+      .filter((tag) => {
+        if (allStaticSet.has(tag.id) || seenIds.has(tag.id)) return false
+        seenIds.add(tag.id)
+        return true
+      })
+
+    // this.dynamicCategoryByContestantId_[gender][player.contestantId] = [
+    //   ...(this.dynamicCategoryByContestantId_[gender][player.contestantId]?.filter(
+    //     (tag) => !newTags.find((t) => tag.id == t.id)
+    //   ) ?? []),
+    //   ...newTags.filter((tag) => !allStaticSet.has(tag.id))
+    // ]
     playersStore.setPlayer({
       ...player,
       category: [
@@ -314,7 +365,7 @@ class WinnerStore extends GenderedStore<Winners> {
 }
 
 class SidebarStore {
-  tab = $state('chaves')
+  tab = $state('participantes')
 }
 
 export const playersStore = new PlayerStore()

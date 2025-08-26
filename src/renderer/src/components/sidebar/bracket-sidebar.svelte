@@ -192,7 +192,6 @@
     {@render bracketSizeSnippet(selectedNum)}
 
     <Button variant="outline" disabled={selectedNum == 0}>Imprimir</Button>
-    <!-- TODO: Implementar as outras ações de gerenciamento de chaves -->
   </div>
 </div>
 

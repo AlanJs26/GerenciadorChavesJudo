@@ -127,17 +127,16 @@
             </Command.Item>
           {/each}
         </Command.Group>
-        {#if selectedValues.size > 0}
-          <Command.Separator />
-          <Command.Group>
-            <Command.Item
-              onSelect={() => column?.setFilterValue(undefined)}
-              class="justify-center text-center"
-            >
-              Clear filters
-            </Command.Item>
-          </Command.Group>
-        {/if}
+        <Command.Separator />
+        <Command.Group>
+          <Command.Item
+            disabled={selectedValues.size == 0}
+            onSelect={() => column?.setFilterValue(undefined)}
+            class="justify-center text-center"
+          >
+            Clear filters
+          </Command.Item>
+        </Command.Group>
       </Command.List>
     </Command.Root>
   </Popover.Content>

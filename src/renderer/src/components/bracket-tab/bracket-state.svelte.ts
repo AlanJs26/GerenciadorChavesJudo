@@ -119,14 +119,6 @@ export function findValidCategory(tagOrder: string[], constraints?: Tag[]) {
 export function setSelectedCategory(category: Tag[]): Tag[] {
   const gender = genderStore.gender
 
-  // const tagById = bracketsStore.tagById[gender]
-  // const tagIds = Object.keys(tagById)
-  // // keep tagIds already included in new tagIds, and remove any tagId not present in new tagIds
-  // categoryState.tagOrder = [
-  //   ...categoryState.tagOrder.filter((tagId) => tagIds.includes(tagId)),
-  //   ...tagIds.filter((tagId) => !categoryState.tagOrder.includes(tagId))
-  // ]
-
   if (bracketsStore.get(gender, category)) {
     bracketsStore.selectedCategory = category
     return category

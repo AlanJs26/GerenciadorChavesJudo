@@ -7,8 +7,6 @@
   import { createSvelteTable } from '@components/ui/data-table/data-table.svelte'
   import FlexRender from '@components/ui/data-table/flex-render.svelte'
   import * as Table from '@components/ui/table'
-  import type { Player } from '@lib/types/bracket-lib'
-  import { randomContestantId } from '@lib/utils'
   import {
     type ColumnDef,
     type ColumnFiltersState,
@@ -21,19 +19,29 @@
     type PaginationState,
     type RowSelectionState,
     type SortingState,
+    type TableOptions,
     type VisibilityState
   } from '@tanstack/table-core'
-
-  import { playersStore } from '@/states.svelte.ts'
+  import type { Snippet } from 'svelte'
 
   import DataTablePagination from './pagination.svelte'
-  import DataTableToolbar from './toolbar.svelte'
 
-  let { columns, data }: { columns: ColumnDef<TData, TValue>[]; data: TData[] } = $props()
+  let {
+    columns,
+    data,
+    options = {},
+    columnFilters = $bindable([]),
+    headerSnippet
+  }: {
+    columns: ColumnDef<TData, TValue>[]
+    data: TData[]
+    options?: TableOptions<TData>
+    columnFilters: ColumnFiltersState
+    headerSnippet?: Snippet<[Table<TData>]>
+  } = $props()
 
   let rowSelection = $state<RowSelectionState>({})
   let columnVisibility = $state<VisibilityState>({})
-  let columnFilters = $state<ColumnFiltersState>([])
   let sorting = $state<SortingState>([])
   let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 25 })
 
@@ -47,76 +55,63 @@
     }
   }
 
-  const table = createSvelteTable({
-    get data() {
-      return data
-    },
-    state: {
-      get sorting() {
-        return sorting
+  const table = $derived(
+    createSvelteTable({
+      get data() {
+        return data
       },
-      get columnVisibility() {
-        return columnVisibility
+      state: {
+        get sorting() {
+          return sorting
+        },
+        get columnVisibility() {
+          return columnVisibility
+        },
+        get rowSelection() {
+          return rowSelection
+        },
+        get columnFilters() {
+          return columnFilters
+        },
+        get pagination() {
+          return pagination
+        }
       },
-      get rowSelection() {
-        return rowSelection
-      },
-      get columnFilters() {
-        return columnFilters
-      },
-      get pagination() {
-        return pagination
-      }
-    },
-    columns,
-    enableRowSelection: false,
-    meta: {
-      removePlayer: (player: Player) => {
-        const gender = player.isMale ? 'male' : 'female'
-        const players = playersStore.get(gender, player.category)
-
-        playersStore.set(
-          gender,
-          player.category,
-          players.filter((p) => p.contestantId != player.contestantId)
-        )
-      },
-      addPlayer: (player: Omit<Player, 'contestantId'>) => {
-        const contestantId = randomContestantId()
-        playersStore.setPlayer({ ...player, contestantId })
-      }
-    },
-    onRowSelectionChange: buildChangeCallback(
-      () => rowSelection,
-      (v) => (rowSelection = v)
-    ),
-    onSortingChange: buildChangeCallback(
-      () => sorting,
-      (v) => (sorting = v)
-    ),
-    onColumnFiltersChange: buildChangeCallback(
-      () => columnFilters,
-      (v) => (columnFilters = v)
-    ),
-    onColumnVisibilityChange: buildChangeCallback(
-      () => columnVisibility,
-      (v) => (columnVisibility = v)
-    ),
-    onPaginationChange: buildChangeCallback(
-      () => pagination,
-      (v) => (pagination = v)
-    ),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues()
-  })
+      columns,
+      enableRowSelection: false,
+      onRowSelectionChange: buildChangeCallback(
+        () => rowSelection,
+        (v) => (rowSelection = v)
+      ),
+      onSortingChange: buildChangeCallback(
+        () => sorting,
+        (v) => (sorting = v)
+      ),
+      onColumnFiltersChange: buildChangeCallback(
+        () => columnFilters,
+        (v) => (columnFilters = v)
+      ),
+      onColumnVisibilityChange: buildChangeCallback(
+        () => columnVisibility,
+        (v) => (columnVisibility = v)
+      ),
+      onPaginationChange: buildChangeCallback(
+        () => pagination,
+        (v) => (pagination = v)
+      ),
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+      getPaginationRowModel: getPaginationRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+      getFacetedRowModel: getFacetedRowModel(),
+      getFacetedUniqueValues: getFacetedUniqueValues(),
+      ...options
+    })
+  )
 </script>
 
 <div class="h-full space-y-4">
-  <DataTableToolbar {table} />
+  {@render headerSnippet?.(table)}
   <div class="!mt-1 h-full rounded-md border">
     <Table.Root class="h-full">
       <Table.Header>

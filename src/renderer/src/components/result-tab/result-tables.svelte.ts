@@ -3,100 +3,137 @@ import type { ResultTable } from '@lib/types/result-table'
 // Estado inicial (exemplos) extraído do componente
 const initialTables: ResultTable[] = [
   {
-    name: 'Pontos por Categoria',
-    filter: {
-      difficulty: 'simple',
-      items: [
-        { field: 'Categoria', selection: null },
-        { field: 'Sexo', selection: null }
-      ]
-    },
+    name: 'Pontos SUB10',
+    filters: [
+      { field: 'Organização', selection: null },
+      // { field: 'SUB', selection: null }
+      { field: 'SUB', selection: 'SUB10' }
+    ],
     columns: [
       {
-        name: 'Atleta',
-        type: 'data',
+        name: 'Organização',
         formula: {
-          difficulty: 'simple',
-          field: 'nome',
-          operation: { difficulty: 'simple', type: 'sum' }
+          rank: false,
+          operation: 'maxcount',
+          value: 'Organização'
         },
-        aggregations: [
-          {
-            name: 'Total Pontos',
-            groups: ['Peso'],
-            column: {
-              name: 'Total',
-              type: 'data',
-              formula: {
-                difficulty: 'simple',
-                field: 'pontos',
-                operation: { difficulty: 'simple', type: 'sum' }
-              }
-            }
-          }
-        ]
-      }
-    ],
-    extraColumns: [
+        filters: []
+      },
+      // {
+      //   name: 'Coluna2',
+      //   formula: {
+      //     rank: false,
+      //     operation: 'count',
+      //     value: null
+      //   },
+      //   // filters: [{ field: 'Peso', selection: '10kg' }]
+      //   filters: [
+      //     // { field: 'Peso', selection: '10kg' },
+      //     // { field: 'Peso', selection: null }
+      //     { field: 'Sexo', selection: null }
+      //   ]
+      //   // filters: []
+      // }
       {
-        name: 'Ranking',
-        type: 'order',
-        formula: { difficulty: 'advanced', code: '/* cálculo de ranking */' }
-      }
-    ],
-    extraRows: {
-      name: 'TOTAL GERAL',
-      formula: {
-        difficulty: 'simple',
-        field: 'pontos',
-        operation: { difficulty: 'simple', type: 'sum' }
-      }
-    }
-  },
-  {
-    name: 'Ranking por Peso',
-    filter: { difficulty: 'advanced', code: '/* filtro avançado (ex: categoria=="Senior") */' },
-    columns: [
-      {
-        name: 'Atleta',
-        type: 'data',
+        name: 'Pontos',
         formula: {
-          difficulty: 'simple',
-          field: 'nome',
-          operation: { difficulty: 'simple', type: 'sum' }
+          rank: false,
+          operation: 'sum',
+          value: 'Pontos'
         },
-        aggregations: []
+        filters: [{ field: 'Peso', selection: null }]
       },
       {
-        name: 'Classificação',
-        type: 'order',
-        formula: { difficulty: 'advanced', code: '/* lógica de classificação */' },
-        aggregations: []
+        name: 'Total de Pontos',
+        formula: {
+          rank: false,
+          operation: 'sum',
+          value: 'Pontos'
+        },
+        filters: []
       }
+    ]
+  },
+
+  {
+    name: 'Participantes SUB10',
+    filters: [
+      // { field: 'Organização', selection: null },
+      // { field: 'SUB', selection: null }
+      { field: 'SUB', selection: 'SUB10' },
+      { field: 'Peso', selection: '40kg' }
     ],
-    extraColumns: [],
-    extraRows: {
-      name: 'TOTAL',
-      formula: {
-        difficulty: 'simple',
-        field: 'pontos',
-        operation: { difficulty: 'simple', type: 'sum' }
+    columns: [
+      {
+        name: 'Participante',
+        formula: {
+          rank: false,
+          operation: 'maxcount',
+          value: 'Nome'
+        },
+        filters: []
+      },
+      {
+        name: 'Organização',
+        formula: {
+          rank: false,
+          operation: 'maxcount',
+          value: 'Organização'
+        },
+        filters: []
+      },
+      {
+        name: 'Sexo',
+        formula: {
+          rank: false,
+          operation: 'maxcount',
+          value: 'Sexo'
+        },
+        filters: []
       }
-    }
+    ]
+  },
+  {
+    name: 'Classificação Geral',
+    filters: [
+      { field: 'Organização', selection: null }
+      // { field: 'SUB', selection: null }
+      // { field: 'SUB', selection: 'SUB10' }
+    ],
+    columns: [
+      {
+        name: 'Posição',
+        formula: {
+          rank: true,
+          operation: 'sum',
+          value: 'Pontos'
+        },
+        filters: []
+      },
+      {
+        name: 'Organização',
+        formula: {
+          rank: false,
+          operation: 'maxcount',
+          value: 'Organização'
+        },
+        filters: []
+      },
+      {
+        name: 'Pontos',
+        formula: {
+          rank: false,
+          operation: 'sum',
+          value: 'Pontos'
+        },
+        filters: []
+      }
+    ]
   }
 ]
 
-let resultTables = $state(initialTables)
-
-export const resultTablesStore = {
-  get resultTables(): ResultTable[] {
-    return resultTables
-  },
-  set resultTables(value: ResultTable[]) {
-    resultTables = value
-  }
+class ResultTableStore {
+  tables = $state(initialTables)
 }
 
-export function addResultTable(table: ResultTable) {
-  resultTables = [...resultTables, table]
-}
+export const resultTablesStore = new ResultTableStore()

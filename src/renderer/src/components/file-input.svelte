@@ -1,8 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
 
-  let { files = $bindable(), children }: { files: FileList | undefined; children: Snippet } =
-    $props()
+  let {
+    files = $bindable(),
+    value = $bindable(),
+    children
+  }: { files: FileList | undefined; value: string; children: Snippet } = $props()
 
   import { Button } from '@components/ui/button'
 
@@ -24,6 +27,7 @@
     type="file"
     style="display: none;"
     bind:files
+    bind:value
     bind:this={fileInput}
     accept=".xlsx,.gsheet"
     multiple

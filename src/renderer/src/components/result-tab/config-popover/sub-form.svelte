@@ -2,81 +2,78 @@
   import { Button } from '@components/ui/button'
   import { cn } from '@lib/utils'
   import { Plus, X } from '@lucide/svelte'
-  import { createEventDispatcher, type Snippet } from 'svelte'
-
-  const dispatch = createEventDispatcher<{
-    add: { item: string }
-    remove: { index: number; item: string }
-  }>()
+  import { type Snippet } from 'svelte'
 
   let {
     class: className,
     containerclass,
     items = $bindable<string[]>([]),
     selected = $bindable<string>(''),
+    onAdd,
+    onRemove,
     children
   }: {
     class?: string
     containerclass?: string
     selected?: string
     items?: string[]
+    onAdd?: (item: string) => void
+    onRemove?: (item: string) => void
     children: Snippet
   } = $props()
 
-  function addItem() {
+  function uniqueName() {
     // gera nome único básico
-    let base = 'Item'
+    let base = 'Coluna'
     let n = items.length + 1
     let newName = `${base} ${n}`
     while (items.includes(newName)) {
       n++
       newName = `${base} ${n}`
     }
-    items = [...items, newName]
-    selected = newName
-    dispatch('add', { item: newName })
-  }
-
-  function removeItem(index: number) {
-    const item = items[index]
-    const newItems = items.filter((_, i) => i !== index)
-    items = newItems
-    if (!newItems.includes(selected)) {
-      selected = newItems[0] ?? ''
-    }
-    dispatch('remove', { index, item })
+    return newName
   }
 </script>
 
 <div class={cn('flex w-full flex-1 border-t-1', containerclass)}>
   <div class="min-h-full border-r-1">
     <div class="sticky top-0 flex min-h-min flex-col">
-      {#each items as item, i (item)}
-        <div class="group relative">
-          <Button
-            variant="ghost"
-            class={cn(
-              'w-full justify-start rounded-none pr-7',
-              selected == item ? 'bg-primary/10' : ''
-            )}
-            onclick={() => {
-              selected = item
-            }}
-          >
-            {item}
-          </Button>
-          {#if items.length > 1}
-            <button
-              class="text-muted-foreground hover:text-foreground absolute top-1 right-1 hidden rounded p-1 text-xs group-hover:block"
-              title="Remover"
-              onclick={() => removeItem(i)}
+      {#each items as item (item)}
+        <Button
+          variant="ghost"
+          class={cn(
+            'group w-full justify-start rounded-none pr-7',
+            selected == item ? 'bg-primary/10' : ''
+          )}
+          onclick={() => {
+            selected = item
+          }}
+        >
+          {item}
+          {#if items.length > 0}
+            <Button
+              variant="ghost"
+              class="group-hover:text-muted-foreground hover:text-foreground absolute right-1 z-10 size-5 rounded-full p-0 text-transparent"
+              onclick={() => {
+                onRemove?.(item)
+              }}
             >
               <X class="size-3" />
-            </button>
+            </Button>
           {/if}
-        </div>
+        </Button>
       {/each}
-      <Button variant="outline" size="sm" class="!mx-2 !mt-2" on:click={addItem}>
+      <Button
+        variant="outline"
+        size="sm"
+        class="!mx-2 !mt-2"
+        onclick={() => {
+          const newItem = uniqueName()
+          items = [...items, newItem]
+          onAdd?.(newItem)
+          selected = newItem
+        }}
+      >
         <Plus class="size-3" />
         Novo
       </Button>

@@ -1,4 +1,5 @@
 import type { Organization, Player } from '@lib/types/bracket-lib'
+import type { TableExport } from '@lib/types/data-table'
 import { fail, type Result, success } from '@shared/errors'
 import { BrowserWindow, dialog, shell } from 'electron'
 import ExcelJS from 'exceljs'
@@ -7,109 +8,31 @@ import fs, { readFile, writeFile } from 'fs/promises'
 import os from 'os'
 import path from 'path'
 
-function cellToText(value: ExcelJS.CellValue | undefined): string {
-  if (value === undefined || value === null) return ''
-  if (typeof value === 'object' && 'richText' in value) {
-    // Rich text cell
-    return value.richText.map((t) => t.text).join('')
-  }
-  if (typeof value === 'object' && 'text' in value) {
-    // Formula or shared string
-    return value.text
-  }
-  return value.toString()
-}
-
-function toTitleCase(str: string): string {
-  return str.replace(
-    /\w\S*/g,
-    (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
-  )
-}
-
-function normalizeCategory(category: string | undefined): string {
-  return category?.replaceAll(/\(\s*?(FEM|MASC)\s*?\)/g, '')?.replaceAll(/\s+/g, ' ') ?? ''
-}
+import { readLJEForm, readNescauForm } from './excel-forms'
 
 export async function organizationFromFile(
   _event: Electron.IpcMainInvokeEvent,
+  type: string,
   path: string
-): Promise<Result<Organization>> {
-  const workbook = new ExcelJS.Workbook()
-  await workbook.xlsx.readFile(path)
-
-  const organization: Organization = {
-    organization: '',
-    players: []
+): Promise<Result<Organization[]>> {
+  const forms: Record<string, (path: string) => Promise<Result<Organization[]>>> = {
+    nescau: readNescauForm,
+    lje: readLJEForm
   }
-
-  const worksheet = workbook.getWorksheet('Planilha1')
-  if (worksheet === undefined) {
-    return fail('ExcelOrganizationError', 'Planilha não encontrada', {
-      file: path
-    })
+  if (!(type in forms)) {
+    return fail('Invalid Type', `O tipo de ficha "${type}" não é suportado`)
   }
-
-  const organizationCell = cellToText(worksheet.getRow(5).getCell(2).value)
-  organization.organization = toTitleCase(
-    organizationCell.replace(/COLÉGIO \/ INSTITUIÇÃO:\s*(.+)/i, '$1').trim()
-  )
-  if (!organization.organization) {
-    return fail(
-      'ExcelOrganizationError',
-      'Não foi possível encontrar a célula com o nome da instituição',
-      {
-        file: path,
-        cell: organizationCell
-      }
-    )
-  }
-
-  const lastRow = worksheet?.lastRow?.number ?? 0
-  const rows = worksheet.getRows(12, lastRow) ?? []
-
-  for (const row of rows) {
-    if (!Array.isArray(row.values)) continue
-    if (row.values.length == 0) break
-    if (row.values.length == 2) continue
-
-    const [_, ...values] = row.values.map((v) => cellToText(v).trim())
-
-    const fields = [
-      { value: values?.[1], message: 'Participante com nome inválido' },
-      { value: values?.[2], message: 'Participante com gênero inválido' },
-      { value: values?.[3], message: 'Participante com categoria inválida' }
-    ]
-
-    for (const { value, message } of fields) {
-      if (!value) {
-        return fail('ExcelPlayerError', message, {
-          file: path,
-          n: values?.[0],
-          cell: value
-        })
-      }
-    }
-
-    const player = {
-      name: toTitleCase(values?.[1]),
-      isMale: /^(ma|ho|menino|garoto)/i.test(values?.[2]),
-      category: normalizeCategory(values?.[3])
-    }
-
-    organization.players.push(player)
-  }
-
-  return success(organization)
+  return await forms[type](path)
 }
 
-export async function exportPlayers(
+export async function exportTable(
   _event: Electron.IpcMainInvokeEvent,
-  players: Player[]
+  tableData: TableExport | TableExport[],
+  defaultPath?: string
 ): Promise<Result<void>> {
   const dialogResult = await dialog.showSaveDialog({
-    title: 'Exportar jogadores',
-    defaultPath: `jogadores-${new Date().toISOString()}.xlsx`,
+    title: 'Exportar',
+    defaultPath: defaultPath ?? `tabela-${new Date().toISOString()}.xlsx`,
     filters: [
       {
         name: 'Excel',
@@ -124,26 +47,77 @@ export async function exportPlayers(
   }
   const filePath = dialogResult.filePath
 
+  if (!Array.isArray(tableData)) {
+    tableData = [tableData]
+  }
+
   const workbook = new ExcelJS.Workbook()
-  const worksheet = workbook.addWorksheet('Planilha1')
+  for (const data of tableData) {
+    const worksheet = workbook.addWorksheet(data.name)
 
-  worksheet.columns = [
-    { header: 'Nome', key: 'name', width: 30 },
-    { header: 'Sexo', key: 'isMale', width: 10 },
-    { header: 'Categoria', key: 'category', width: 20 },
-    { header: 'Escola', key: 'organization', width: 30 },
-    { header: 'Presença', key: 'present', width: 30 }
-  ]
+    worksheet.columns = data.headers.at(-1)!.map(({ id }) => ({
+      key: id
+    }))
 
-  players.forEach(({ name, isMale, category, organization, present }) => {
-    worksheet.addRow({
-      name,
-      isMale: isMale ? 'Masc.' : 'Fem.',
-      category,
-      organization,
-      present: present ? 'Sim' : 'Não'
+    const rowsToMerge: Record<
+      string,
+      {
+        row: { start: number; end: number }
+        column: number
+      }
+    > = {}
+    for (const [i, headers] of Object.entries(data.headers)) {
+      const header: string[] = []
+      const colsToMerge: { start: number; end: number }[] = []
+      let totalColSpan = 0
+      for (const { label, colSpan, id } of headers) {
+        header.push(label)
+
+        if (colSpan > 1) {
+          colsToMerge.push({
+            start: totalColSpan + 1,
+            end: totalColSpan + colSpan
+          })
+        } else {
+          if (label in rowsToMerge) {
+            rowsToMerge[id].row.end = +i + 1
+          } else {
+            rowsToMerge[id] = {
+              row: { start: +i + 1, end: +i + 1 },
+              column: totalColSpan + 1
+            }
+          }
+        }
+        totalColSpan += colSpan
+        for (let i = 0; i < colSpan - 1; i++) {
+          header.push('')
+        }
+      }
+      worksheet.addRow(header)
+      const rowIdx = worksheet.rowCount // Find out how many rows are there currently
+      for (const { start, end } of colsToMerge) {
+        worksheet.mergeCells(rowIdx, start, rowIdx, end)
+      }
+    }
+
+    for (const { row, column } of Object.values(rowsToMerge)) {
+      if (row.start == row.end) continue
+      worksheet.mergeCells(row.start, column, row.end, column)
+    }
+
+    data.rows.forEach((row) => {
+      worksheet.addRow(row)
     })
-  })
+
+    worksheet.eachRow({ includeEmpty: false }, (row) => {
+      row.eachCell({ includeEmpty: false }, (cell) => {
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center'
+        }
+      })
+    })
+  }
 
   try {
     await workbook.xlsx.writeFile(filePath)

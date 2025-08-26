@@ -18,9 +18,16 @@
   type Props = HTMLAttributes<HTMLDivElement> & {
     column: Column<TData, TValue>
     title: string
+    center: boolean
   }
 
-  let { column, class: className, title, ...restProps }: WithoutChildren<Props> = $props()
+  let {
+    column,
+    class: className,
+    title,
+    center = false,
+    ...restProps
+  }: WithoutChildren<Props> = $props()
 </script>
 
 {#if !column?.getCanSort()}
@@ -28,7 +35,10 @@
     {title}
   </div>
 {:else}
-  <div class={cn('flex items-center', className)} {...restProps}>
+  <div
+    class={cn('flex items-center', center ? 'justify-self-center' : '', className)}
+    {...restProps}
+  >
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
         {#snippet child({ props })}

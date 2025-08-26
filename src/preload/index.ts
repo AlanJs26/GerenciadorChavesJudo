@@ -9,9 +9,10 @@ import type { API } from './index.d'
 // Custom APIs for renderer
 const api: API = {
   // eslint-disable-next-line
-  organizationFromFile: (file) => ipcRenderer.invoke('dialog:organizationFromFile', webUtils.getPathForFile(file)),
+  organizationFromFile: (type, file) => ipcRenderer.invoke('dialog:organizationFromFile', type, webUtils.getPathForFile(file)),
 
-  exportPlayers: (players) => ipcRenderer.invoke('dialog:exportPlayers', players),
+  exportTable: (tableData, defaultPath) =>
+    ipcRenderer.invoke('dialog:exportTable', tableData, defaultPath),
   // eslint-disable-next-line
   exportState: (state, defaultPath?) => ipcRenderer.invoke('dialog:exportState', state, defaultPath),
 

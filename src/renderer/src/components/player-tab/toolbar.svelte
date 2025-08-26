@@ -71,17 +71,49 @@
     variant="default"
     class="!ml-1 h-8"
     onclick={async () => {
-      const tablePlayers: PlayerColumn[] = table
-        .getFilteredRowModel()
-        .rows.map((row) => row.original as Player)
-        .map((original) => ({
-          name: original.name,
-          isMale: original.isMale,
-          category: original.category,
-          organization: original.organization,
-          present: original.present
-        }))
-      await window.api.exportPlayers(tablePlayers)
+      const headerNames = {
+        name: 'Nome',
+        isMale: 'Sexo',
+        organization: 'Organização',
+        category: 'Categoria',
+        points: 'Pontos',
+        present: 'Presença'
+      }
+      const headers = table.getHeaderGroups().map(({ headers }) =>
+        headers
+          .map(({ column, colSpan }) => ({
+            id: column.id,
+            label: headerNames[column.id.split(',').at(-1)] ?? column.id.split(',').at(-1),
+            colSpan
+          }))
+          .filter(({ label }) => label != 'actions')
+      )
+      const rows: PlayerColumn[] = table.getFilteredRowModel().rows.map((row) =>
+        row.getVisibleCells().reduce((acc, cell) => {
+          const id = cell.id.replace(/^[0-9]+_/, '')
+          if (id == 'actions') return acc
+          let value = cell.getValue()
+          switch (id) {
+            case 'isMale':
+              value = value ? 'Masculino' : 'Feminino'
+              break
+            case 'present':
+              value = value ? 'Sim' : 'Não'
+              break
+            case 'category':
+              value = unhashCategory(value)
+                .map((t) => t.value)
+                .join(' ')
+              break
+          }
+          return {
+            ...acc,
+            [id]: value
+          }
+        }, {})
+      )
+      const tableData = { name: 'Participantes', headers, rows }
+      await window.api.exportTable(tableData, 'participantes.xlsx')
     }}>Exportar</Button
   >
 </div>

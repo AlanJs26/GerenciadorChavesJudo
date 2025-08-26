@@ -2,6 +2,7 @@
 type ErrorNameMap = {
   ExcelPlayerError: ExcelPlayerError
   ExcelOrganizationError: ExcelOrganizationError
+  ExcelCellError: ExcelCellError
 }
 
 // Helper type to extract error type from name
@@ -18,6 +19,14 @@ export interface ExcelPlayerError extends ResultError {
 
 export interface ExcelOrganizationError extends ResultError {
   name: 'ExcelOrganizationError'
+  cause: {
+    file: string
+    cell?: string
+  }
+}
+
+export interface ExcelCellError extends ResultError {
+  name: 'ExcelCellError'
   cause: {
     file: string
     cell?: string

@@ -1,5 +1,6 @@
 import type { Table } from '@tanstack/table-core'
 import { type ClassValue, clsx } from 'clsx'
+import md5 from 'md5'
 import { SvelteSet as Set } from 'svelte/reactivity'
 import { twMerge } from 'tailwind-merge'
 
@@ -20,21 +21,8 @@ export function buildColFn<TData>(table: Table<TData>) {
   return colFn
 }
 
-let invalidContestantIds: string[] = []
-const rand = buildRandomGen('seed')
-
-export function addInvalidContestantIds(ids: string[]) {
-  invalidContestantIds = [...new Set([...invalidContestantIds, ...ids])]
-}
-
-export function randomContestantId(): string {
-  const gen = () => Math.floor(rand() * 10000).toString()
-  let contestantId = gen()
-  while (invalidContestantIds.includes(contestantId)) {
-    contestantId = gen()
-  }
-  invalidContestantIds.push(contestantId)
-  return contestantId
+export function createContestantId(name: string, organization: string, isMale: boolean) {
+  return md5(name + organization + isMale)
 }
 
 export function mapFilter<T, U>(
@@ -185,8 +173,8 @@ export function shuffleArray<T>(array: T[], randomGen: () => number): T[] {
     const randomIndex = Math.floor(randomGen() * currentIndex)
     currentIndex--
 
-    // And swap it with the current element.
-    ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
+      // And swap it with the current element.
+      ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
   }
 
   return array

@@ -3,13 +3,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 
 import icon from '../../resources/icon.png?asset'
-import {
-  exportPlayers,
-  exportState,
-  importState,
-  organizationFromFile,
-  printPDF
-} from './excel-lib'
+import { exportState, exportTable, importState, organizationFromFile, printPDF } from './excel-lib'
 
 function createWindow(): void {
   // Create the browser window.
@@ -61,7 +55,7 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   ipcMain.handle('dialog:organizationFromFile', organizationFromFile)
-  ipcMain.handle('dialog:exportPlayers', exportPlayers)
+  ipcMain.handle('dialog:exportTable', exportTable)
   ipcMain.handle('dialog:exportState', exportState)
   ipcMain.handle('dialog:importState', importState)
   ipcMain.handle('dialog:printPDF', printPDF)

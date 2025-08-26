@@ -1,60 +1,46 @@
-export type Difficulty<S extends object, A extends object> =
-  | ({
-      [K in keyof S]: S[keyof S]
-    } & { difficulty: 'simple' })
-  | ({
-      [K in keyof A]: A[keyof A]
-    } & { difficulty: 'advanced' })
+import type { Player } from '@lib/types/bracket-lib'
+export type Operation = 'sum' | 'max' | 'min' | 'count' | 'maxcount'
 
-export interface AdvancedField {
-  code: string
-}
-
-export interface OperationSimple {
-  type: 'sum' | 'max' | 'min'
-}
-
-export interface FormulaSimple {
-  field: string
+export interface Formula {
+  rank: boolean
   operation: Operation
+  value: string | null
 }
-
-export type Operation = Difficulty<OperationSimple, AdvancedField>
-export type Formula = Difficulty<FormulaSimple, AdvancedField>
 
 export interface Column {
   name: string
-  type: 'data' | 'order'
   formula: Formula
+  filters: Filter[]
 }
 
-type AggregationColumn = Column
-
-export interface Aggregation {
-  name: string
-  groups: string[]
-  column: AggregationColumn | null
-}
-
-export interface ResultColumn extends Column {
-  aggregations: Aggregation[]
-}
-
-export interface FilterItem {
+export interface Filter {
   field: string
   selection: string | null
 }
 
-export interface FilterSimple {
-  items: FilterItem[]
-}
-
-export type Filter = Difficulty<FilterSimple, AdvancedField>
-
 export interface ResultTable {
   name: string
-  filter: Filter
-  columns: ResultColumn[]
-  extraColumns: Column[]
-  extraRows: Omit<Column, 'type'>
+  filters: Filter[]
+  columns: Column[]
+}
+
+export type SourceObj = {
+  label: string
+  allowedOperations: string[]
+  fetch: (players: Player[]) => string[]
+}
+
+export type OperationObj = {
+  label: string
+  allowRank: boolean
+  apply: (items: string[]) => string
+}
+
+export type FilterObj<T = null> = {
+  label: string
+  values: T[]
+  apply: (
+    players: Player[],
+    value: T | null
+  ) => T extends null ? Record<string, Player[]> : Player[]
 }

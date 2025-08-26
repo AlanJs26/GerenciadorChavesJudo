@@ -15,9 +15,18 @@
   import { Separator } from '@components/ui/separator'
   import { gendered, generateRandomOrganizations } from '@lib/bracket-lib'
   import type { Organization, Player, State } from '@lib/types/bracket-lib'
-  import { addInvalidContestantIds, randomContestantId } from '@lib/utils'
+  import { createContestantId } from '@lib/utils'
   // Icons
-  import { Bolt, Download, FileDown, FileJson2, MoonIcon, SunIcon } from '@lucide/svelte'
+  import {
+    Bolt,
+    Download,
+    FileDown,
+    FileJson2,
+    Loader,
+    MoonIcon,
+    SunIcon,
+    Trash
+  } from '@lucide/svelte'
   // Custom components
   import createFuzzySearch from '@nozbe/microfuzz'
   import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
@@ -26,41 +35,25 @@
   import { onMount, type Snippet, untrack } from 'svelte'
   import { toast } from 'svelte-sonner'
 
+  import ConfirmPopover from '@/components/confirm-popover.svelte'
+  import ToastItemList from '@/components/toast-item-list.svelte'
   // Utilities and stores
   import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte.ts'
 
   // ==================== State Variables ====================
   let files: FileList | undefined = $state()
+  let fileInputValue: string = $state()
   let organizations: Organization[] = $state([])
   let contextOpen = $state(false)
   let filterText = $state('')
   let autosaveInterval: ReturnType<typeof setInterval> | null = $state(null)
+  let configOpen = $state(false)
+  let loading = $state(false)
 
   // ==================== Effect Handlers ====================
   // Process organizations into players
-  $effect(() => {
-    const newPlayers = organizations.reduce(
-      (acc, org) => {
-        for (const player of org.players) {
-          const gender = player.isMale ? 'male' : 'female'
-          acc[gender].push({
-            ...player,
-            organization: org.organization,
-            present: true,
-            contestantId: randomContestantId()
-          })
-        }
-        return acc
-      },
-      gendered(() => [] as Player[])
-    )
-    untrack(() => {
-      newPlayers.male.sort((a, b) => a.organization.localeCompare(b.organization))
-      newPlayers.female.sort((a, b) => a.organization.localeCompare(b.organization))
-
-      playersStore.players = newPlayers
-    })
-  })
+  // $effect(() => {
+  // })
 
   // ==================== Derived Values ====================
   let nFemale = $derived(playersStore.players.female.length)
@@ -141,7 +134,8 @@
           playersStore.players = state.players
           bracketsStore.brackets = state.brackets
           winnerStore.winnersByCategory = state.winnersByCategory
-          addInvalidContestantIds(Object.keys(playersStore.byContestantId))
+
+          updatePlayers()
           enableAutosave()
         },
         (error) => {
@@ -152,6 +146,56 @@
     )
   }
 
+  function updatePlayers() {
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const invalidContestantIds = new Set<string>()
+    const duplicatedPlayers: string[] = []
+    const newPlayers = organizations.reduce(
+      (acc, { players, organization }) => {
+        for (const player of players) {
+          const contestantId = createContestantId(player.name, organization, player.isMale)
+
+          if (invalidContestantIds.has(contestantId)) {
+            duplicatedPlayers.push(
+              `${player.name}, ${organization}, ${player.isMale ? 'Masculino' : 'Feminino'}`
+            )
+            continue
+          }
+          invalidContestantIds.add(contestantId)
+
+          if (contestantId in playersStore.byContestantId) continue
+
+          const gender = player.isMale ? 'male' : 'female'
+          acc[gender].push({
+            ...player,
+            present: true,
+            organization,
+            contestantId
+          })
+        }
+        return acc
+      },
+      gendered((gender) => [...playersStore.players[gender]] as Player[])
+    )
+    if (duplicatedPlayers.length) {
+      const formated = Object.entries(Object.groupBy(duplicatedPlayers, (x) => x)).map(
+        ([text, items]) => text + (items.length > 1 ? ` (${items.length}x)` : '')
+      )
+      console.log(formated)
+      toast.warning(ToastItemList, {
+        componentProps: {
+          items: formated,
+          title: 'Participantes duplicados não foram inclusos'
+        },
+        duration: 100000
+      })
+    }
+    // newPlayers.male.sort((a, b) => a.organization.localeCompare(b.organization))
+    // newPlayers.female.sort((a, b) => a.organization.localeCompare(b.organization))
+
+    playersStore.players = newPlayers
+  }
+
   // ==================== Error Handling ====================
   function handleImportError(error: ResultError) {
     if (error.name == 'ExcelPlayerError') {
@@ -160,8 +204,11 @@
     } else if (error.name == 'ExcelOrganizationError') {
       const { cause } = error as ExcelOrganizationError
       toast.error(`Erro ao importar ${cause.file}: ${error.message} (Cell: ${cause.cell})`)
+    } else {
+      const { cause } = error
+      toast.error(`Erro ao importar ${cause.file}: ${error.message}`)
     }
-    console.error('Erro ao importar arquivos:', error.cause)
+    console.error('Erro ao importar arquivos:', error)
     return null
   }
 
@@ -169,21 +216,26 @@
   $effect(() => {
     if (!files) return
     ;(async (): Promise<void> => {
-      organizations = await Promise.all(
+      const newOrganizations = await Promise.all(
         Array.from(files).map(async (file) => {
-          const result = await window.api.organizationFromFile(file)
+          const result = await window.api.organizationFromFile('nescau', file)
           return result.status == true ? result.data : handleImportError(result.error)
         })
       )
       // Remove arquivos que falharam
-      organizations = organizations.filter(Boolean)
+
+      console.log(newOrganizations)
+      organizations = newOrganizations.flat().filter(Boolean)
+      updatePlayers()
     })()
+    fileInputValue = ''
   })
 
   // ==================== Lifecycle Hooks ====================
   onMount(() => {
     // importState('~/.chaves-judo/dados.json')
-    organizations = generateRandomOrganizations(4, 50)
+    // organizations = generateRandomOrganizations(4, 50)
+    // updatePlayers()
 
     // Clear all previous intervals
     clearAllIntervals()
@@ -205,7 +257,7 @@
 <div class="bg-background flex h-full w-full flex-col border-r p-1">
   <div class="flex w-full flex-row">
     {@render configDropdown()}
-    <FileInput bind:files>
+    <FileInput bind:files bind:value={fileInputValue}>
       <FileDown class="mr-2 h-4 w-4" />
       Importar Fichas
     </FileInput>
@@ -243,14 +295,18 @@
 
   <div class="flex flex-row">
     <CategoryDropdown statefullCategories={categoryState.statefullCategories[genderStore.gender]}>
-      <Bolt class="h-4 w-4" />
+      <Bolt class="size-4" />
     </CategoryDropdown>
 
     <Button
       class="w-full rounded-s-none"
       variant="defaultDark"
       onclick={(): void => {
-        generateAllBrackets()
+        loading = true
+        setTimeout(() => {
+          generateAllBrackets()
+          loading = false
+        }, 500)
         // bracketRenderer.update()
         // enableAutosave()
       }}>Atualizar Chaves</Button
@@ -258,8 +314,17 @@
   </div>
 </div>
 
+{#if loading}
+  <div
+    class="fixed top-0 z-10 flex h-screen w-screen flex-col items-center justify-center gap-10 backdrop-blur-xs"
+  >
+    <h1 class="text-2xl">Criando chaves. Aguarde.</h1>
+    <Loader class="size-10 animate-spin" style="animation-duration: 1.5s" />
+  </div>
+{/if}
+
 {#snippet configDropdown()}
-  <DropdownMenu.Root>
+  <DropdownMenu.Root bind:open={configOpen}>
     <DropdownMenu.Trigger class={buttonVariants({ variant: 'outline' })}>
       <Bolt class="h-4 w-4" />
     </DropdownMenu.Trigger>
@@ -285,6 +350,29 @@
           <Download class="h-4 w-4" />
           <span>Exportar Sessão</span>
         </DropdownMenu.Item>
+
+        <ConfirmPopover
+          class="w-full"
+          title="Continuar?"
+          description="Isso irá apagar todos os dados atuais"
+          onNo={() => (configOpen = false)}
+          onYes={() => {
+            playersStore.clear()
+            bracketsStore.clear()
+            winnerStore.clear()
+            organizations = []
+
+            configOpen = false
+          }}
+        >
+          <DropdownMenu.Item
+            closeOnSelect={false}
+            class="bg-destructive hover:bg-destructive/70 text-destructive-foreground"
+          >
+            <Trash class="h-4 w-4" />
+            <span>Apagar Sessão</span>
+          </DropdownMenu.Item>
+        </ConfirmPopover>
       </DropdownMenu.Group>
 
       <DropdownMenu.Group>
