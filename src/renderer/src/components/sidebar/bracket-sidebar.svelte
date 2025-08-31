@@ -22,8 +22,8 @@
   import { type Snippet } from 'svelte'
   import { SvelteMap as Map } from 'svelte/reactivity'
 
-  import BracketCard from '@/components/bracket-tab/bracket-card.svelte'
   import CategorySelect from '@/components/category-select.svelte'
+  import BracketCard from '@/components/sidebar/bracket-card.svelte'
   import { bracketsStore, genderStore, playersStore } from '@/states.svelte.ts'
 
   const elByHash = new Map<string, Element>()

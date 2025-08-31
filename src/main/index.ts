@@ -3,7 +3,8 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'path'
 
 import icon from '../../resources/icon.png?asset'
-import { exportState, exportTable, importState, organizationFromFile, printPDF } from './excel-lib'
+import { exportTable, organizationFromFile, printPDF } from './excel-lib'
+import { exportState, importState } from './state-lib'
 
 function createWindow(): void {
   // Create the browser window.

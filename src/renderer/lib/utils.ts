@@ -173,8 +173,8 @@ export function shuffleArray<T>(array: T[], randomGen: () => number): T[] {
     const randomIndex = Math.floor(randomGen() * currentIndex)
     currentIndex--
 
-      // And swap it with the current element.
-      ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
+    // And swap it with the current element.
+    ;[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]
   }
 
   return array

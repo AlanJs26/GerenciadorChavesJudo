@@ -10,17 +10,21 @@
     class: className,
     children,
     textarea = false,
+    warning = $bindable(false),
     label,
     withDifficulty = false,
     value = $bindable(''),
-    difficulty = $bindable<'simple' | 'advanced'>('simple')
+    difficulty = $bindable<'simple' | 'advanced'>('simple'),
+    el = $bindable()
   }: {
     withDifficulty?: boolean
     textarea?: boolean
     children?: Snippet
+    warning?: boolean
     class?: string
     value?: string
     difficulty?: 'simple' | 'advanced'
+    el: HTMLInputElement
   } = $props()
 </script>
 
@@ -41,17 +45,22 @@
         {#if textarea}
           <Textarea bind:value id="filter" class="min-h-8" />
         {:else}
-          <Input bind:value id="name" class="h-8" />
+          <Input
+            bind:el
+            bind:value
+            id="name"
+            class={cn('h-8', warning ? 'border-amber-500' : '')}
+          />
         {/if}
       </FormItem>
     </Tabs.Content>
   </Tabs.Root>
 {:else}
-  <FormItem {label} class="w-full">
+  <FormItem {label} class={cn('w-full', className)}>
     {#if textarea}
       <Textarea bind:value id="filter" class="min-h-8" />
     {:else}
-      <Input bind:value id="name" class="h-8" />
+      <Input bind:el bind:value id="name" class={cn('h-8', warning ? 'border-amber-500' : '')} />
     {/if}
   </FormItem>
 {/if}

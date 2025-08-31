@@ -5,30 +5,55 @@
   import { Button } from '@components/ui/button'
   import * as Dialog from '@components/ui/dialog'
   import { ScrollArea } from '@components/ui/scroll-area'
-  import type { Column } from '@lib/types/result-table'
-  import type { ResultTable } from '@renderer/lib/types/result-table'
+  import type { ColumnFormState, ResultTable } from '@lib/types/result-table'
+  import { filterObject } from '@lib/utils'
   import { type Snippet } from 'svelte'
+  import { toast } from 'svelte-sonner'
 
-  interface ColumnFormState extends Column {
-    id: string
-  }
+  import type { SelectItem } from '@/components/command-select'
+  import FilterSelect from '@/components/result-tab/filter-select.svelte'
+  import { resultTableStore } from '@/states.svelte'
 
   let {
     class: className,
+    table: inputTable = {},
+    open: initialOpen,
+    onSave,
     children
   }: {
     class?: string
+    open: boolean
+    table: ResultTable
+    onSave?: (table: ResultTable) => void
     children: Snippet
   } = $props()
 
-  let open = $state(false)
+  $effect(() => {
+    const _ = open
+    nameInput = table?.name ?? ''
+    tableFilters = table?.filters ?? [{ field: 'Participantes', selection: null }]
+    columns =
+      table?.columns?.map((c) => ({
+        ...c,
+        id: crypto.randomUUID?.() || Math.random().toString(36).slice(2)
+      })) ?? []
+  })
+
+  let table = $derived(JSON.parse(JSON.stringify(inputTable)))
+
+  let open = $state(initialOpen ?? false)
 
   let nameInput = $state('')
-  let filterInput = $state('')
+  let tableFilters: ResultTable['filters'] = $state([{ field: 'Participantes', selection: null }])
 
   let columns: ColumnFormState[] = $state([])
-  let columnItems: string[] = $derived(columns.map((c) => c.name))
-  let selectedColumnName = $state('')
+  let columnItems: SelectItem[] = $derived(
+    columns.map((c) => ({
+      label: c.name,
+      value: c.id
+    }))
+  )
+  let selectedColumnId = $state('')
 
   function newColumn(name = ''): ColumnFormState {
     return {
@@ -36,35 +61,43 @@
       name,
       formula: {
         rank: false,
-        operation: 'sum',
-        value: null
+        operation: 'Contar',
+        value: 'Participantes'
       },
       filters: []
     }
   }
 
   function buildResultTable(): ResultTable {
-    const filters = [{ field: 'Organização', selection: null }]
-
     return {
       name: nameInput || 'Nova Tabela',
-      filters,
-      columns
+      filters: tableFilters,
+      columns: columns.map((c) => filterObject(c, (key, _) => key != 'id'))
     }
   }
 
-  // TODO: Fazer o ColumnForm retornar um objeto Column
-  // TODO: Criar um componente para selecionar Filtros
-  // TODO: Criar um objeto ResultTable completo ao clicar salvar
-  // TODO: Utilizar esses dados para montar uma tabela
   function save() {
-    const table = buildResultTable()
-    console.log($state.snapshot(table))
+    const newTable = buildResultTable()
+
+    if (
+      newTable.name != table.name &&
+      resultTableStore.tables.some((t) => t.name == newTable.name)
+    ) {
+      toast.warning(`Já existe outra tabela com o nome "${newTable.name}"`)
+      return
+    }
+    if (!newTable.name) {
+      toast.warning('Nome inválido')
+      return
+    }
+
     open = false
-    // reset básico
+    // reset
     nameInput = ''
-    filterInput = ''
+    tableFilters = []
     columns = []
+    selectedColumnId = ''
+    onSave?.(newTable)
   }
 </script>
 
@@ -85,25 +118,32 @@
       <div class="flex flex-col gap-2 px-5 pt-0 pb-3">
         <FormInput withDifficulty={false} textarea={false} label="Nome" bind:value={nameInput} />
 
-        <FormInput withDifficulty={false} textarea={true} label="Filtro" bind:value={filterInput} />
+        <FilterSelect bind:filters={tableFilters} class="text-sm" />
       </div>
 
       <h1 class="!ml-5 text-3xl">Colunas</h1>
       <SubForm
         bind:items={columnItems}
-        bind:selected={selectedColumnName}
-        onAdd={(item) => {
-          columns = [...columns, newColumn(item)]
+        bind:selected={selectedColumnId}
+        onAdd={(name) => {
+          const column = newColumn(name)
+          columns = [...columns, column]
+          selectedColumnId = column.id
         }}
         onRemove={(item) => {
-          columns = columns.filter((c) => c.name != item)
+          columns = columns.filter((c) => c.id != item.value)
         }}
       >
-        {#each columns as c (c.id)}
-          {#if c.name === selectedColumnName}
-            <ColumnForm bind:name={c.name} />
-          {/if}
-        {/each}
+        <ColumnForm
+          bind:column={
+            () => columns.find((c) => c.id == selectedColumnId),
+            (v) => (columns[columns.findIndex((c) => c.id == selectedColumnId)] = v)
+          }
+          invalidNames={columns.map((c) => c.name)}
+          onChange={(column) => {
+            selectedColumnId = column.id
+          }}
+        />
       </SubForm>
     </ScrollArea>
   </Dialog.Content>

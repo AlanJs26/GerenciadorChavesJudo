@@ -6,7 +6,7 @@
   import Button from '@components/ui/button/button.svelte'
   import { Input } from '@components/ui/input'
   import { unhashCategory } from '@lib/bracket-lib'
-  import type { Player, PlayerColumn } from '@lib/types/bracket-lib'
+  import type { PlayerColumn } from '@lib/types/bracket-lib'
   import { buildColFn } from '@lib/utils'
   import { X } from '@lucide/svelte'
   import type { Table } from '@tanstack/table-core'
@@ -88,7 +88,7 @@
           }))
           .filter(({ label }) => label != 'actions')
       )
-      const rows: PlayerColumn[] = table.getFilteredRowModel().rows.map((row) =>
+      const rows: PlayerColumn[] = table.getSortedRowModel().rows.map((row) =>
         row.getVisibleCells().reduce((acc, cell) => {
           const id = cell.id.replace(/^[0-9]+_/, '')
           if (id == 'actions') return acc

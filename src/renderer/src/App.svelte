@@ -5,6 +5,7 @@
   import PlayerTab from '@components/player-tab/PlayerTab.svelte'
   import ResultTab from '@components/result-tab/ResultTab.svelte'
   import AppSidebar from '@components/sidebar/app-sidebar.svelte'
+  import { sidebarStore } from '@components/sidebar/sidebar-state.svelte.ts'
   import * as Sidebar from '@components/ui/sidebar'
   import { Toaster } from '@components/ui/sonner'
   import * as Tabs from '@components/ui/tabs'
@@ -12,7 +13,6 @@
   import { onMount } from 'svelte'
 
   import { generateAllBrackets } from '@/components/bracket-tab/bracket-state.svelte'
-  import { sidebarStore } from '@/states.svelte'
 
   // ==================== DOM References ====================
   let bracketRenderer: BracketTab
@@ -30,12 +30,13 @@
   <main>
     <div class="tabs-container h-[100vh] min-w-0">
       <Tabs.Root
-        value="participantes"
+        value="resultados"
         class="flex h-full w-full flex-col"
         onValueChange={(value) => {
           switch (value) {
             case 'participantes':
             case 'chaves':
+            case 'resultados':
               sidebarStore.tab = value
               break
           }

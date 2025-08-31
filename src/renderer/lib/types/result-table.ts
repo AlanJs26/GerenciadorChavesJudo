@@ -1,5 +1,9 @@
 import type { Player } from '@lib/types/bracket-lib'
-export type Operation = 'sum' | 'max' | 'min' | 'count' | 'maxcount'
+export type Operation = string
+
+export interface ColumnFormState extends Column {
+  id: string
+}
 
 export interface Formula {
   rank: boolean
@@ -25,7 +29,7 @@ export interface ResultTable {
 }
 
 export type SourceObj = {
-  label: string
+  label: string | null
   allowedOperations: string[]
   fetch: (players: Player[]) => string[]
 }
@@ -36,11 +40,8 @@ export type OperationObj = {
   apply: (items: string[]) => string
 }
 
-export type FilterObj<T = null> = {
+export type FilterObj<T extends null | string = string | null> = {
   label: string
-  values: T[]
-  apply: (
-    players: Player[],
-    value: T | null
-  ) => T extends null ? Record<string, Player[]> : Player[]
+  values: (string | null)[]
+  apply: (players: Player[], value: T) => T extends null ? Record<string, Player[]> : Player[]
 }

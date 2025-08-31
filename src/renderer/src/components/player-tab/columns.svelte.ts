@@ -1,10 +1,8 @@
 import { DataTableCell, DataTableColumnHeader } from '@components/data-table'
 import { renderComponent } from '@components/ui/data-table'
-import { compareCategory, getPoints, hashCategory, unhashCategory } from '@lib/bracket-lib'
+import { getPoints, hashCategory } from '@lib/bracket-lib'
 import type { Category, Player } from '@lib/types/bracket-lib'
 import type { ColumnDef } from '@tanstack/table-core'
-
-import { winnerStore } from '@/states.svelte'
 
 import { DataTableAddButton, DataTableRowActions } from './index'
 // @ts-ignore typescript is not able to find exported snippets from .svelte files

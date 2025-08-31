@@ -1,7 +1,7 @@
 import { gendered } from '@lib/bracket-lib'
 import { SvelteMap as Map } from 'svelte/reactivity'
 
-import { bracketsStore } from '@/states.svelte'
+import { bracketsStore, resultTableStore } from '@/states.svelte'
 
 class SidebarState {
   checkedBrackets = $state({
@@ -15,6 +15,17 @@ class SidebarState {
         .map(([hash, _checked]) => bracketsStore.get_(gender, hash)!)
     )
   )
+  checkedTables = $state(new Map<string, boolean>())
+  selectedTables = $derived(
+    Array.from(sidebarState.checkedTables.entries())
+      .filter(([_hash, checked]) => checked)
+      .flatMap(([hash, _checked]) => resultTableStore.tables.filter((table) => table.name == hash))
+  )
 }
 
+class SidebarStore {
+  tab = $state('resultados')
+}
+
+export const sidebarStore = new SidebarStore()
 export const sidebarState = new SidebarState()

@@ -14,7 +14,7 @@
 </script>
 
 <div class={cn('items-top flex gap-2', className)}>
-  <Label class="!mt-2 min-w-10">{label}</Label>
+  <Label class="!mt-2 min-w-10 text-sm/tight font-bold">{label}</Label>
 
   <div class="flex-1">
     {@render children?.()}

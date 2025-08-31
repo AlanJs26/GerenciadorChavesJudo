@@ -1,12 +1,6 @@
 import type { Organization, Player } from '@lib/types/bracket-lib'
-import type { TableExport } from '@lib/types/data-table'
-import { fail, handleResult, type Result, success } from '@shared/errors'
-import { BrowserWindow, dialog, shell } from 'electron'
+import { fail, type Result, success } from '@shared/errors'
 import ExcelJS from 'exceljs'
-import { existsSync } from 'fs'
-import fs, { readFile, writeFile } from 'fs/promises'
-import os from 'os'
-import path from 'path'
 
 function cellToText(value: ExcelJS.CellValue | undefined): string {
   if (value === undefined || value === null) return ''
@@ -59,24 +53,9 @@ function mapNescauPeso(isMale: boolean, age: string, weight: number): Result<str
     return fail('Invalid age', `"${age}" não é uma categoria válida`)
   }
 
-  let pesoIndex = -1
-  for (const [i, testWeight] of Object.entries(matrix[ageIndex])) {
-    if (+i == matrix[ageIndex].length - 1) {
-      pesoIndex = +i
-      break
-    }
-    if (weight < testWeight) {
-      pesoIndex = +i
-      break
-    }
-  }
-  if (ageIndex == -1) {
-    return fail(
-      'Invalid Peso',
-      `não possível atribuir uma categoria à "${weight}kg". Se você está vendo isso, algo de muito errado aconteceu, já que é impossível.`
-    )
-  }
-  return success(allPesos[pesoIndex])
+  const pesoIndex = matrix[ageIndex].findIndex((testWeight) => weight < testWeight)
+  const peso = pesoIndex == -1 ? allPesos[matrix[ageIndex].length - 1] : allPesos[pesoIndex]
+  return success(peso)
 }
 
 function normalizeCategory(category: string | undefined): string {
@@ -160,7 +139,7 @@ export async function readNescauForm(path: string): Promise<Result<Organization[
         name: toTitleCase(values?.[0]),
         isMale: gender == 'Masculino',
         category: [
-          { id: 'SUB', value: ageCategory },
+          { id: 'Idade', value: ageCategory },
           { id: 'Peso', value: peso }
         ]
       }

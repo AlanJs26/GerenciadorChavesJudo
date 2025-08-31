@@ -1,4 +1,9 @@
+<script lang="ts" module>
+  type T = unknown
+</script>
+
 <script lang="ts">
+  import type { SelectItem } from '@components/command-select'
   import { Button } from '@components/ui/button'
   import { cn } from '@lib/utils'
   import { Plus, X } from '@lucide/svelte'
@@ -7,18 +12,18 @@
   let {
     class: className,
     containerclass,
-    items = $bindable<string[]>([]),
-    selected = $bindable<string>(''),
+    items = $bindable<SelectItem<T>[]>([]),
+    selected = $bindable<T>(),
     onAdd,
     onRemove,
     children
   }: {
     class?: string
     containerclass?: string
-    selected?: string
-    items?: string[]
-    onAdd?: (item: string) => void
-    onRemove?: (item: string) => void
+    selected?: T
+    items?: SelectItem<T>[]
+    onAdd?: (name: string) => void
+    onRemove?: (item: SelectItem<T>) => void
     children: Snippet
   } = $props()
 
@@ -27,7 +32,7 @@
     let base = 'Coluna'
     let n = items.length + 1
     let newName = `${base} ${n}`
-    while (items.includes(newName)) {
+    while (items.find((it) => it.label == newName)) {
       n++
       newName = `${base} ${n}`
     }
@@ -38,18 +43,18 @@
 <div class={cn('flex w-full flex-1 border-t-1', containerclass)}>
   <div class="min-h-full border-r-1">
     <div class="sticky top-0 flex min-h-min flex-col">
-      {#each items as item (item)}
+      {#each items as item (item.value)}
         <Button
           variant="ghost"
           class={cn(
             'group w-full justify-start rounded-none pr-7',
-            selected == item ? 'bg-primary/10' : ''
+            selected == item.value ? 'bg-primary/10' : ''
           )}
           onclick={() => {
-            selected = item
+            selected = item.value
           }}
         >
-          {item}
+          {item.label}
           {#if items.length > 0}
             <Button
               variant="ghost"
@@ -68,10 +73,8 @@
         size="sm"
         class="!mx-2 !mt-2"
         onclick={() => {
-          const newItem = uniqueName()
-          items = [...items, newItem]
-          onAdd?.(newItem)
-          selected = newItem
+          const newName = uniqueName()
+          onAdd?.(newName)
         }}
       >
         <Plus class="size-3" />
@@ -81,7 +84,7 @@
   </div>
 
   <div class={cn('flex flex-1 flex-col gap-2 p-5', className)}>
-    {#if !items.includes(selected)}
+    {#if !items.some((it) => it.value == selected)}
       <div class="flex w-full flex-1 items-center justify-center">Nada selecionado</div>
     {:else}
       {@render children?.()}

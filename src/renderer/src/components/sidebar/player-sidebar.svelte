@@ -2,8 +2,8 @@
   import { categoryState, generateAllBrackets } from '@components/bracket-tab/bracket-state.svelte'
   import CategoryDropdown from '@components/category-dropdown.svelte'
   import FileInput from '@components/file-input.svelte'
-  import PlayerCard from '@components/player-card.svelte'
   import * as RadioGroup from '@components/radio-group'
+  import PlayerCard from '@components/sidebar/player-card.svelte'
   // UI Components
   import { Button, buttonVariants } from '@components/ui/button'
   import { Checkbox } from '@components/ui/checkbox'
@@ -13,7 +13,7 @@
   import { Label } from '@components/ui/label'
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Separator } from '@components/ui/separator'
-  import { gendered, generateRandomOrganizations } from '@lib/bracket-lib'
+  import { gendered } from '@lib/bracket-lib'
   import type { Organization, Player, State } from '@lib/types/bracket-lib'
   import { createContestantId } from '@lib/utils'
   // Icons
@@ -24,6 +24,8 @@
     FileJson2,
     Loader,
     MoonIcon,
+    Save,
+    SaveOff,
     SunIcon,
     Trash
   } from '@lucide/svelte'
@@ -32,13 +34,19 @@
   import type { ExcelOrganizationError, ExcelPlayerError, ResultError } from '@shared/errors'
   import { handleResult } from '@shared/errors'
   import { toggleMode } from 'mode-watcher'
-  import { onMount, type Snippet, untrack } from 'svelte'
+  import { onMount, type Snippet } from 'svelte'
   import { toast } from 'svelte-sonner'
 
   import ConfirmPopover from '@/components/confirm-popover.svelte'
   import ToastItemList from '@/components/toast-item-list.svelte'
   // Utilities and stores
-  import { bracketsStore, genderStore, playersStore, winnerStore } from '@/states.svelte.ts'
+  import {
+    bracketsStore,
+    genderStore,
+    playersStore,
+    resultTableStore,
+    winnerStore
+  } from '@/states.svelte.ts'
 
   // ==================== State Variables ====================
   let files: FileList | undefined = $state()
@@ -49,11 +57,7 @@
   let autosaveInterval: ReturnType<typeof setInterval> | null = $state(null)
   let configOpen = $state(false)
   let loading = $state(false)
-
-  // ==================== Effect Handlers ====================
-  // Process organizations into players
-  // $effect(() => {
-  // })
+  let autosave = $state(false)
 
   // ==================== Derived Values ====================
   let nFemale = $derived(playersStore.players.female.length)
@@ -107,7 +111,8 @@
     const state: State = {
       brackets: bracketsStore.brackets,
       players: playersStore.players,
-      winnersByCategory: winnerStore.winnersByCategory
+      winnersByCategory: winnerStore.winnersByCategory,
+      resultTables: resultTableStore.tables
     }
 
     // Separate handlers for autosave vs manual export
@@ -125,6 +130,7 @@
         exportState('~/.chaves-judo/dados.json')
       }, 60000)
     }
+    autosave = true
   }
 
   function importState(defaultPath?: string) {
@@ -134,6 +140,8 @@
           playersStore.players = state.players
           bracketsStore.brackets = state.brackets
           winnerStore.winnersByCategory = state.winnersByCategory
+          resultTableStore.tables = state.resultTables
+          resultTableStore.selectedName = state.resultTables[0].name ?? ''
 
           updatePlayers()
           enableAutosave()
@@ -223,8 +231,6 @@
         })
       )
       // Remove arquivos que falharam
-
-      console.log(newOrganizations)
       organizations = newOrganizations.flat().filter(Boolean)
       updatePlayers()
     })()
@@ -233,9 +239,9 @@
 
   // ==================== Lifecycle Hooks ====================
   onMount(() => {
-    // importState('~/.chaves-judo/dados.json')
+    importState('~/.chaves-judo/dados.json')
     // organizations = generateRandomOrganizations(4, 50)
-    // updatePlayers()
+    updatePlayers()
 
     // Clear all previous intervals
     clearAllIntervals()
@@ -333,6 +339,25 @@
         <DropdownMenu.DropdownMenuGroupHeading class="!font-bold"
           >Sessão</DropdownMenu.DropdownMenuGroupHeading
         >
+        <DropdownMenu.Item
+          onclick={() => {
+            if (!autosave) {
+              enableAutosave()
+            } else {
+              console.log('Desligando Autosave')
+              window.clearInterval(autosaveInterval)
+              autosave = false
+            }
+          }}
+        >
+          {#if !autosave}
+            <Save class="h-4 w-4" />
+            <span>Ligar Autosave</span>
+          {:else}
+            <SaveOff class="h-4 w-4" />
+            <span>Desligar Autosave</span>
+          {/if}
+        </DropdownMenu.Item>
         <DropdownMenu.Item
           onclick={() => {
             importState()

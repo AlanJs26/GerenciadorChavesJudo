@@ -4,7 +4,9 @@
 
   import BracketSidebar from '@/components/sidebar/bracket-sidebar.svelte'
   import PlayerSidebar from '@/components/sidebar/player-sidebar.svelte'
-  import { sidebarStore } from '@/states.svelte.ts'
+  import ResultSidebar from '@/components/sidebar/result-sidebar.svelte'
+
+  import { sidebarStore } from './sidebar-state.svelte.ts'
 </script>
 
 <Sidebar.Root>
@@ -15,6 +17,9 @@
       </Tabs.Content>
       <Tabs.Content value="chaves" class="mt-0 h-full w-full">
         <BracketSidebar />
+      </Tabs.Content>
+      <Tabs.Content value="resultados" class="mt-0 h-full w-full">
+        <ResultSidebar />
       </Tabs.Content>
     </Tabs.Root>
   </Sidebar.Content>

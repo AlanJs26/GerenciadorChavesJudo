@@ -1,3 +1,5 @@
+import { ResultTable } from './result-table'
+
 export type Gendered<T> = {
   male: T
   female: T
@@ -54,6 +56,7 @@ export type State = {
   players: Player[]
   brackets: BracketCollection
   winnersByCategory: WinnersByCategory
+  resultTables: ResultTable
 }
 
 // CSV Data

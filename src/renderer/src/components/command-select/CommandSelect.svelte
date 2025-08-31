@@ -54,11 +54,12 @@
 
 <Popover.Root bind:open={popoverOpen}>
   {#if children}
-    <Popover.Trigger class={className}>
+    <Popover.Trigger class={className} onclick={(e) => e.stopPropagation()}>
       {@render children()}
     </Popover.Trigger>
   {:else}
     <Popover.Trigger
+      onclick={(e) => e.stopPropagation()}
       class={cn(buttonVariants({ variant: 'outlineNoHover' }), 'justify-start', className)}
     >
       {#if selectedIndex >= 0}

@@ -11,6 +11,7 @@ import type {
   Winners,
   WinnersByCategory
 } from '@lib/types/bracket-lib'
+import type { ResultTable } from '@lib/types/result-table'
 import { compareObject, filterObject } from '@lib/utils'
 // import { SvelteSet as Set } from 'svelte/reactivity'
 
@@ -359,17 +360,39 @@ class GenderStore {
     this.isMale = !this.isMale
   }
 }
-// Winners store
-class WinnerStore extends GenderedStore<Winners> {
-  winnersByCategory: Gendered<WinnersByCategory> = this.state
+
+class ResultTableStore {
+  selectedName = $state('')
+  tables = $state<ResultTable[]>([])
+  selectedTable = $derived(this.tables.find((t) => t.name == this.selectedName))
 }
 
-class SidebarStore {
-  tab = $state('participantes')
+const winnerStoreProxyHandler = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get: function (target: any, prop: string, _receiver: unknown) {
+    if (prop === 'winnersByCategory') {
+      return Reflect.get(target, 'state')
+    }
+    return Reflect.get(target, prop)
+  },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  set: function (target: any, prop: string, value: unknown) {
+    if (prop === 'winnersByCategory') {
+      return Reflect.set(target, 'state', value)
+    }
+    return Reflect.set(target, prop, value)
+  }
 }
 
+interface WinnerStore extends GenderedStore<Winners> {
+  winnersByCategory: Gendered<WinnersByCategory>
+}
+
+export const resultTableStore = new ResultTableStore()
 export const playersStore = new PlayerStore()
 export const bracketsStore = new BracketStore()
-export const winnerStore = new WinnerStore()
+export const winnerStore: WinnerStore = new Proxy(
+  new GenderedStore<Winners>(),
+  winnerStoreProxyHandler
+)
 export const genderStore = new GenderStore()
-export const sidebarStore = new SidebarStore()

@@ -9,6 +9,7 @@
 
   let className: $$Props['class'] = undefined
   export let value: $$Props['value'] = undefined
+  export let el: $$Props['el'] = undefined
   export { className as class }
 
   // Workaround for https://github.com/sveltejs/svelte/issues/9305
@@ -22,6 +23,7 @@
     className
   )}
   bind:value
+  bind:this={el}
   {readonly}
   on:blur
   on:change

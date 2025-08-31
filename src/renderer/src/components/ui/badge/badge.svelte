@@ -23,6 +23,9 @@
   } = $props()
 
   function groupClass(i: number, n: number) {
+    if (n == 1) {
+      return 'px-2'
+    }
     if (i == 0) {
       return 'pl-2 rounded-r-none'
     } else if (i == n - 1) {

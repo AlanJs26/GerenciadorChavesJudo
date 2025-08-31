@@ -242,7 +242,7 @@
           bracketsStore.selectedCategory,
           retrieveWinners(bracket, playersStore.byContestantId[winnerContestantId])
         )
-        winnerStore.winnersByCategory = { ...winnerStore.winnersByCategory }
+        // winnerStore.winnersByCategory = { ...winnerStore.winnersByCategory }
       }
     }
   }
