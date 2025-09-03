@@ -17,9 +17,9 @@
   // ==================== DOM References ====================
   let bracketRenderer: BracketTab
 
-  onMount(() => {
-    generateAllBrackets()
-  })
+  // onMount(() => {
+  //   generateAllBrackets()
+  // })
 </script>
 
 <ModeWatcher />
@@ -30,7 +30,7 @@
   <main>
     <div class="tabs-container h-[100vh] min-w-0">
       <Tabs.Root
-        value="resultados"
+        value="participantes"
         class="flex h-full w-full flex-col"
         onValueChange={(value) => {
           switch (value) {

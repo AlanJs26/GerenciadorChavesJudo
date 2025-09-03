@@ -24,7 +24,7 @@ class SidebarState {
 }
 
 class SidebarStore {
-  tab = $state('resultados')
+  tab = $state('participantes')
 }
 
 export const sidebarStore = new SidebarStore()

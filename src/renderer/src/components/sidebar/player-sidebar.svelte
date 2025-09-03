@@ -189,7 +189,6 @@
       const formated = Object.entries(Object.groupBy(duplicatedPlayers, (x) => x)).map(
         ([text, items]) => text + (items.length > 1 ? ` (${items.length}x)` : '')
       )
-      console.log(formated)
       toast.warning(ToastItemList, {
         componentProps: {
           items: formated,

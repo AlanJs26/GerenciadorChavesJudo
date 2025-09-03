@@ -116,6 +116,7 @@
                 bind:value={selectedValues[key]}
                 class="h-8"
                 onfocusout={() => {
+                  if (player[key] == selectedValues[key]) return
                   playersStore.setPlayer({ ...player, [key]: selectedValues[key] })
                 }}
                 onkeypress={(e) => {

@@ -1,4 +1,10 @@
-import { compareCategory, gendered, hashCategory, unhashCategory } from '@lib/bracket-lib'
+import {
+  compareCategory,
+  comparePlayer,
+  gendered,
+  hashCategory,
+  unhashCategory
+} from '@lib/bracket-lib'
 import type {
   Bracket,
   BracketCollection,
@@ -13,6 +19,7 @@ import type {
 } from '@lib/types/bracket-lib'
 import type { ResultTable } from '@lib/types/result-table'
 import { compareObject, filterObject } from '@lib/utils'
+import type { Table } from '@tanstack/table-core'
 // import { SvelteSet as Set } from 'svelte/reactivity'
 
 class GenderedStore<T> {
@@ -119,31 +126,56 @@ class PlayerStore extends GenderedStore<Player[]> {
 
   setPlayer(newPlayer: Player) {
     const originalPlayer = this.byContestantId?.[newPlayer.contestantId]
-    const dynamicTags = newPlayer.category.filter((t) => this.dynamicTagIds.includes(t.id))
+    console.log($state.snapshot(this.dynamicCategoryByContestantId_))
 
+    const originalGender = originalPlayer?.isMale ? 'male' : 'female'
     const newGender = newPlayer.isMale ? 'male' : 'female'
+
+    // New Player
+    if (!originalPlayer) {
+      console.log('new Player')
+      const newPlayers = this.get(newGender, newPlayer.category) ?? []
+      this.set(newGender, newPlayer.category, [
+        ...newPlayers,
+        {
+          ...newPlayer,
+          category: this.removeDynamicCategories(newPlayer.category)
+        }
+      ])
+
+      return
+    }
+
+    if (comparePlayer(originalPlayer, newPlayer)) return
+
+    const dynamicTags = newPlayer.category.filter((t) => this.dynamicTagIds?.includes(t.id))
+
+    if (originalPlayer.isMale != newPlayer.isMale) {
+      delete this.dynamicCategoryByContestantId_[originalGender][newPlayer.contestantId]
+    }
 
     this.dynamicCategoryByContestantId_[newGender][newPlayer.contestantId] = dynamicTags
 
     if (
-      originalPlayer &&
-      (!compareCategory(originalPlayer.category, newPlayer.category, this.dynamicTagIds) ||
-        originalPlayer.isMale != newPlayer.isMale)
+      originalPlayer.isMale != newPlayer.isMale ||
+      (originalPlayer.isMale == newPlayer.isMale &&
+        !compareCategory(originalPlayer.category, newPlayer.category))
     ) {
-      const originalPlayers = this.get(newGender, originalPlayer.category)!
-      const originalGender = originalPlayer?.isMale ? 'male' : 'female'
+      const originalPlayers = this.get(originalGender, originalPlayer.category)!
 
       this.set(
         originalGender,
         originalPlayer.category,
-        originalPlayers.filter((p) => p.contestantId != originalPlayer.contestantId)
+        originalPlayers.filter((p) => p.contestantId != newPlayer.contestantId)
       )
     }
 
-    const newPlayers = this.get(newGender, newPlayer.category)
-
+    const newPlayers =
+      this.get(newGender, newPlayer.category)?.filter(
+        (p) => p.contestantId != newPlayer.contestantId
+      ) ?? []
     this.set(newGender, newPlayer.category, [
-      ...(newPlayers?.filter((p) => p.contestantId != newPlayer.contestantId) ?? []),
+      ...newPlayers,
       {
         ...newPlayer,
         category: this.removeDynamicCategories(newPlayer.category)
@@ -224,6 +256,7 @@ class PlayerStore extends GenderedStore<Player[]> {
   }
 
   set(gender: Gender, category: Category, value: Player[]) {
+    value.sort((a, b) => a.contestantId.localeCompare(b.contestantId))
     super.set(gender, this.removeDynamicCategories(category), value)
   }
 
@@ -245,7 +278,7 @@ class PlayerStore extends GenderedStore<Player[]> {
   }
 
   private createCategoryRecord(players: Player[]): Record<string, Player[]> {
-    return players.reduce((acc, player) => {
+    const record = players.reduce((acc, player) => {
       const hash = hashCategory(player.category)
       if (hash in acc) {
         acc[hash].push(player)
@@ -254,6 +287,10 @@ class PlayerStore extends GenderedStore<Player[]> {
       }
       return acc
     }, {})
+    for (const key of Object.keys(record)) {
+      record[key].sort((a, b) => a.contestantId.localeCompare(b.contestantId))
+    }
+    return record
   }
 
   private uniqueCategories(players: Player[]): Category[] {
@@ -365,6 +402,7 @@ class ResultTableStore {
   selectedName = $state('')
   tables = $state<ResultTable[]>([])
   selectedTable = $derived(this.tables.find((t) => t.name == this.selectedName))
+  dataTable = $state<Table<unknown>>()
 }
 
 const winnerStoreProxyHandler = {

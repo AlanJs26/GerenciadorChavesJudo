@@ -235,6 +235,16 @@ export function compareCategory(a: Category, b: Category, excludeIds: string[] =
   return hashCategory(excludeFn(a)) == hashCategory(excludeFn(b))
 }
 
+export function comparePlayer(a: Player, b: Player) {
+  return Object.entries(a).every(([k, v]) => {
+    if (k == 'category') {
+      return compareCategory(v, b.category)
+    } else {
+      return v == b[k]
+    }
+  })
+}
+
 export function gendered<T>(fn: (gender: 'female' | 'male') => T): Gendered<T> {
   return {
     male: fn('male'),

@@ -56,6 +56,9 @@
       )
     )
   })
+  const selectedBracketSize = $derived.by(() =>
+    Math.pow(2, bracketsStore.selectedBracket?.rounds.length ?? 0)
+  )
   $effect(() => {
     const el = elByHash.get(hashCategory(bracketsStore.selectedCategory))
     el?.scrollIntoView({
@@ -122,14 +125,17 @@
     >
     <Button
       variant="outline"
-      disabled={selectedNum == 0}
       onclick={() => {
         const gender = genderStore.gender
         const letterGen = (n) => {
           const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
           return letters[n % letters.length]
         }
-        for (const bracket of sidebarState.selected[gender]) {
+
+        const selectedBrackets =
+          selectedNum == 0 ? [bracketsStore.selectedBracket] : sidebarState.selected[gender]
+
+        for (const bracket of selectedBrackets) {
           const players = Object.keys(bracket.contestants).map(
             (id) => playersStore.byContestantId[id]
           )
@@ -174,10 +180,13 @@
     >
     <Button
       variant="outline"
-      disabled={selectedNum == 0}
       onclick={() => {
         const gender = genderStore.gender
-        for (const bracket of sidebarState.selected[gender]) {
+
+        const selectedBrackets =
+          selectedNum == 0 ? [bracketsStore.selectedBracket] : sidebarState.selected[gender]
+
+        for (const bracket of selectedBrackets) {
           const players = Object.keys(bracket.contestants).map(
             (id) => playersStore.byContestantId[id]
           )
@@ -197,10 +206,7 @@
 
 {#snippet bracketSizeSnippet(selectedNum: number)}
   <DropdownMenu.Root>
-    <DropdownMenu.Trigger
-      disabled={selectedNum == 0}
-      class={buttonVariants({ variant: 'outline' })}
-    >
+    <DropdownMenu.Trigger class={buttonVariants({ variant: 'outline' })}>
       Mudar Tamanho
     </DropdownMenu.Trigger>
     <DropdownMenu.Content class="w-56">
@@ -213,10 +219,16 @@
           {#each [2, 4, 8, 16] as bracketSize (bracketSize)}
             <DropdownMenu.Item
               class="grid place-items-center"
-              disabled={bracketSize == commonBracketSize}
+              disabled={selectedNum == 0
+                ? bracketSize == selectedBracketSize
+                : bracketSize == commonBracketSize}
               onclick={() => {
                 const gender = genderStore.gender
-                for (const bracket of sidebarState.selected[gender]) {
+
+                const selectedBrackets =
+                  selectedNum == 0 ? [bracketsStore.selectedBracket] : sidebarState.selected[gender]
+
+                for (const bracket of selectedBrackets) {
                   const players = Object.keys(bracket.contestants).map(
                     (id) => playersStore.byContestantId[id]
                   )
