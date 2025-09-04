@@ -1,15 +1,19 @@
-import { getPoints } from '@lib/bracket-lib'
-import type { Player } from '@lib/types/bracket-lib'
+import { compareCategory, gendered, getPoints } from '@lib/bracket-lib'
+import type { Category, Gender, Gendered, Player } from '@lib/types/bracket-lib'
 import type { FilterObj, OperationObj, SourceObj } from '@lib/types/result-table'
 import { SvelteSet } from 'svelte/reactivity'
 
-import { playersStore } from '@/states.svelte'
+import { bracketsStore, playersStore } from '@/states.svelte'
 
 type FilterDef = {
   key: string
   label: string
   map?: <T>(s: T) => string
   values: string[]
+}
+
+function parseName(gender: Gender, category: Category) {
+  return category.map((t) => t.value).join(' ') + (gender == 'male' ? ' (M)' : ' (F)')
 }
 
 function buildCustomFilterObjects(defs: FilterDef[]): FilterObj[] {
@@ -55,21 +59,42 @@ function buildTagFilterObjects(tagIds: string[]): FilterObj[] {
       players = players.filter((player) => player.category.find((t) => t.id == tagId))
 
       if (value == null) {
-        return players.reduce((acc, player) => {
-          const tagValue = player.category.find((c) => c.id == tagId)!.value
-
-          if (tagValue in acc) {
-            acc[tagValue].push(player)
-          } else {
-            acc[tagValue] = [player]
-          }
-          return acc
-        }, {})
+        return Object.groupBy(
+          players,
+          (player) => player.category.find((c) => c.id == tagId)!.value
+        ) as Record<string, Player[]>
       }
 
       return players.filter((player) => player.category.find((c) => c.id == tagId)!.value == value)
     }
   }))
+}
+
+function buildCategoryObjects(genderedCategories: Gendered<Category[]>): FilterObj {
+  const categories = (['male', 'female'] as Gender[])
+    .map((gender) => genderedCategories[gender].map((category) => ({ gender, category })))
+    .flat()
+
+  const names = categories.map(({ gender, category }) => parseName(gender, category))
+
+  return {
+    label: 'Categoria',
+    get values() {
+      return [null, ...names]
+    },
+    apply(players: Player[], value: string | null) {
+      if (value == null) {
+        return Object.groupBy(players, (player) =>
+          parseName(player.isMale ? 'male' : 'female', player.category)
+        ) as Record<string, Player[]>
+      }
+
+      return players.filter((player) => {
+        const name = parseName(player.isMale ? 'male' : 'female', player.category)
+        return name == value
+      })
+    }
+  }
 }
 
 class ResultObjects {
@@ -98,7 +123,8 @@ class ResultObjects {
         values: []
       }
     ]),
-    ...buildTagFilterObjects(Array.from(new SvelteSet(Object.values(playersStore.tagIds).flat())))
+    ...buildTagFilterObjects(Array.from(new SvelteSet(Object.values(playersStore.tagIds).flat()))),
+    ...(bracketsStore.flatBrackets.length ? [buildCategoryObjects(bracketsStore.categories)] : [])
   ])
 
   operationObjects = $state([
@@ -164,6 +190,13 @@ class ResultObjects {
       allowedOperations: ['Mais Comum'],
       fetch(players: Player[]) {
         return players.map((p) => p.organization)
+      }
+    },
+    {
+      label: 'Categoria',
+      allowedOperations: ['Mais Comum'],
+      fetch(players: Player[]) {
+        return players.map((p) => parseName(p.isMale ? 'male' : 'female', p.category))
       }
     },
     {

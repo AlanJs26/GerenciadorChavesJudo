@@ -6,15 +6,18 @@
   let {
     class: className,
     children,
-    label
+    label,
+    labelFor = ''
   }: {
     children?: Snippet
     class?: string
+    label: string
+    labelFor: string
   } = $props()
 </script>
 
 <div class={cn('items-top flex gap-2', className)}>
-  <Label class="!mt-2 min-w-10 text-sm/tight font-bold">{label}</Label>
+  <Label for={labelFor} class="min-w-10 self-center text-sm/tight font-bold">{label}</Label>
 
   <div class="flex-1">
     {@render children?.()}

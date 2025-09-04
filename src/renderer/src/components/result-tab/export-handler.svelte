@@ -74,7 +74,9 @@
     exportStack = [...exportStack]
   })
 
-  export async function extractExportableTableData(resultTables: ResultTable[]) {
+  export async function extractExportableTableData(
+    resultTables: ResultTable[]
+  ): Promise<TableExport[]> {
     const promise = new Promise((res, rej) => {
       exportStackResolve = res
       setTimeout(() => rej('Timeout'), 2000)

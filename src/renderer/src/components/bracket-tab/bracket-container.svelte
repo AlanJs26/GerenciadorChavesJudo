@@ -15,6 +15,7 @@
   } = $props()
 
   let isBracketVisible = $state(false)
+  const hasBrackets = $derived(bracketsStore.brackets[genderStore.gender].length > 0)
 
   let winners: Winners = $derived(
     winnerStore.get(genderStore.gender, bracketsStore.selectedCategory)
@@ -36,7 +37,7 @@
 <div
   class={cn(
     'flex h-full w-full flex-col items-center',
-    !isBracketVisible ? 'hidden' : '',
+    !isBracketVisible || !hasBrackets ? 'hidden' : '',
     bracketFullscreen ? 'fullscreen' : ''
     // 'fullscreen'
   )}
@@ -91,7 +92,7 @@
   {/if}
   <div class={cn('brackets flex h-full w-full')} bind:this={bracketsEl}></div>
 </div>
-{#if !isBracketVisible}
+{#if !isBracketVisible || hasBrackets}
   <div class="text-foreground flex h-full w-full items-center justify-center text-center">
     <span>
       Nenhuma chave foi gerada!

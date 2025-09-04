@@ -26,6 +26,7 @@ export interface ResultTable {
   name: string
   filters: Filter[]
   columns: Column[]
+  useSyncColumn: boolean
 }
 
 export type SourceObj = {

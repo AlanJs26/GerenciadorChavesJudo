@@ -11,7 +11,9 @@
   import { toast } from 'svelte-sonner'
 
   import type { SelectItem } from '@/components/command-select'
+  import FormItem from '@/components/result-tab/config-popover/form-item.svelte'
   import FilterSelect from '@/components/result-tab/filter-select.svelte'
+  import Checkbox from '@/components/ui/checkbox/checkbox.svelte'
   import { resultTableStore } from '@/states.svelte'
 
   let {
@@ -32,6 +34,7 @@
     const _ = open
     nameInput = table?.name ?? ''
     tableFilters = table?.filters ?? [{ field: 'Participantes', selection: null }]
+    useSyncColumn = table?.useSyncColumn ?? true
     columns =
       table?.columns?.map((c) => ({
         ...c,
@@ -42,6 +45,7 @@
   let table = $derived(JSON.parse(JSON.stringify(inputTable)))
 
   let open = $state(initialOpen ?? false)
+  let useSyncColumn = $state(true)
 
   let nameInput = $state('')
   let tableFilters: ResultTable['filters'] = $state([{ field: 'Participantes', selection: null }])
@@ -69,10 +73,38 @@
   }
 
   function buildResultTable(): ResultTable {
-    return {
-      name: nameInput || 'Nova Tabela',
-      filters: tableFilters,
-      columns: columns.map((c) => filterObject(c, (key, _) => key != 'id'))
+    const tableColumns = columns.map((c) => filterObject(c, (key, _) => key != 'id'))
+
+    if (useSyncColumn) {
+      const syncColumn = {
+        name: tableFilters[0].field + ' (S)',
+        formula: {
+          rank: false,
+          operation: 'Mais Comum',
+          value: tableFilters[0].field
+        },
+        filters: []
+      }
+      const hasSyncColumn =
+        tableColumns.length &&
+        tableColumns[0].name.endsWith(' (S)') &&
+        tableColumns[0].filters.length == 0 &&
+        !tableColumns[0].formula.rank &&
+        tableColumns[0].formula.operation == 'Mais Comum'
+
+      return {
+        name: nameInput || 'Nova Tabela',
+        filters: tableFilters,
+        columns: hasSyncColumn ? tableColumns : [syncColumn, ...tableColumns],
+        useSyncColumn
+      }
+    } else {
+      return {
+        name: nameInput || 'Nova Tabela',
+        filters: tableFilters,
+        columns: tableColumns,
+        useSyncColumn
+      }
     }
   }
 
@@ -94,6 +126,7 @@
     open = false
     // reset
     nameInput = ''
+    useSyncColumn = true
     tableFilters = []
     columns = []
     selectedColumnId = ''
@@ -119,6 +152,12 @@
         <FormInput withDifficulty={false} textarea={false} label="Nome" bind:value={nameInput} />
 
         <FilterSelect bind:filters={tableFilters} class="text-sm" />
+
+        <FormItem labelFor="syncColumn" label="Coluna Sincronizada" class="h-7">
+          <div class="flex h-full items-center">
+            <Checkbox id="syncColumn" bind:checked={useSyncColumn} />
+          </div>
+        </FormItem>
       </div>
 
       <h1 class="!ml-5 text-3xl">Colunas</h1>

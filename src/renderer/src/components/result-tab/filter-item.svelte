@@ -12,6 +12,7 @@
     filters: tableFilters = [],
     allowNull = true,
     allowDelete = true,
+    selectable = true,
     onChange,
     onDelete,
     class: className
@@ -20,6 +21,7 @@
     filters: ResultTable['filters']
     allowNull: boolean
     allowDelete: boolean
+    selectable: boolean
     onChange?: (filter: Filter) => void
     onDelete?: (filter: Filter) => void
     class?: string
@@ -58,7 +60,7 @@
   class={className}
 >
   <div
-    class="border-border hover:bg-accent group has-hover:bg-background relative flex cursor-pointer items-center gap-1 rounded-full border-2 py-1 pr-1 pl-2 text-base font-bold"
+    class="border-border hover:bg-accent group has-hover:bg-background relative flex cursor-pointer items-center gap-0.5 rounded-full border-2 py-1 pr-1 pl-2 text-base font-bold"
   >
     {#if allowDelete}
       <button
@@ -75,24 +77,38 @@
       </button>
     {/if}
     {filter.field}
-    <CommandSelect
-      items={allowNull
-        ? valueItemsByField[filter.field]
-        : (valueItemsByField[filter.field]?.filter((item) => item.label !== null) ?? [])}
-      onSelect={(item) => {
-        filter.selection = item.value
-        onChange?.(filter)
-      }}
-    >
-      <div
+    <div class="flex-1"></div>
+
+    {#if selectable}
+      <CommandSelect
+        items={allowNull
+          ? valueItemsByField[filter.field]
+          : (valueItemsByField[filter.field]?.filter((item) => item.label !== null) ?? [])}
+        onSelect={(item) => {
+          filter.selection = item.value
+          onChange?.(filter)
+        }}
+      >
+        <div
+          class={cn(
+            'border-border bg-background hover:bg-accent rounded-full border-2 px-2 py-1 text-xs font-normal',
+            filter.selection === null ? 'border-1 font-bold text-blue-700 dark:border-blue-700' : ''
+          )}
+        >
+          {filter.selection ?? 'Tudo'}
+        </div>
+      </CommandSelect>
+    {:else}
+      <button
         class={cn(
           'border-border bg-background hover:bg-accent rounded-full border-2 px-2 py-1 text-xs font-normal',
           filter.selection === null ? 'border-1 font-bold text-blue-700 dark:border-blue-700' : ''
         )}
+        onclick={(e) => e.stopPropagation()}
       >
         {filter.selection ?? 'Tudo'}
-      </div>
-    </CommandSelect>
+      </button>
+    {/if}
   </div>
 </CommandSelect>
 

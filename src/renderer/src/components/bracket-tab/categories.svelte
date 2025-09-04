@@ -17,6 +17,7 @@
 
   let { onPrint }: { onPrint?: () => void } = $props()
 
+  const hasBrackets = $derived(bracketsStore.brackets[genderStore.gender].length > 0)
   const ITEM_REM_HEIGHT = 3
 
   function handleDrop(state: DragDropState<string>) {
@@ -161,7 +162,7 @@
     </div>
   </div>
 
-  {#if bracketsStore.selectedCategory?.length}
+  {#if bracketsStore.selectedCategory?.length && hasBrackets}
     <div class="flex !w-full items-center px-5 py-2">
       <!-- <p class="!mr-5 min-w-fit !font-bold"> -->
       <!--   {bracketsStore.selectedCategory.map((c) => c.value).join(' | ')} -->

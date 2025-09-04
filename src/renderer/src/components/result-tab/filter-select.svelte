@@ -11,9 +11,11 @@
 
   let {
     filters: tableFilters = $bindable([]),
+    onRowFilterChange,
     class: className
   }: {
     filters: ResultTable['filters']
+    onRowFilterChange: (filters: Filter[]) => void
     class?: string
   } = $props()
 
@@ -41,6 +43,9 @@
       filters={selectableFilters.filter((f) => tableFilters?.every((it) => it.field != f.field))}
       allowNull={true}
       allowDelete={false}
+      onChange={() => {
+        onRowFilterChange?.(tableFilters)
+      }}
     />
   {/if}
 
