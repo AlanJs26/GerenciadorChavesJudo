@@ -20,6 +20,8 @@ import type {
 import type { ResultTable } from '@lib/types/result-table'
 import { compareObject, filterObject } from '@lib/utils'
 import type { Table } from '@tanstack/table-core'
+
+import ExportHandler from '@/components/result-tab/export-handler.svelte'
 // import { SvelteSet as Set } from 'svelte/reactivity'
 
 class GenderedStore<T> {
@@ -402,7 +404,8 @@ class ResultTableStore {
   selectedName = $state('')
   tables = $state<ResultTable[]>([])
   selectedTable = $derived(this.tables.find((t) => t.name == this.selectedName))
-  dataTable = $state<Table<unknown>>()
+  dataTable = $state<Table<Player[]>>()
+  exportHandler = $state<ExportHandler>()
 }
 
 const winnerStoreProxyHandler = {

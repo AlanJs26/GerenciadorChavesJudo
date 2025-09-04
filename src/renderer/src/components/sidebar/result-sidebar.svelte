@@ -9,14 +9,18 @@
   import { Label } from '@components/ui/label'
   import { ScrollArea } from '@components/ui/scroll-area'
   import { Separator } from '@components/ui/separator'
+  import type { Player } from '@lib/types/bracket-lib'
+  import type { TableExport } from '@lib/types/data-table'
   import type { ResultTable } from '@lib/types/result-table'
   import { Bolt, MoonIcon, Plus, SunIcon } from '@lucide/svelte'
   import createFuzzySearch from '@nozbe/microfuzz'
+  import type { Table } from '@tanstack/table-core'
   import { toggleMode } from 'mode-watcher'
   import { onMount, type Snippet } from 'svelte'
 
+  import { buildTableData, exportTableData } from '@/components/result-tab/result-lib.svelte'
   import TableCard from '@/components/sidebar/table-card.svelte'
-  import { resultTableStore } from '@/states.svelte.ts'
+  import { playersStore, resultTableStore } from '@/states.svelte.ts'
 
   let contextOpen = $state(false)
   let filterText = $state('')
@@ -120,11 +124,14 @@
     <Button
       variant="outline"
       disabled={selectedNum == 0}
-      onclick={() => {
-        // TODO: Descobrir como exportar várias tabelas
-        for (const selected of sidebarState.selectedTables) {
-          resultTableStore.selectedName = selected.name
-        }
+      onclick={async () => {
+        const tableData: TableExport[] =
+          await resultTableStore.exportHandler.extractExportableTableData(
+            sidebarState.selectedTables
+          )
+
+        await exportTableData(tableData, tableData.map((td) => td.name).join('-'))
+
         sidebarState.checkedTables.clear()
       }}>Exportar</Button
     >

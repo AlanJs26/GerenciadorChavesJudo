@@ -16,10 +16,16 @@
 
   // ==================== DOM References ====================
   let bracketRenderer: BracketTab
+  let value = $state('resultados')
 
-  // onMount(() => {
-  //   generateAllBrackets()
-  // })
+  $effect(() => {
+    sidebarStore.tab = value
+  })
+
+  onMount(() => {
+    sidebarStore.tab = value
+    // generateAllBrackets()
+  })
 </script>
 
 <ModeWatcher />
@@ -29,19 +35,7 @@
   <AppSidebar />
   <main>
     <div class="tabs-container h-[100vh] min-w-0">
-      <Tabs.Root
-        value="participantes"
-        class="flex h-full w-full flex-col"
-        onValueChange={(value) => {
-          switch (value) {
-            case 'participantes':
-            case 'chaves':
-            case 'resultados':
-              sidebarStore.tab = value
-              break
-          }
-        }}
-      >
+      <Tabs.Root bind:value class="flex h-full w-full flex-col">
         <Tabs.List class="grid w-full grid-cols-[auto_1fr_1fr_1fr] rounded-none">
           <Sidebar.Trigger />
           <Tabs.Trigger value="participantes">Participantes</Tabs.Trigger>

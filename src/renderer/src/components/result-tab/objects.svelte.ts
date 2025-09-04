@@ -189,7 +189,7 @@ class ResultObjects {
     }
   ]
 
-  filters: Record<string, FilterObj> = $derived(
+  filters: Record<string, FilterObj<string | null>> = $derived(
     resultObjects.filterObjects.reduce((acc, fobj) => {
       acc[fobj.label] = fobj
       return acc

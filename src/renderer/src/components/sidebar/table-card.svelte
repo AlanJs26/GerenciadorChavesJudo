@@ -18,11 +18,11 @@
 <button
   class="participante hover:bg-primary/5 flex w-full cursor-pointer gap-0 !pr-5"
   onclick={function (): void {
-    if (isSelected) {
-      ;(this as HTMLDivElement).querySelector('input').click()
-    } else {
-      resultTableStore.selectedName = table.name
-    }
+    ;(this as HTMLDivElement).querySelector('input').click()
+    // if (isSelected) {
+    // } else {
+    //   resultTableStore.selectedName = table.name
+    // }
   }}
 >
   <div class="flex w-full flex-1 flex-col items-start p-3">
